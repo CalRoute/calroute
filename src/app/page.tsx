@@ -236,6 +236,7 @@ export default function HomePage() {
           <div className="flex gap-6 text-xs text-[#1a1a1a]/30">
             <a href="#features" className="hover:text-[#0D7377] transition-colors">Features</a>
             <a href="#how" className="hover:text-[#0D7377] transition-colors">How it works</a>
+            <Link href="/privacy" className="hover:text-[#0D7377] transition-colors">Privacy</Link>
             <Link href="/login" className="hover:text-[#0D7377] transition-colors">Sign in</Link>
           </div>
         </div>
