@@ -1,27 +1,22 @@
-import { createClient } from '@/lib/supabase/server'
-import { createServiceClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { getServerUser } from '@/lib/firebase/session'
+import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await getServerUser()
   if (!user) redirect('/login')
 
-  const serviceSupabase = await createServiceClient()
-  const { data: host } = await serviceSupabase
-    .from('hosts')
-    .select('id, name')
-    .eq('user_id', user.id)
-    .single()
+  const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
+  const host = hostSnap.data()
 
-  const { data: links } = host
-    ? await serviceSupabase
-        .from('booking_links')
-        .select('*, booking_link_hosts(count)')
-        .eq('owner_id', host.id)
-        .order('created_at', { ascending: false })
-    : { data: [] }
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('ownerId', '==', user.uid)
+    .orderBy('createdAt', 'desc')
+    .get()
+
+  const links = linksSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
 
   return (
     <main className="min-h-screen bg-gray-50">
@@ -46,24 +41,21 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {(!links || links.length === 0) ? (
+        {links.length === 0 ? (
           <div className="bg-white rounded-2xl border border-gray-200 p-12 text-center">
             <p className="text-gray-500 mb-4">No booking links yet.</p>
-            <Link
-              href="/dashboard/links/new"
-              className="text-blue-600 hover:underline text-sm font-medium"
-            >
+            <Link href="/dashboard/links/new" className="text-blue-600 hover:underline text-sm font-medium">
               Create your first link →
             </Link>
           </div>
         ) : (
           <div className="space-y-3">
-            {links.map((link: any) => (
+            {links.map((link) => (
               <div key={link.id} className="bg-white rounded-2xl border border-gray-200 p-5 flex items-center justify-between">
                 <div>
                   <h3 className="font-medium text-gray-900">{link.title}</h3>
                   <p className="text-sm text-gray-500 mt-0.5">
-                    {link.duration_minutes} min · {link.routing_strategy} routing
+                    {link.durationMinutes} min · {link.routingStrategy} routing
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

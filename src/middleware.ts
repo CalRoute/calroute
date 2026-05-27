@@ -1,8 +1,18 @@
-import { type NextRequest } from 'next/server'
-import { updateSession } from '@/lib/supabase/middleware'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function middleware(request: NextRequest) {
-  return await updateSession(request)
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
+
+  if (isDashboardRoute) {
+    const token = request.cookies.get('firebase-token')?.value
+    if (!token) {
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      return NextResponse.redirect(url)
+    }
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {

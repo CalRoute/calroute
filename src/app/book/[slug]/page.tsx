@@ -1,6 +1,6 @@
 import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
-import { createServiceClient } from '@/lib/supabase/server'
+import { adminDb } from '@/lib/firebase/admin'
 import BookingWidget from '@/components/booking/BookingWidget'
 
 interface Props {
@@ -8,38 +8,55 @@ interface Props {
 }
 
 export async function generateMetadata({ params }: Props) {
-  const supabase = await createServiceClient()
-  const { data: link } = await supabase
-    .from('booking_links')
-    .select('title, description')
-    .eq('slug', params.slug)
-    .eq('is_active', true)
-    .single()
+  const snap = await adminDb
+    .collection('booking_links')
+    .where('slug', '==', params.slug)
+    .where('isActive', '==', true)
+    .limit(1)
+    .get()
 
-  if (!link) return { title: 'Not Found' }
+  if (snap.empty) return { title: 'Not Found' }
+  const link = snap.docs[0].data()
 
   return {
     title: `Book a time — ${link.title}`,
-    description: link.description ?? `Schedule a meeting via CalRoute`,
+    description: link.description ?? 'Schedule a meeting via CalRoute',
   }
 }
 
 export default async function BookPage({ params }: Props) {
-  const supabase = await createServiceClient()
-  const { data: link } = await supabase
-    .from('booking_links')
-    .select('*')
-    .eq('slug', params.slug)
-    .eq('is_active', true)
-    .single()
+  const snap = await adminDb
+    .collection('booking_links')
+    .where('slug', '==', params.slug)
+    .where('isActive', '==', true)
+    .limit(1)
+    .get()
 
-  if (!link) notFound()
+  if (snap.empty) notFound()
+
+  const link = { id: snap.docs[0].id, ...snap.docs[0].data() } as any
+
+  // Normalise to the shape BookingWidget expects
+  const normalisedLink = {
+    id: link.id,
+    slug: link.slug,
+    title: link.title,
+    description: link.description ?? null,
+    duration_minutes: link.durationMinutes,
+    buffer_before_minutes: link.bufferBeforeMinutes ?? 0,
+    buffer_after_minutes: link.bufferAfterMinutes ?? 0,
+    routing_strategy: link.routingStrategy ?? 'priority',
+    is_active: link.isActive,
+    max_days_ahead: link.maxDaysAhead ?? 30,
+    owner_id: link.ownerId,
+    created_at: link.createdAt,
+  }
 
   return (
     <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="w-full max-w-2xl">
         <Suspense fallback={<div className="text-center py-12">Loading availability…</div>}>
-          <BookingWidget link={link} />
+          <BookingWidget link={normalisedLink} />
         </Suspense>
       </div>
     </main>

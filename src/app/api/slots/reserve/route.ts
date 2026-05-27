@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { adminDb } from '@/lib/firebase/admin'
 import { addMinutes, parseISO } from 'date-fns'
 import crypto from 'crypto'
 
@@ -11,32 +11,51 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  const supabase = await createServiceClient()
-  const session_token = crypto.randomBytes(32).toString('hex')
+  const sessionToken = crypto.randomBytes(32).toString('hex')
   const startTime = parseISO(start_time)
   const endTime = addMinutes(startTime, duration_minutes)
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000)
 
-  // Clean up expired reservations first
-  await supabase.rpc('cleanup_expired_reservations')
+  // Clean up expired reservations for this host+slot
+  const expiredSnap = await adminDb
+    .collection('slot_reservations')
+    .where('hostId', '==', host_id)
+    .where('startTime', '==', start_time)
+    .where('expiresAt', '<', new Date().toISOString())
+    .get()
 
-  // Try to insert a reservation (unique constraint prevents double-reserving)
-  const { error } = await supabase.from('slot_reservations').insert({
-    booking_link_id,
-    host_id,
-    start_time: startTime.toISOString(),
-    end_time: endTime.toISOString(),
-    session_token,
-  })
+  const batch = adminDb.batch()
+  expiredSnap.docs.forEach(d => batch.delete(d.ref))
 
-  if (error) {
-    if (error.code === '23505') {
-      return NextResponse.json(
-        { error: 'This slot is currently being reserved by another user.' },
-        { status: 409 }
-      )
-    }
-    return NextResponse.json({ error: 'Failed to reserve slot' }, { status: 500 })
+  // Check for active reservation
+  const activeSnap = await adminDb
+    .collection('slot_reservations')
+    .where('hostId', '==', host_id)
+    .where('startTime', '==', start_time)
+    .where('expiresAt', '>=', new Date().toISOString())
+    .limit(1)
+    .get()
+
+  if (!activeSnap.empty) {
+    await batch.commit()
+    return NextResponse.json(
+      { error: 'This slot is currently being reserved by another user.' },
+      { status: 409 }
+    )
   }
 
-  return NextResponse.json({ session_token, expires_in_seconds: 300 })
+  // Create reservation
+  const reservationRef = adminDb.collection('slot_reservations').doc()
+  batch.set(reservationRef, {
+    bookingLinkId: booking_link_id,
+    hostId: host_id,
+    startTime: start_time,
+    endTime: endTime.toISOString(),
+    sessionToken,
+    expiresAt: expiresAt.toISOString(),
+  })
+
+  await batch.commit()
+
+  return NextResponse.json({ session_token: sessionToken, expires_in_seconds: 300 })
 }

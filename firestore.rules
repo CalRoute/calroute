@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hosts: only the owner can read/write their own doc
+    match /hosts/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+      // Connected calendars subcollection
+      match /connected_calendars/{calId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+
+      // Availability subcollection
+      match /availability/{dayId} {
+        allow read, write: if request.auth != null && request.auth.uid == uid;
+      }
+    }
+
+    // Booking links: owner can write, anyone can read active ones
+    match /booking_links/{linkId} {
+      allow read: if resource.data.isActive == true;
+      allow write: if request.auth != null && request.auth.uid == resource.data.ownerId;
+      allow create: if request.auth != null;
+
+      // Hosts subcollection on a link
+      match /hosts/{hostId} {
+        allow read: if true;
+        allow write: if request.auth != null;
+      }
+    }
+
+    // Bookings: hosts can read their own, anyone can create
+    match /bookings/{bookingId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.hostId;
+      allow create: if true;
+      allow update: if request.auth != null && request.auth.uid == resource.data.hostId;
+    }
+
+    // Slot reservations: server-side only (use Admin SDK)
+    match /slot_reservations/{resId} {
+      allow read, write: if false; // Admin SDK only
+    }
+  }
+}

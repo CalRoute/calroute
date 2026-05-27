@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient, createServiceClient } from '@/lib/supabase/server'
+import { adminDb } from '@/lib/firebase/admin'
 import { createOAuthClient } from '@/lib/google/calendar'
 import { google } from 'googleapis'
 
@@ -8,18 +8,12 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get('code')
   const state = searchParams.get('state')
   const storedState = request.cookies.get('google_oauth_state')?.value
+  const uid = request.cookies.get('google_oauth_uid')?.value
 
-  if (!code || !state || state !== storedState) {
+  if (!code || !state || state !== storedState || !uid) {
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=oauth_failed`
     )
-  }
-
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login`)
   }
 
   try {
@@ -27,46 +21,36 @@ export async function GET(request: NextRequest) {
     const { tokens } = await client.getToken(code)
     client.setCredentials(tokens)
 
-    // Get account email
     const oauth2 = google.oauth2({ version: 'v2', auth: client })
     const { data: userInfo } = await oauth2.userinfo.get()
 
-    // Get host record
-    const serviceSupabase = await createServiceClient()
-    const { data: host } = await serviceSupabase
-      .from('hosts')
-      .select('id')
-      .eq('user_id', user.id)
-      .single()
+    // Save to Firestore: hosts/{uid}/connected_calendars/{calendarId}
+    const calRef = adminDb
+      .collection('hosts')
+      .doc(uid)
+      .collection('connected_calendars')
+      .doc(`google_${userInfo.email}_primary`)
 
-    if (!host) {
-      return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=host_not_found`
-      )
-    }
-
-    // Save calendar connection
-    await serviceSupabase.from('connected_calendars').upsert({
-      host_id: host.id,
+    await calRef.set({
       provider: 'google',
-      account_email: userInfo.email!,
-      calendar_id: 'primary',
+      accountEmail: userInfo.email,
+      calendarId: 'primary',
       label: 'Primary',
-      access_token: tokens.access_token!,
-      refresh_token: tokens.refresh_token!,
-      expires_at: new Date(tokens.expiry_date!).toISOString(),
-      is_active: true,
-    }, {
-      onConflict: 'host_id,account_email,calendar_id',
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: new Date(tokens.expiry_date!).toISOString(),
+      isActive: true,
+      createdAt: new Date().toISOString(),
     })
 
     const response = NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?success=calendar_connected`
     )
     response.cookies.delete('google_oauth_state')
+    response.cookies.delete('google_oauth_uid')
     return response
   } catch (error) {
-    console.error('OAuth callback error:', error)
+    console.error('Calendar OAuth error:', error)
     return NextResponse.redirect(
       `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=oauth_failed`
     )

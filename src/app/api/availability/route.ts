@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { adminDb } from '@/lib/firebase/admin'
 import { queryFreeBusy } from '@/lib/google/calendar'
 import { computeAvailableSlots } from '@/lib/scheduling/engine'
 import { addDays, startOfDay, endOfDay, parseISO } from 'date-fns'
@@ -14,112 +14,151 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'slug is required' }, { status: 400 })
   }
 
-  const supabase = await createServiceClient()
+  // 1. Load booking link by slug
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('slug', '==', slug)
+    .where('isActive', '==', true)
+    .limit(1)
+    .get()
 
-  // 1. Load booking link
-  const { data: link, error: linkError } = await supabase
-    .from('booking_links')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single()
-
-  if (linkError || !link) {
+  if (linksSnap.empty) {
     return NextResponse.json({ error: 'Booking link not found' }, { status: 404 })
   }
 
-  // 2. Determine date range to query (default: today + max_days_ahead)
+  const linkDoc = linksSnap.docs[0]
+  const link = { id: linkDoc.id, ...linkDoc.data() } as any
+
+  // 2. Determine date range
   const startDate = startDateParam
     ? startOfDay(parseISO(startDateParam))
     : startOfDay(new Date())
-  const endDate = endOfDay(addDays(startDate, Math.min(link.max_days_ahead, 14)))
+  const endDate = endOfDay(addDays(startDate, Math.min(link.maxDaysAhead ?? 30, 14)))
 
-  // 3. Load hosts for this link with their calendars and availability
-  const { data: linkHosts } = await supabase
-    .from('booking_link_hosts')
-    .select(`
-      priority,
-      last_booked_at,
-      host:hosts(
-        id,
-        timezone,
-        host_availability(*),
-        connected_calendars(*)
-      )
-    `)
-    .eq('booking_link_id', link.id)
+  // 3. Load booking_link_hosts subcollection
+  const linkHostsSnap = await adminDb
+    .collection('booking_links')
+    .doc(linkDoc.id)
+    .collection('hosts')
+    .get()
 
-  if (!linkHosts || linkHosts.length === 0) {
+  if (linkHostsSnap.empty) {
     return NextResponse.json({ slots: [] })
   }
 
-  // 4. Fetch freeBusy for all calendars in a single batch per account
-  const allCalendars = linkHosts.flatMap(
-    lh => (lh.host as any)?.connected_calendars?.filter((c: any) => c.is_active) ?? []
+  // 4. Load each host's data
+  const hostsData = await Promise.all(
+    linkHostsSnap.docs.map(async (lhDoc) => {
+      const lhData = lhDoc.data()
+      const hostId = lhData.hostId
+
+      const [hostSnap, availSnap, calsSnap] = await Promise.all([
+        adminDb.collection('hosts').doc(hostId).get(),
+        adminDb.collection('hosts').doc(hostId).collection('availability').get(),
+        adminDb.collection('hosts').doc(hostId).collection('connected_calendars')
+          .where('isActive', '==', true).get(),
+      ])
+
+      return {
+        hostId,
+        priority: lhData.priority ?? 1,
+        lastBookedAt: lhData.lastBookedAt ?? null,
+        host: hostSnap.data(),
+        availability: availSnap.docs.map(d => d.data()),
+        calendars: calsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+      }
+    })
+  )
+
+  // 5. Fetch freeBusy for all calendars
+  const allCalendars = hostsData.flatMap(h =>
+    h.calendars.map((c: any) => ({
+      ...c,
+      host_id: h.hostId,
+      account_email: c.accountEmail,
+      calendar_id: c.calendarId,
+      access_token: c.accessToken,
+      refresh_token: c.refreshToken,
+      expires_at: c.expiresAt,
+      is_active: c.isActive,
+      created_at: c.createdAt,
+    }))
   )
 
   const busyByCalendarId = await queryFreeBusy(
     allCalendars,
     startDate,
     endDate,
-    async (calendarId, token, expiresAt) => {
-      await supabase
-        .from('connected_calendars')
-        .update({ access_token: token, expires_at: expiresAt.toISOString() })
-        .eq('id', calendarId)
+    async (calendarDocId, token, expiresAt) => {
+      for (const h of hostsData) {
+        const cal = h.calendars.find((c: any) => c.id === calendarDocId)
+        if (cal) {
+          await adminDb
+            .collection('hosts')
+            .doc(h.hostId)
+            .collection('connected_calendars')
+            .doc(calendarDocId)
+            .update({ accessToken: token, expiresAt: expiresAt.toISOString() })
+          break
+        }
+      }
     }
   )
 
-  // 5. Merge busy slots per host (across all their calendars)
-  const hosts = linkHosts.map(lh => {
-    const host = lh.host as any
-    const calendars: any[] = host.connected_calendars?.filter((c: any) => c.is_active) ?? []
-    const allBusy = calendars.flatMap(cal => busyByCalendarId.get(cal.id) ?? [])
-
+  // 6. Build host structs for engine
+  const hosts = hostsData.map(h => {
+    const allBusy = h.calendars.flatMap((cal: any) =>
+      busyByCalendarId.get(cal.id) ?? []
+    )
     return {
-      id: host.id,
-      timezone: host.timezone ?? 'UTC',
-      availability: (host.host_availability ?? []).map((a: any) => ({
-        dayOfWeek: a.day_of_week,
-        startTime: a.start_time,
-        endTime: a.end_time,
+      id: h.hostId,
+      timezone: h.host?.timezone ?? 'UTC',
+      availability: h.availability.map((a: any) => ({
+        dayOfWeek: a.dayOfWeek,
+        startTime: a.startTime,
+        endTime: a.endTime,
       })),
       busySlots: allBusy,
-      priority: lh.priority ?? 1,
-      lastBookedAt: lh.last_booked_at ? new Date(lh.last_booked_at) : null,
+      priority: h.priority,
+      lastBookedAt: h.lastBookedAt ? new Date(h.lastBookedAt) : null,
     }
   })
 
-  // 6. Load existing confirmed bookings in the range
-  const { data: existingBookings } = await supabase
-    .from('bookings')
-    .select('host_id, start_time, end_time')
-    .eq('booking_link_id', link.id)
-    .eq('status', 'confirmed')
-    .gte('start_time', startDate.toISOString())
-    .lte('start_time', endDate.toISOString())
+  // 7. Load existing bookings
+  const bookingsSnap = await adminDb
+    .collection('bookings')
+    .where('bookingLinkId', '==', linkDoc.id)
+    .where('status', '==', 'confirmed')
+    .where('startTime', '>=', startDate.toISOString())
+    .where('startTime', '<=', endDate.toISOString())
+    .get()
 
-  // 7. Compute available slots
+  const existingBookings = bookingsSnap.docs.map(d => {
+    const data = d.data()
+    return {
+      hostId: data.hostId,
+      start: new Date(data.startTime),
+      end: new Date(data.endTime),
+    }
+  })
+
+  // 8. Compute slots
   const slots = computeAvailableSlots({
     hosts,
     startDate,
     endDate,
-    durationMinutes: link.duration_minutes,
-    bufferBeforeMinutes: link.buffer_before_minutes,
-    bufferAfterMinutes: link.buffer_after_minutes,
-    routingStrategy: link.routing_strategy as 'priority' | 'round_robin',
-    existingBookings: (existingBookings ?? []).map(b => ({
-      hostId: b.host_id,
-      start: new Date(b.start_time),
-      end: new Date(b.end_time),
-    })),
+    durationMinutes: link.durationMinutes,
+    bufferBeforeMinutes: link.bufferBeforeMinutes ?? 0,
+    bufferAfterMinutes: link.bufferAfterMinutes ?? 0,
+    routingStrategy: link.routingStrategy ?? 'priority',
+    existingBookings,
   })
 
   return NextResponse.json({
     link: {
       title: link.title,
-      description: link.description,
-      duration_minutes: link.duration_minutes,
+      description: link.description ?? null,
+      duration_minutes: link.durationMinutes,
     },
     slots: slots.map(s => ({
       start: s.start.toISOString(),

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceClient } from '@/lib/supabase/server'
+import { adminDb } from '@/lib/firebase/admin'
 import { createCalendarEvent } from '@/lib/google/calendar'
 import { addMinutes, parseISO } from 'date-fns'
 import { Resend } from 'resend'
@@ -14,19 +14,17 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  const supabase = await createServiceClient()
+  // 1. Validate slot reservation
+  const reservationSnap = await adminDb
+    .collection('slot_reservations')
+    .where('hostId', '==', host_id)
+    .where('startTime', '==', start_time)
+    .where('sessionToken', '==', session_token)
+    .where('expiresAt', '>=', new Date().toISOString())
+    .limit(1)
+    .get()
 
-  // 1. Validate the slot reservation
-  const { data: reservation } = await supabase
-    .from('slot_reservations')
-    .select('*')
-    .eq('host_id', host_id)
-    .eq('start_time', start_time)
-    .eq('session_token', session_token)
-    .gt('expires_at', new Date().toISOString())
-    .single()
-
-  if (!reservation) {
+  if (reservationSnap.empty) {
     return NextResponse.json(
       { error: 'Slot reservation expired or invalid. Please select the slot again.' },
       { status: 409 }
@@ -34,73 +32,88 @@ export async function POST(request: NextRequest) {
   }
 
   // 2. Load booking link
-  const { data: link } = await supabase
-    .from('booking_links')
-    .select('*')
-    .eq('id', reservation.booking_link_id)
-    .single()
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('slug', '==', slug)
+    .limit(1)
+    .get()
 
-  if (!link) {
+  if (linksSnap.empty) {
     return NextResponse.json({ error: 'Booking link not found' }, { status: 404 })
   }
 
-  // 3. Load host info
-  const { data: host } = await supabase
-    .from('hosts')
-    .select('*')
-    .eq('id', host_id)
-    .single()
+  const link = { id: linksSnap.docs[0].id, ...linksSnap.docs[0].data() } as any
 
-  if (!host) {
+  // 3. Load host
+  const hostSnap = await adminDb.collection('hosts').doc(host_id).get()
+  if (!hostSnap.exists) {
     return NextResponse.json({ error: 'Host not found' }, { status: 404 })
   }
+  const host = hostSnap.data() as any
 
-  // 4. Load host's primary calendar for event creation
-  const { data: hostCalendar } = await supabase
-    .from('connected_calendars')
-    .select('*')
-    .eq('host_id', host_id)
-    .eq('is_active', true)
-    .order('created_at', { ascending: true })
-    .limit(1)
-    .single()
-
+  // 4. Check for double-booking
   const startTime = parseISO(start_time)
-  const endTime = addMinutes(startTime, link.duration_minutes)
+  const endTime = addMinutes(startTime, link.durationMinutes)
 
-  // 5. Create booking in DB (unique constraint prevents double-booking)
-  const { data: booking, error: bookingError } = await supabase
-    .from('bookings')
-    .insert({
-      booking_link_id: link.id,
-      host_id,
-      customer_name,
-      customer_email,
-      customer_notes: customer_notes ?? null,
-      start_time: startTime.toISOString(),
-      end_time: endTime.toISOString(),
-      status: 'confirmed',
-    })
-    .select()
-    .single()
+  const existingSnap = await adminDb
+    .collection('bookings')
+    .where('hostId', '==', host_id)
+    .where('startTime', '==', start_time)
+    .where('status', '==', 'confirmed')
+    .limit(1)
+    .get()
 
-  if (bookingError) {
-    if (bookingError.code === '23505') {
-      return NextResponse.json(
-        { error: 'This slot was just booked by someone else. Please choose another time.' },
-        { status: 409 }
-      )
-    }
-    return NextResponse.json({ error: 'Failed to create booking' }, { status: 500 })
+  if (!existingSnap.empty) {
+    return NextResponse.json(
+      { error: 'This slot was just booked by someone else. Please choose another time.' },
+      { status: 409 }
+    )
   }
 
-  // 6. Create Google Calendar event
-  let googleEventId: string | null = null
-  if (hostCalendar) {
-    googleEventId = await createCalendarEvent(hostCalendar, {
+  // 5. Create booking document
+  const bookingRef = adminDb.collection('bookings').doc()
+  await bookingRef.set({
+    bookingLinkId: link.id,
+    hostId: host_id,
+    customerName: customer_name,
+    customerEmail: customer_email,
+    customerNotes: customer_notes ?? null,
+    startTime: startTime.toISOString(),
+    endTime: endTime.toISOString(),
+    googleEventId: null,
+    status: 'confirmed',
+    createdAt: new Date().toISOString(),
+  })
+
+  // 6. Load host calendar and create Google Calendar event
+  const calsSnap = await adminDb
+    .collection('hosts')
+    .doc(host_id)
+    .collection('connected_calendars')
+    .where('isActive', '==', true)
+    .limit(1)
+    .get()
+
+  if (!calsSnap.empty) {
+    const calData = calsSnap.docs[0].data()
+    const hostCalendar = {
+      id: calsSnap.docs[0].id,
+      host_id,
+      account_email: calData.accountEmail,
+      calendar_id: calData.calendarId,
+      access_token: calData.accessToken,
+      refresh_token: calData.refreshToken,
+      expires_at: calData.expiresAt,
+      is_active: calData.isActive,
+      created_at: calData.createdAt,
+      provider: calData.provider,
+      label: calData.label,
+    }
+
+    const googleEventId = await createCalendarEvent(hostCalendar, {
       title: `${link.title} — ${customer_name}`,
       description: customer_notes
-        ? `Meeting booked via CalRoute\n\nNotes from customer: ${customer_notes}`
+        ? `Meeting booked via CalRoute\n\nNotes: ${customer_notes}`
         : 'Meeting booked via CalRoute',
       startTime,
       endTime,
@@ -110,76 +123,56 @@ export async function POST(request: NextRequest) {
     })
 
     if (googleEventId) {
-      await supabase
-        .from('bookings')
-        .update({ google_event_id: googleEventId })
-        .eq('id', booking.id)
+      await bookingRef.update({ googleEventId })
     }
   }
 
-  // 7. Update last_booked_at for round-robin tracking
-  await supabase
-    .from('booking_link_hosts')
-    .update({ last_booked_at: new Date().toISOString() })
-    .eq('booking_link_id', link.id)
-    .eq('host_id', host_id)
+  // 7. Update last_booked_at for round-robin
+  await adminDb
+    .collection('booking_links')
+    .doc(link.id)
+    .collection('hosts')
+    .doc(host_id)
+    .update({ lastBookedAt: new Date().toISOString() })
 
-  // 8. Delete the reservation
-  await supabase
-    .from('slot_reservations')
-    .delete()
-    .eq('id', reservation.id)
+  // 8. Delete reservation
+  await reservationSnap.docs[0].ref.delete()
 
-  // 9. Send confirmation emails
+  // 9. Send emails
   try {
     await Promise.all([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: customer_email,
         subject: `Booking confirmed: ${link.title}`,
-        html: buildCustomerConfirmationEmail({ booking: booking as any, link: link as any, host: host as any }),
+        html: `
+          <h2>Your meeting is confirmed!</h2>
+          <ul>
+            <li><strong>What:</strong> ${link.title}</li>
+            <li><strong>When:</strong> ${startTime.toLocaleString()}</li>
+            <li><strong>With:</strong> ${host.name}</li>
+          </ul>
+          <p>A Google Meet link is in your calendar invite.</p>
+        `,
       }),
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: host.email,
         subject: `New booking: ${customer_name} — ${link.title}`,
-        html: buildHostNotificationEmail({ booking: booking as any, link: link as any, customer_name, customer_email, customer_notes }),
+        html: `
+          <h2>New booking received</h2>
+          <ul>
+            <li><strong>Meeting:</strong> ${link.title}</li>
+            <li><strong>When:</strong> ${startTime.toLocaleString()}</li>
+            <li><strong>Customer:</strong> ${customer_name} (${customer_email})</li>
+            ${customer_notes ? `<li><strong>Notes:</strong> ${customer_notes}</li>` : ''}
+          </ul>
+        `,
       }),
     ])
   } catch (emailError) {
-    console.error('Failed to send confirmation emails:', emailError)
-    // Don't fail the booking if email fails
+    console.error('Email failed:', emailError)
   }
 
-  return NextResponse.json({ booking_id: booking.id, status: 'confirmed' })
-}
-
-function buildCustomerConfirmationEmail(params: any): string {
-  const { booking, link, host } = params
-  const start = new Date(booking.start_time)
-  return `
-    <h2>Your meeting is confirmed!</h2>
-    <p>You have a <strong>${link.duration_minutes}-minute</strong> meeting scheduled.</p>
-    <ul>
-      <li><strong>What:</strong> ${link.title}</li>
-      <li><strong>When:</strong> ${start.toLocaleString()}</li>
-      <li><strong>With:</strong> ${host.name}</li>
-    </ul>
-    <p>You'll receive a Google Meet link in your calendar invite.</p>
-    <p>Need to cancel? Reply to this email.</p>
-  `
-}
-
-function buildHostNotificationEmail(params: any): string {
-  const { booking, link, customer_name, customer_email, customer_notes } = params
-  const start = new Date(booking.start_time)
-  return `
-    <h2>New booking received</h2>
-    <ul>
-      <li><strong>Meeting:</strong> ${link.title}</li>
-      <li><strong>When:</strong> ${start.toLocaleString()}</li>
-      <li><strong>Customer:</strong> ${customer_name} (${customer_email})</li>
-      ${customer_notes ? `<li><strong>Notes:</strong> ${customer_notes}</li>` : ''}
-    </ul>
-  `
+  return NextResponse.json({ booking_id: bookingRef.id, status: 'confirmed' })
 }

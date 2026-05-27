@@ -1,89 +1,50 @@
-export type Json = string | number | boolean | null | { [key: string]: Json } | Json[]
+// Firebase / Firestore document types for CalRoute
 
-export interface Database {
-  public: {
-    Tables: {
-      hosts: {
-        Row: {
-          id: string
-          user_id: string
-          email: string
-          name: string
-          avatar_url: string | null
-          timezone: string
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['hosts']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['hosts']['Insert']>
-      }
-      connected_calendars: {
-        Row: ConnectedCalendar
-        Insert: Omit<ConnectedCalendar, 'id' | 'created_at'>
-        Update: Partial<Omit<ConnectedCalendar, 'id'>>
-      }
-      host_availability: {
-        Row: {
-          id: string
-          host_id: string
-          day_of_week: number
-          start_time: string
-          end_time: string
-        }
-        Insert: Omit<Database['public']['Tables']['host_availability']['Row'], 'id'>
-        Update: Partial<Omit<Database['public']['Tables']['host_availability']['Row'], 'id'>>
-      }
-      booking_links: {
-        Row: BookingLink
-        Insert: Omit<BookingLink, 'id' | 'created_at'>
-        Update: Partial<Omit<BookingLink, 'id'>>
-      }
-      booking_link_hosts: {
-        Row: {
-          booking_link_id: string
-          host_id: string
-          priority: number
-          last_booked_at: string | null
-        }
-        Insert: Database['public']['Tables']['booking_link_hosts']['Row']
-        Update: Partial<Database['public']['Tables']['booking_link_hosts']['Row']>
-      }
-      bookings: {
-        Row: Booking
-        Insert: Omit<Booking, 'id' | 'created_at'>
-        Update: Partial<Omit<Booking, 'id'>>
-      }
-      slot_reservations: {
-        Row: {
-          id: string
-          booking_link_id: string
-          host_id: string
-          start_time: string
-          end_time: string
-          session_token: string
-          expires_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['slot_reservations']['Row'], 'id' | 'expires_at'>
-        Update: Partial<Database['public']['Tables']['slot_reservations']['Row']>
-      }
-    }
-  }
+export interface Host {
+  uid: string
+  email: string
+  name: string
+  avatarUrl: string | null
+  timezone: string
+  createdAt: string
 }
 
 export interface ConnectedCalendar {
-  id: string
-  host_id: string
+  id: string           // Firestore doc ID
   provider: string
-  account_email: string
-  calendar_id: string
+  accountEmail: string
+  calendarId: string
   label: string | null
-  access_token: string
-  refresh_token: string
-  expires_at: string
-  is_active: boolean
-  created_at: string
+  accessToken: string
+  refreshToken: string
+  expiresAt: string
+  isActive: boolean
+  createdAt: string
+}
+
+export interface HostAvailability {
+  dayOfWeek: number    // 0=Sun, 6=Sat
+  startTime: string    // "09:00"
+  endTime: string      // "17:00"
 }
 
 export interface BookingLink {
+  id: string
+  ownerId: string
+  slug: string
+  title: string
+  description: string | null
+  durationMinutes: number
+  bufferBeforeMinutes: number
+  bufferAfterMinutes: number
+  routingStrategy: 'priority' | 'round_robin'
+  isActive: boolean
+  maxDaysAhead: number
+  createdAt: string
+}
+
+// Shape expected by BookingWidget (snake_case for backwards compat)
+export interface BookingLinkWidget {
   id: string
   owner_id: string
   slug: string
@@ -98,18 +59,24 @@ export interface BookingLink {
   created_at: string
 }
 
+export interface BookingLinkHost {
+  hostId: string
+  priority: number
+  lastBookedAt: string | null
+}
+
 export interface Booking {
   id: string
-  booking_link_id: string
-  host_id: string
-  customer_name: string
-  customer_email: string
-  customer_notes: string | null
-  start_time: string
-  end_time: string
-  google_event_id: string | null
+  bookingLinkId: string
+  hostId: string
+  customerName: string
+  customerEmail: string
+  customerNotes: string | null
+  startTime: string
+  endTime: string
+  googleEventId: string | null
   status: 'confirmed' | 'cancelled' | 'rescheduled'
-  cancelled_at: string | null
-  cancellation_reason: string | null
-  created_at: string
+  cancelledAt: string | null
+  cancellationReason: string | null
+  createdAt: string
 }
