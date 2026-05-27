@@ -4,14 +4,14 @@ Multi-calendar scheduling engine — connect multiple Google Calendars and share
 
 ## Features
 
-- Multi-host scheduling — one link, multiple available hosts
-- Smart routing — priority-based or round-robin host assignment
-- Multiple calendars per host — merge work + personal calendars for availability
-- Real-time availability — Google Calendar freeBusy API queries
-- Race condition protection — 5-minute slot reservations prevent double-bookings
-- Timezone-aware — customer timezone auto-detection
-- Confirmation emails — via Resend
-- Embeddable widget — drop an iframe on any page
+- 🗓 **Multi-host scheduling** — one link, multiple available hosts
+- 🔄 **Smart routing** — priority-based or round-robin host assignment
+- 📅 **Multiple calendars per host** — merge work + personal calendars for availability
+- ⚡ **Real-time availability** — Google Calendar freeBusy API queries
+- 🔒 **Race condition protection** — 5-minute slot reservations prevent double-bookings
+- 🌍 **Timezone-aware** — customer timezone auto-detection
+- 📧 **Confirmation emails** — via Resend
+- 🔗 **Embeddable widget** — drop an iframe on any page
 
 ## Tech Stack
 
@@ -19,7 +19,7 @@ Multi-calendar scheduling engine — connect multiple Google Calendars and share
 - **Database/Auth**: Supabase (PostgreSQL + Row Level Security)
 - **Calendar**: Google Calendar API (freeBusy + Events)
 - **Emails**: Resend
-- **Deploy**: Vercel
+- **Deploy**: Netlify (free tier)
 
 ## Setup
 
@@ -45,10 +45,13 @@ cp .env.example .env.local
 
 **Google OAuth**:
 - Go to [console.cloud.google.com](https://console.cloud.google.com)
-- Create a project, enable Google Calendar API + Google OAuth
+- Create a project → Enable Google Calendar API + Google OAuth
 - Create OAuth 2.0 credentials (Web application)
-- Add `http://localhost:3000/api/auth/callback` to authorized redirect URIs
-- Also add `http://localhost:3000/api/auth/google/callback` for calendar connections
+- Add these authorized redirect URIs:
+  - `http://localhost:3000/api/auth/callback` (local dev)
+  - `http://localhost:3000/api/auth/google/callback` (local dev)
+  - `https://your-site.netlify.app/api/auth/callback` (production)
+  - `https://your-site.netlify.app/api/auth/google/callback` (production)
 - Copy Client ID and Secret
 
 **Resend**: Create account at [resend.com](https://resend.com), create an API key
@@ -60,38 +63,81 @@ Paste the contents of `supabase/schema.sql` into your Supabase SQL editor and ru
 Also configure Supabase Auth:
 - Go to Auth → Providers → Enable Google
 - Add your Google Client ID and Secret
+- Add `https://your-site.netlify.app/api/auth/callback` to the allowed redirect URLs
 
 ### 4. Run locally
 
-First, run the development server:
-
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```
+src/
+├── app/
+│   ├── api/
+│   │   ├── auth/          # Supabase OAuth + Google Calendar OAuth
+│   │   ├── availability/  # Slot computation endpoint
+│   │   ├── bookings/      # Booking creation + emails
+│   │   └── slots/reserve/ # Slot reservation (race condition protection)
+│   ├── book/[slug]/       # Customer-facing booking page
+│   ├── embed/[slug]/      # iFrame embed version
+│   ├── dashboard/         # Host dashboard
+│   └── login/             # Auth page
+├── components/
+│   └── booking/
+│       └── BookingWidget.tsx  # Main booking UI (3-step flow)
+├── lib/
+│   ├── google/calendar.ts     # Google Calendar API + OAuth helpers
+│   ├── scheduling/engine.ts   # Core availability computation
+│   └── supabase/              # Client, server, middleware
+└── types/
+    └── database.ts            # TypeScript types for all DB tables
+```
 
-## Learn More
+## Embedding
 
-To learn more about Next.js, take a look at the following resources:
+Add this iframe anywhere:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```html
+<iframe
+  src="https://your-site.netlify.app/embed/your-link-slug"
+  width="100%"
+  height="600px"
+  frameborder="0"
+  style="border-radius: 16px;"
+></iframe>
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy to Netlify (free)
 
-## Deploy on Vercel
+### Option A — GitHub (recommended, auto-deploys)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Push this repo to GitHub
+2. Go to [netlify.com](https://netlify.com) → **Add new site → Import from Git**
+3. Select your repo
+4. Build settings are auto-detected from `netlify.toml`
+5. Go to **Site settings → Environment variables** and add all vars from `.env.local`
+6. Click **Deploy site**
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Every push to `main` triggers an automatic redeploy.
+
+### Option B — Netlify CLI
+
+```bash
+npm install -g netlify-cli
+netlify login
+netlify init
+netlify env:import .env.local
+netlify deploy --prod
+```
+
+### After deploying
+
+Update these with your real Netlify URL:
+- `NEXT_PUBLIC_APP_URL` in Netlify env vars → `https://your-site.netlify.app`
+- Google Cloud Console → OAuth redirect URIs → add your Netlify URLs
+- Supabase → Auth → URL Configuration → add your Netlify URL
