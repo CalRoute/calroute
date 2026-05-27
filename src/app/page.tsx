@@ -2,10 +2,10 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <main className="min-h-screen bg-white text-gray-900 antialiased">
+    <main className="min-h-screen bg-[#fafafa] text-gray-900 antialiased">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#fafafa]/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
           <span className="text-lg font-semibold tracking-tight">CalRoute</span>
           <div className="flex items-center gap-6">
@@ -25,14 +25,14 @@ export default function HomePage() {
       {/* Hero */}
       <section className="pt-40 pb-28 px-6 text-center">
         <div className="max-w-4xl mx-auto">
-          <div className="inline-flex items-center gap-2 bg-blue-50 text-blue-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
-            <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+          <div className="inline-flex items-center gap-2 bg-violet-50 text-violet-700 text-xs font-medium px-3 py-1.5 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-violet-500 rounded-full animate-pulse" />
             Free to get started · No credit card required
           </div>
           <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.08] mb-6">
             Scheduling that routes
             <br />
-            <span className="text-blue-600">to the right person</span>
+            <span className="bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">to the right person</span>
           </h1>
           <p className="text-xl text-gray-500 max-w-2xl mx-auto mb-10 leading-relaxed">
             Share one booking link. CalRoute checks every team member&apos;s calendar in real time and routes the meeting to whoever is actually free — no back-and-forth, no double-bookings.
@@ -40,7 +40,7 @@ export default function HomePage() {
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/login"
-              className="bg-blue-600 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-200"
+              className="bg-gradient-to-r from-violet-600 to-indigo-600 text-white px-8 py-3.5 rounded-xl text-base font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-violet-200"
             >
               Start for free →
             </Link>
@@ -72,7 +72,7 @@ export default function HomePage() {
                     ))}
                     {Array.from({length: 30}, (_, i) => i + 1).map(d => (
                       <div key={d} className={`text-center text-xs py-2 rounded-lg cursor-pointer transition-colors ${
-                        d === 12 ? 'bg-blue-600 text-white font-semibold' :
+                        d === 12 ? 'bg-violet-600 text-white font-semibold' :
                         [3,4,5,9,10,11,16,17].includes(d) ? 'text-gray-300' :
                         'text-gray-700 hover:bg-gray-100'
                       }`}>{d}</div>
@@ -84,7 +84,7 @@ export default function HomePage() {
                   <div className="space-y-2">
                     {['9:00 AM','9:30 AM','10:00 AM','11:00 AM','2:00 PM','3:30 PM'].map(t => (
                       <div key={t} className={`py-2 px-3 rounded-lg border text-sm font-medium text-center cursor-pointer transition-colors ${
-                        t === '10:00 AM' ? 'border-blue-500 bg-blue-50 text-blue-700' : 'border-gray-200 text-gray-700 hover:border-blue-300'
+                        t === '10:00 AM' ? 'border-violet-500 bg-violet-50 text-violet-700' : 'border-gray-200 text-gray-700 hover:border-violet-300'
                       }`}>{t}</div>
                     ))}
                   </div>
@@ -154,10 +154,10 @@ export default function HomePage() {
                 desc: 'Drop a single iframe tag into any webpage and your booking widget appears — fully functional, no redirect needed.',
               },
             ].map(f => (
-              <div key={f.title} className="bg-gray-50 rounded-2xl p-6 hover:bg-blue-50 transition-colors group">
+              <div key={f.title} className="bg-gray-50 rounded-2xl p-6 hover:bg-violet-50 transition-colors group">
                 <div className="text-3xl mb-4">{f.icon}</div>
-                <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-blue-900">{f.title}</h3>
-                <p className="text-sm text-gray-500 leading-relaxed group-hover:text-blue-800">{f.desc}</p>
+                <h3 className="font-semibold text-gray-900 mb-2 group-hover:text-violet-900">{f.title}</h3>
+                <p className="text-sm text-gray-500 leading-relaxed group-hover:text-violet-700">{f.desc}</p>
               </div>
             ))}
           </div>
@@ -214,8 +214,8 @@ export default function HomePage() {
                 ))}
               </ul>
             </div>
-            <div className="rounded-2xl border-2 border-blue-500 bg-blue-50 p-6">
-              <p className="font-semibold text-blue-600 mb-4 text-sm uppercase tracking-wider">CalRoute</p>
+            <div className="rounded-2xl border-2 border-violet-500 bg-violet-50 p-6">
+              <p className="font-semibold text-violet-600 mb-4 text-sm uppercase tracking-wider">CalRoute</p>
               <ul className="space-y-3 text-sm text-gray-700">
                 {[
                   'Up to 5 calendars merged per person',
@@ -225,7 +225,7 @@ export default function HomePage() {
                   'Native embeddable widget',
                 ].map(i => (
                   <li key={i} className="flex items-center gap-3">
-                    <span className="text-blue-500">✓</span> {i}
+                    <span className="text-violet-500">✓</span> {i}
                   </li>
                 ))}
               </ul>
@@ -235,7 +235,7 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-28 px-6 bg-gray-900 text-white text-center">
+      <section className="py-28 px-6 bg-gradient-to-br from-violet-900 via-indigo-900 to-gray-900 text-white text-center">
         <div className="max-w-2xl mx-auto">
           <h2 className="text-4xl font-bold tracking-tight mb-4">Ready to stop the calendar chaos?</h2>
           <p className="text-gray-400 text-lg mb-10">Free to start. No credit card. Takes 2 minutes to set up.</p>
