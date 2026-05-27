@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { getAuthUrl } from '@/lib/google/calendar'

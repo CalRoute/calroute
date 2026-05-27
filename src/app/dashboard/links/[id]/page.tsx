@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 import { redirect } from 'next/navigation'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'

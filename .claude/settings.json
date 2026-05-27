@@ -5,10 +5,15 @@
       "Bash(npx tsc *)",
       "Bash(git add *)",
       "Bash(git commit -m 'fix: resolve camelCase/snake_case type mismatches across codebase *)",
-      "Bash(git push *)"
+      "Bash(git push *)",
+      "Bash(grep -q force-dynamic /Users/jo/GIT/CalRoute/__TRACKED_VAR__)",
+      "Bash(sed -i '' '1s/^/export const dynamic = '\\\\''force-dynamic'\\\\''\\\\n\\\\n/' /Users/jo/GIT/CalRoute/__TRACKED_VAR__)",
+      "Bash(rm -f \"/Users/jo/GIT/CalRoute/src/app/book/\\\\[slug\\\\]/page.tsx\" \"/Users/jo/GIT/CalRoute/src/app/embed/\\\\[slug\\\\]/page.tsx\" *)",
+      "Bash(git commit -m 'fix: add force-dynamic to all Firebase Admin routes and pages *)"
     ],
     "additionalDirectories": [
-      "/Users/jo/GIT/CalRoute/src/app/dashboard/links"
+      "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
+      "/Users/jo/GIT/CalRoute/src/app/book/\\[slug\\]"
     ]
   }
 }

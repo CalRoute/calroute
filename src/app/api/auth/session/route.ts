@@ -1,3 +1,5 @@
+export const dynamic = 'force-dynamic'
+
 // Called from client after Firebase sign-in to set a server-side cookie
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
