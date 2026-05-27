@@ -9,7 +9,9 @@
       "Bash(grep -q force-dynamic /Users/jo/GIT/CalRoute/__TRACKED_VAR__)",
       "Bash(sed -i '' '1s/^/export const dynamic = '\\\\''force-dynamic'\\\\''\\\\n\\\\n/' /Users/jo/GIT/CalRoute/__TRACKED_VAR__)",
       "Bash(rm -f \"/Users/jo/GIT/CalRoute/src/app/book/\\\\[slug\\\\]/page.tsx\" \"/Users/jo/GIT/CalRoute/src/app/embed/\\\\[slug\\\\]/page.tsx\" *)",
-      "Bash(git commit -m 'fix: add force-dynamic to all Firebase Admin routes and pages *)"
+      "Bash(git commit -m 'fix: add force-dynamic to all Firebase Admin routes and pages *)",
+      "Bash(npx firebase-tools *)",
+      "Bash(git commit *)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
