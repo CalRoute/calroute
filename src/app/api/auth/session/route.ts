@@ -36,11 +36,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid token', step: 'firestore', detail: String(e) }, { status: 401 })
     }
 
+    // Create a long-lived session cookie (14 days) using Firebase Admin
+    let sessionCookie: string
+    try {
+      const expiresIn = 60 * 60 * 24 * 14 * 1000 // 14 days in ms
+      sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
+    } catch (e) {
+      console.error('[session] createSessionCookie failed:', e)
+      return NextResponse.json({ error: 'Invalid token', step: 'createSessionCookie', detail: String(e) }, { status: 401 })
+    }
+
     const response = NextResponse.json({ status: 'ok' })
-    response.cookies.set('firebase-token', idToken, {
+    response.cookies.set('firebase-session', sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60,
+      maxAge: 60 * 60 * 24 * 14, // 14 days
       path: '/',
       sameSite: 'lax',
     })
