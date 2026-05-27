@@ -8,35 +8,46 @@ export async function POST(request: NextRequest) {
   const { idToken } = await request.json()
 
   try {
-    const decoded = await adminAuth.verifyIdToken(idToken)
+    // Step 1: verify the token
+    let decoded: any
+    try {
+      decoded = await adminAuth.verifyIdToken(idToken)
+    } catch (e) {
+      console.error('[session] verifyIdToken failed:', e)
+      return NextResponse.json({ error: 'Invalid token', step: 'verifyIdToken', detail: String(e) }, { status: 401 })
+    }
 
-    // Ensure host document exists in Firestore
-    const hostRef = adminDb.collection('hosts').doc(decoded.uid)
-    const hostSnap = await hostRef.get()
-
-    if (!hostSnap.exists) {
-      await hostRef.set({
-        uid: decoded.uid,
-        email: decoded.email ?? '',
-        name: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
-        avatarUrl: decoded.picture ?? null,
-        timezone: 'UTC',
-        createdAt: new Date().toISOString(),
-      })
+    // Step 2: read/write Firestore
+    try {
+      const hostRef = adminDb.collection('hosts').doc(decoded.uid)
+      const hostSnap = await hostRef.get()
+      if (!hostSnap.exists) {
+        await hostRef.set({
+          uid: decoded.uid,
+          email: decoded.email ?? '',
+          name: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
+          avatarUrl: decoded.picture ?? null,
+          timezone: 'UTC',
+          createdAt: new Date().toISOString(),
+        })
+      }
+    } catch (e) {
+      console.error('[session] Firestore failed:', e)
+      return NextResponse.json({ error: 'Invalid token', step: 'firestore', detail: String(e) }, { status: 401 })
     }
 
     const response = NextResponse.json({ status: 'ok' })
     response.cookies.set('firebase-token', idToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60, // 1 hour
+      maxAge: 60 * 60,
       path: '/',
       sameSite: 'lax',
     })
     return response
   } catch (error) {
-    console.error('[session] verifyIdToken failed:', error)
-    return NextResponse.json({ error: 'Invalid token', detail: String(error) }, { status: 401 })
+    console.error('[session] unexpected error:', error)
+    return NextResponse.json({ error: 'Invalid token', step: 'unknown', detail: String(error) }, { status: 401 })
   }
 }
 
