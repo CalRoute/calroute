@@ -32,16 +32,16 @@ export default async function SettingsPage({
   })) as ConnectedCalendar[]
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">
+    <main className="min-h-screen bg-[#F7F4EF]">
+      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
+        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
           ← Dashboard
         </Link>
         <span className="text-gray-300">/</span>
         <span className="text-sm text-gray-700 font-medium">Settings</span>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-8 space-y-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
 
         {params.success === 'calendar_connected' && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
@@ -60,18 +60,27 @@ export default async function SettingsPage({
         )}
 
         {/* Profile */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
           <h2 className="font-semibold text-gray-900">Profile</h2>
-          <div className="text-sm text-gray-600 space-y-1">
-            <p><span className="font-medium text-gray-700">Name:</span> {host?.name ?? '—'}</p>
-            <p><span className="font-medium text-gray-700">Email:</span> {user.email}</p>
-            <p><span className="font-medium text-gray-700">Timezone:</span> {host?.timezone ?? '—'}</p>
+          <div className="text-sm text-gray-600 space-y-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Name</span>
+              <span>{host?.name ?? '—'}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Email</span>
+              <span className="truncate">{user.email}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Timezone</span>
+              <span>{host?.timezone ?? '—'}</span>
+            </div>
           </div>
         </div>
 
         {/* Connected calendars */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-          <div className="flex items-center justify-between">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <div>
               <h2 className="font-semibold text-gray-900">Connected calendars</h2>
               <p className="text-sm text-gray-500 mt-0.5">
@@ -80,7 +89,7 @@ export default async function SettingsPage({
             </div>
             <a
               href="/api/auth/google"
-              className="bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-blue-700 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 bg-[#0D7377] text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-[#0a5f63] transition-colors whitespace-nowrap self-start sm:self-auto"
             >
               + Connect Google Calendar
             </a>
@@ -98,19 +107,19 @@ export default async function SettingsPage({
               {calendars.map(cal => (
                 <div
                   key={cal.id}
-                  className="flex items-center justify-between p-4 border border-gray-200 rounded-xl"
+                  className="flex items-center justify-between gap-3 p-4 border border-gray-200 rounded-xl"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center text-sm">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
+                    <div className="w-8 h-8 bg-[#0D7377]/10 rounded-full flex items-center justify-center text-sm flex-shrink-0">
                       📅
                     </div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{cal.accountEmail}</p>
-                      <p className="text-xs text-gray-500">{cal.label ?? cal.calendarId} · Google Calendar</p>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{cal.accountEmail}</p>
+                      <p className="text-xs text-gray-500 truncate">{cal.label ?? cal.calendarId}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${cal.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <div className="flex items-center gap-2 flex-shrink-0">
+                    <span className={`text-xs px-2 py-0.5 rounded-full hidden sm:inline-flex ${cal.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {cal.isActive ? 'Active' : 'Inactive'}
                     </span>
                     <DisconnectCalendarButton calendarId={cal.id} hostId={user.uid} />

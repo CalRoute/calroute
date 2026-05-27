@@ -30,7 +30,7 @@ export default function HomePage() {
             Free to start · No credit card
           </div>
 
-          <h1 className="text-6xl sm:text-7xl lg:text-[88px] font-bold tracking-[-0.03em] leading-[0.95] mb-8">
+          <h1 className="text-4xl sm:text-6xl lg:text-[80px] font-bold tracking-[-0.03em] leading-[0.95] mb-8">
             Scheduling that finds
             <br />
             <em className="not-italic text-[#0D7377]">the right person</em>
@@ -59,34 +59,52 @@ export default function HomePage() {
         </div>
 
         {/* Booking widget mockup */}
-        <div className="mt-20 w-full max-w-2xl mx-auto">
+        <div className="mt-14 sm:mt-20 w-full max-w-2xl mx-auto">
           <div className="rounded-2xl border border-[#1a1a1a]/[0.08] bg-white shadow-xl shadow-[#1a1a1a]/[0.06] overflow-hidden">
-            <div className="flex items-center gap-1.5 px-5 py-3.5 border-b border-[#1a1a1a]/[0.06] bg-[#f9f7f3]">
+            <div className="flex items-center gap-1.5 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-[#1a1a1a]/[0.06] bg-[#f9f7f3]">
               <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
               <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
               <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
               <span className="ml-3 text-[11px] text-[#1a1a1a]/30 font-mono">calroute.me/book/sales-call</span>
             </div>
-            <div className="p-7">
-              <div className="flex gap-8">
+            <div className="p-5 sm:p-7">
+              {/* Mobile: stacked layout. Desktop: side by side */}
+              <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
+                {/* Date strip */}
                 <div className="flex-1">
                   <p className="text-[10px] font-semibold text-[#1a1a1a]/30 uppercase tracking-widest mb-3">Select a date</p>
-                  <div className="grid grid-cols-7 gap-1 mb-2">
-                    {['M','T','W','T','F','S','S'].map((d, i) => (
-                      <div key={i} className="text-center text-[10px] text-[#1a1a1a]/30 py-1">{d}</div>
-                    ))}
-                    {Array.from({length: 30}, (_, i) => i + 1).map(d => (
-                      <div key={d} className={`text-center text-[11px] py-2 rounded-lg cursor-pointer transition-colors ${
-                        d === 12 ? 'bg-[#0D7377] text-white font-semibold' :
-                        [1,7,8,14,15,21,22,28,29,30].includes(d) ? 'text-[#1a1a1a]/20' :
-                        'text-[#1a1a1a]/60 hover:bg-[#0D7377]/8'
-                      }`}>{d}</div>
+                  {/* Mobile: horizontal scroll */}
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 sm:hidden">
+                    {[8,9,10,11,12,13,14,15].map(d => (
+                      <div key={d} className={`flex-shrink-0 flex flex-col items-center px-2.5 py-2 rounded-xl text-[10px] min-w-[40px] ${
+                        d === 12 ? 'bg-[#0D7377] text-white' : 'bg-[#f9f7f3] text-[#1a1a1a]/60'
+                      }`}>
+                        <span className="uppercase">{['','','','','','W','T','F','S'][d] ?? 'M'}</span>
+                        <span className="font-bold text-sm mt-0.5">{d}</span>
+                      </div>
                     ))}
                   </div>
+                  {/* Desktop: calendar grid */}
+                  <div className="hidden sm:block">
+                    <div className="grid grid-cols-7 gap-1 mb-2">
+                      {['M','T','W','T','F','S','S'].map((d, i) => (
+                        <div key={i} className="text-center text-[10px] text-[#1a1a1a]/30 py-1">{d}</div>
+                      ))}
+                      {Array.from({length: 30}, (_, i) => i + 1).map(d => (
+                        <div key={d} className={`text-center text-[11px] py-2 rounded-lg cursor-pointer transition-colors ${
+                          d === 12 ? 'bg-[#0D7377] text-white font-semibold' :
+                          [1,7,8,14,15,21,22,28,29,30].includes(d) ? 'text-[#1a1a1a]/20' :
+                          'text-[#1a1a1a]/60 hover:bg-[#0D7377]/8'
+                        }`}>{d}</div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="w-40 flex-shrink-0">
+
+                {/* Time slots */}
+                <div className="sm:w-40 sm:flex-shrink-0">
                   <p className="text-[10px] font-semibold text-[#1a1a1a]/30 uppercase tracking-widest mb-3">Available</p>
-                  <div className="space-y-1.5">
+                  <div className="grid grid-cols-2 sm:grid-cols-1 gap-1.5">
                     {[
                       { t: '9:00 AM', host: 'Alex' },
                       { t: '10:00 AM', host: 'Beth' },
@@ -97,7 +115,7 @@ export default function HomePage() {
                       <div key={i} className={`flex items-center justify-between py-2 px-3 rounded-lg border text-[11px] cursor-pointer transition-colors ${
                         i === 1
                           ? 'border-[#0D7377]/40 bg-[#0D7377]/8 text-[#0D7377] font-medium'
-                          : 'border-[#1a1a1a]/08 text-[#1a1a1a]/50 hover:border-[#0D7377]/20 hover:text-[#1a1a1a]/70'
+                          : 'border-[#1a1a1a]/08 text-[#1a1a1a]/50'
                       }`}>
                         <span>{s.t}</span>
                         <span className="text-[9px] bg-[#1a1a1a]/05 px-1.5 py-0.5 rounded text-[#1a1a1a]/30">{s.host}</span>
@@ -116,8 +134,8 @@ export default function HomePage() {
       </section>
 
       {/* Stats */}
-      <section className="py-16 border-y border-[#1a1a1a]/[0.06] bg-white/50">
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-3 gap-8 text-center">
+      <section className="py-12 sm:py-16 border-y border-[#1a1a1a]/[0.06] bg-white/50">
+        <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
           {[
             { n: '< 2 min', label: 'to set up your first link' },
             { n: '5×', label: 'calendars merged per person' },
@@ -132,10 +150,10 @@ export default function HomePage() {
       </section>
 
       {/* Features */}
-      <section id="features" className="py-32 px-6">
+      <section id="features" className="py-20 sm:py-32 px-6">
         <div className="max-w-5xl mx-auto">
           <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">Features</p>
-          <h2 className="text-4xl font-bold tracking-tight mb-16 max-w-lg leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-10 sm:mb-16 max-w-lg leading-tight">
             Everything a team needs to stop playing calendar ping-pong
           </h2>
 
@@ -159,10 +177,10 @@ export default function HomePage() {
       </section>
 
       {/* How it works */}
-      <section id="how" className="py-32 px-6 bg-white/60 border-t border-[#1a1a1a]/[0.06]">
+      <section id="how" className="py-20 sm:py-32 px-6 bg-white/60 border-t border-[#1a1a1a]/[0.06]">
         <div className="max-w-3xl mx-auto">
           <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">How it works</p>
-          <h2 className="text-4xl font-bold tracking-tight mb-16 leading-tight">Up and running in under 2 minutes</h2>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-10 sm:mb-16 leading-tight">Up and running in under 2 minutes</h2>
 
           <div className="space-y-5">
             {[
@@ -184,29 +202,31 @@ export default function HomePage() {
       </section>
 
       {/* Vs */}
-      <section className="py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
+      <section className="py-20 sm:py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
         <div className="max-w-3xl mx-auto">
           <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">Why CalRoute</p>
-          <h2 className="text-4xl font-bold tracking-tight mb-3">Calendly is for individuals.</h2>
-          <p className="text-[#1a1a1a]/40 mb-12">We built what they left unfinished.</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Calendly is for individuals.</h2>
+          <p className="text-[#1a1a1a]/40 mb-8 sm:mb-12">We built what they left unfinished.</p>
 
           <div className="rounded-2xl border border-[#1a1a1a]/[0.06] overflow-hidden bg-white">
             <div className="grid grid-cols-2 border-b border-[#1a1a1a]/[0.06]">
-              <div className="px-6 py-3 text-xs font-semibold text-[#1a1a1a]/30 uppercase tracking-wider border-r border-[#1a1a1a]/[0.06]">Others</div>
-              <div className="px-6 py-3 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
+              <div className="px-4 sm:px-6 py-3 text-xs font-semibold text-[#1a1a1a]/30 uppercase tracking-wider border-r border-[#1a1a1a]/[0.06]">Others</div>
+              <div className="px-4 sm:px-6 py-3 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
             </div>
             {[
-              { them: 'One calendar per person', us: 'Up to 5 calendars merged per person' },
-              { them: 'Manual round-robin setup', us: 'Automatic routing, configured in seconds' },
-              { them: 'Per-seat pricing adds up fast', us: 'Flat pricing, your whole team included' },
+              { them: 'One calendar per person', us: 'Up to 5 calendars merged' },
+              { them: 'Manual round-robin setup', us: 'Automatic routing, in seconds' },
+              { them: 'Per-seat pricing adds up fast', us: 'Flat pricing, whole team included' },
               { them: 'Redirect-only booking pages', us: 'Native embeddable iframe widget' },
             ].map((r, i) => (
-              <div key={i} className={`grid grid-cols-2 text-sm ${i < 3 ? 'border-b border-[#1a1a1a]/[0.06]' : ''}`}>
-                <div className="px-6 py-4 text-[#1a1a1a]/35 flex items-center gap-3 border-r border-[#1a1a1a]/[0.06]">
-                  <span className="text-[#1a1a1a]/20">✕</span> {r.them}
+              <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 3 ? 'border-b border-[#1a1a1a]/[0.06]' : ''}`}>
+                <div className="px-4 sm:px-6 py-3 sm:py-4 text-[#1a1a1a]/35 flex items-start sm:items-center gap-2 sm:gap-3 border-r border-[#1a1a1a]/[0.06]">
+                  <span className="text-[#1a1a1a]/20 flex-shrink-0 mt-0.5 sm:mt-0">✕</span>
+                  <span>{r.them}</span>
                 </div>
-                <div className="px-6 py-4 text-[#1a1a1a]/70 flex items-center gap-3 bg-[#0D7377]/[0.02]">
-                  <span className="text-[#0D7377]">✓</span> {r.us}
+                <div className="px-4 sm:px-6 py-3 sm:py-4 text-[#1a1a1a]/70 flex items-start sm:items-center gap-2 sm:gap-3 bg-[#0D7377]/[0.02]">
+                  <span className="text-[#0D7377] flex-shrink-0 mt-0.5 sm:mt-0">✓</span>
+                  <span>{r.us}</span>
                 </div>
               </div>
             ))}
@@ -215,9 +235,9 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-32 px-6 bg-[#0D7377] text-white text-center">
+      <section className="py-20 sm:py-32 px-6 bg-[#0D7377] text-white text-center">
         <div className="max-w-2xl mx-auto">
-          <h2 className="text-5xl font-bold tracking-tight mb-4">Ready to stop the chaos?</h2>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">Ready to stop the chaos?</h2>
           <p className="text-white/60 text-lg mb-10">Free forever for individuals. No credit card required.</p>
           <Link
             href="/login"

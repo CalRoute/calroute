@@ -89,16 +89,16 @@ export default function NewBookingLinkPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">
+    <main className="min-h-screen bg-[#F7F4EF]">
+      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
+        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
           ← Dashboard
         </Link>
         <span className="text-gray-300">/</span>
         <span className="text-sm text-gray-700 font-medium">New booking link</span>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {error && (
@@ -108,7 +108,7 @@ export default function NewBookingLinkPage() {
           )}
 
           {/* Basic info */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
             <h2 className="font-semibold text-gray-900">Basic info</h2>
 
             <div>
@@ -156,7 +156,7 @@ export default function NewBookingLinkPage() {
           </div>
 
           {/* Duration & buffers */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
             <h2 className="font-semibold text-gray-900">Duration & buffers</h2>
 
             <div>
@@ -223,11 +223,11 @@ export default function NewBookingLinkPage() {
           </div>
 
           {/* Routing */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
             <h2 className="font-semibold text-gray-900">Host routing</h2>
             <p className="text-sm text-gray-500">When multiple hosts are free at the same time, who gets assigned?</p>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { value: 'priority', label: 'Priority', desc: 'Always assign the highest-priority host first' },
                 { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly — whoever was booked longest ago goes next' },
@@ -250,45 +250,47 @@ export default function NewBookingLinkPage() {
           </div>
 
           {/* Availability */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
             <h2 className="font-semibold text-gray-900">Your availability</h2>
             <p className="text-sm text-gray-500">Set the hours customers can book with you.</p>
 
             <div className="space-y-2">
               {availability.map((a, i) => (
-                <div key={a.dayOfWeek} className="flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => updateAvailability(i, 'enabled', !a.enabled)}
-                    className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${
-                      a.enabled ? 'bg-blue-600' : 'bg-gray-200'
-                    }`}
-                  >
-                    <span className={`block w-4 h-4 bg-white rounded-full shadow mx-auto transition-transform ${
-                      a.enabled ? 'translate-x-2' : '-translate-x-2'
-                    }`} />
-                  </button>
-                  <span className={`w-8 text-sm font-medium ${a.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                    {DAYS[a.dayOfWeek]}
-                  </span>
+                <div key={a.dayOfWeek} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-1">
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => updateAvailability(i, 'enabled', !a.enabled)}
+                      className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${
+                        a.enabled ? 'bg-[#0D7377]' : 'bg-gray-200'
+                      }`}
+                    >
+                      <span className={`block w-4 h-4 bg-white rounded-full shadow mx-auto transition-transform ${
+                        a.enabled ? 'translate-x-2' : '-translate-x-2'
+                      }`} />
+                    </button>
+                    <span className={`w-10 text-sm font-medium ${a.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
+                      {DAYS[a.dayOfWeek]}
+                    </span>
+                  </div>
                   {a.enabled ? (
-                    <div className="flex items-center gap-2 flex-1">
+                    <div className="flex items-center gap-2 flex-1 pl-13 sm:pl-0">
                       <input
                         type="time"
                         value={a.startTime}
                         onChange={e => updateAvailability(i, 'startTime', e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
                       />
-                      <span className="text-gray-400 text-sm">to</span>
+                      <span className="text-gray-400 text-sm flex-shrink-0">to</span>
                       <input
                         type="time"
                         value={a.endTime}
                         onChange={e => updateAvailability(i, 'endTime', e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
                       />
                     </div>
                   ) : (
-                    <span className="text-sm text-gray-400">Unavailable</span>
+                    <span className="text-sm text-gray-400 pl-13 sm:pl-0">Unavailable</span>
                   )}
                 </div>
               ))}
