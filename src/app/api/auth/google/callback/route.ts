@@ -21,6 +21,19 @@ export async function GET(request: NextRequest) {
     const { tokens } = await client.getToken(code)
     client.setCredentials(tokens)
 
+    // Enforce 5-calendar limit
+    const existingSnap = await adminDb
+      .collection('hosts')
+      .doc(uid)
+      .collection('connected_calendars')
+      .get()
+
+    if (existingSnap.size >= 5) {
+      return NextResponse.redirect(
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?error=calendar_limit`
+      )
+    }
+
     const oauth2 = google.oauth2({ version: 'v2', auth: client })
     const { data: userInfo } = await oauth2.userinfo.get()
 

@@ -4,6 +4,7 @@ import { addMinutes, parseISO } from 'date-fns'
 import crypto from 'crypto'
 
 export async function POST(request: NextRequest) {
+  try {
   const body = await request.json()
   const { booking_link_id, host_id, start_time, duration_minutes } = body
 
@@ -58,4 +59,8 @@ export async function POST(request: NextRequest) {
   await batch.commit()
 
   return NextResponse.json({ session_token: sessionToken, expires_in_seconds: 300 })
+  } catch (err) {
+    console.error('[/api/slots/reserve]', err)
+    return NextResponse.json({ error: 'Internal server error', detail: String(err) }, { status: 500 })
+  }
 }

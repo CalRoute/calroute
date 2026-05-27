@@ -4,13 +4,14 @@ import { adminDb } from '@/lib/firebase/admin'
 import BookingWidget from '@/components/booking/BookingWidget'
 
 interface Props {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export async function generateMetadata({ params }: Props) {
+  const { slug } = await params
   const snap = await adminDb
     .collection('booking_links')
-    .where('slug', '==', params.slug)
+    .where('slug', '==', slug)
     .where('isActive', '==', true)
     .limit(1)
     .get()
@@ -25,9 +26,11 @@ export async function generateMetadata({ params }: Props) {
 }
 
 export default async function BookPage({ params }: Props) {
+  const { slug } = await params
+
   const snap = await adminDb
     .collection('booking_links')
-    .where('slug', '==', params.slug)
+    .where('slug', '==', slug)
     .where('isActive', '==', true)
     .limit(1)
     .get()
@@ -36,7 +39,6 @@ export default async function BookPage({ params }: Props) {
 
   const link = { id: snap.docs[0].id, ...snap.docs[0].data() } as any
 
-  // Normalise to the shape BookingWidget expects
   const normalisedLink = {
     id: link.id,
     slug: link.slug,

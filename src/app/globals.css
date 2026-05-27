@@ -12,12 +12,7 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+/* CalRoute uses light mode only — dark mode support coming later */
 
 body {
   background: var(--background);

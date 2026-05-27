@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p /Users/jo/GIT/CalRoute/src/app/dashboard/links/\\\\[id\\\\])"
+    ],
+    "additionalDirectories": [
+      "/Users/jo/GIT/CalRoute/src/app/dashboard/links"
+    ]
+  }
+}
