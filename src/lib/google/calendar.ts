@@ -25,18 +25,18 @@ export function getAuthUrl(state: string): string {
 }
 
 export async function refreshAccessToken(
-  calendar: Pick<ConnectedCalendar, 'access_token' | 'refresh_token' | 'expires_at'>
-): Promise<{ access_token: string; expires_at: Date } | null> {
+  calendar: Pick<ConnectedCalendar, 'accessToken' | 'refreshToken' | 'expiresAt'>
+): Promise<{ accessToken: string; expiresAt: Date } | null> {
   try {
     const client = createOAuthClient()
     client.setCredentials({
-      access_token: calendar.access_token,
-      refresh_token: calendar.refresh_token,
+      access_token: calendar.accessToken,
+      refresh_token: calendar.refreshToken,
     })
     const { credentials } = await client.refreshAccessToken()
     return {
-      access_token: credentials.access_token!,
-      expires_at: new Date(credentials.expiry_date!),
+      accessToken: credentials.access_token!,
+      expiresAt: new Date(credentials.expiry_date!),
     }
   } catch (error) {
     console.error('Failed to refresh token:', error)
@@ -51,17 +51,17 @@ export async function getAuthenticatedClient(
   const client = createOAuthClient()
 
   // Check if token needs refresh (refresh 5 min early)
-  const expiresAt = new Date(calendar.expires_at)
+  const expiresAt = new Date(calendar.expiresAt)
   const needsRefresh = expiresAt.getTime() - Date.now() < 5 * 60 * 1000
 
   if (needsRefresh) {
     const refreshed = await refreshAccessToken(calendar)
     if (refreshed && onTokenRefresh) {
-      await onTokenRefresh(refreshed.access_token, refreshed.expires_at)
-      client.setCredentials({ access_token: refreshed.access_token })
+      await onTokenRefresh(refreshed.accessToken, refreshed.expiresAt)
+      client.setCredentials({ access_token: refreshed.accessToken })
     }
   } else {
-    client.setCredentials({ access_token: calendar.access_token })
+    client.setCredentials({ access_token: calendar.accessToken })
   }
 
   return client
@@ -92,8 +92,8 @@ export async function queryFreeBusy(
   // Group calendars by account to minimize OAuth clients
   const calendarsByAccount = new Map<string, ConnectedCalendar[]>()
   for (const cal of calendars) {
-    const existing = calendarsByAccount.get(cal.access_token) ?? []
-    calendarsByAccount.set(cal.access_token, [...existing, cal])
+    const existing = calendarsByAccount.get(cal.accessToken) ?? []
+    calendarsByAccount.set(cal.accessToken, [...existing, cal])
   }
 
   const result = new Map<string, BusySlot[]>()
@@ -101,7 +101,7 @@ export async function queryFreeBusy(
   // We'll use the first calendar's credentials to query all (they share an account)
   // For multiple accounts, we need separate requests
   const uniqueAccounts = Array.from(
-    new Map(calendars.map(c => [c.account_email, c])).values()
+    new Map(calendars.map(c => [c.accountEmail, c])).values()
   )
 
   for (const accountCal of uniqueAccounts) {
@@ -116,19 +116,19 @@ export async function queryFreeBusy(
 
     // Get all calendars belonging to this account
     const accountCalendars = calendars.filter(
-      c => c.account_email === accountCal.account_email
+      c => c.accountEmail === accountCal.accountEmail
     )
 
     const { data } = await calendarClient.freebusy.query({
       requestBody: {
         timeMin: timeMin.toISOString(),
         timeMax: timeMax.toISOString(),
-        items: accountCalendars.map(c => ({ id: c.calendar_id })),
+        items: accountCalendars.map(c => ({ id: c.calendarId })),
       },
     })
 
     for (const cal of accountCalendars) {
-      const calData = data.calendars?.[cal.calendar_id]
+      const calData = data.calendars?.[cal.calendarId]
       result.set(cal.id, (calData?.busy ?? []) as BusySlot[])
     }
   }
@@ -156,7 +156,7 @@ export async function createCalendarEvent(
     const calendarClient = google.calendar({ version: 'v3', auth })
 
     const { data } = await calendarClient.events.insert({
-      calendarId: hostCalendar.calendar_id,
+      calendarId: hostCalendar.calendarId,
       sendUpdates: 'all',
       requestBody: {
         summary: booking.title,
@@ -195,7 +195,7 @@ export async function deleteCalendarEvent(
     const auth = await getAuthenticatedClient(hostCalendar)
     const calendarClient = google.calendar({ version: 'v3', auth })
     await calendarClient.events.delete({
-      calendarId: hostCalendar.calendar_id,
+      calendarId: hostCalendar.calendarId,
       eventId,
       sendUpdates: 'all',
     })

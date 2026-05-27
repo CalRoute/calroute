@@ -98,16 +98,15 @@ export async function POST(request: NextRequest) {
     const calData = calsSnap.docs[0].data()
     const hostCalendar = {
       id: calsSnap.docs[0].id,
-      host_id,
-      account_email: calData.accountEmail,
-      calendar_id: calData.calendarId,
-      access_token: calData.accessToken,
-      refresh_token: calData.refreshToken,
-      expires_at: calData.expiresAt,
-      is_active: calData.isActive,
-      created_at: calData.createdAt,
       provider: calData.provider,
+      accountEmail: calData.accountEmail,
+      calendarId: calData.calendarId,
       label: calData.label,
+      accessToken: calData.accessToken,
+      refreshToken: calData.refreshToken,
+      expiresAt: calData.expiresAt,
+      isActive: calData.isActive,
+      createdAt: calData.createdAt,
     }
 
     const googleEventId = await createCalendarEvent(hostCalendar, {

@@ -25,14 +25,14 @@ export default async function EmbedPage({ params }: Props) {
     slug: link.slug,
     title: link.title,
     description: link.description ?? null,
-    duration_minutes: link.durationMinutes,
-    buffer_before_minutes: link.bufferBeforeMinutes ?? 0,
-    buffer_after_minutes: link.bufferAfterMinutes ?? 0,
-    routing_strategy: link.routingStrategy ?? 'priority',
-    is_active: link.isActive,
-    max_days_ahead: link.maxDaysAhead ?? 30,
-    owner_id: link.ownerId,
-    created_at: link.createdAt,
+    durationMinutes: link.durationMinutes ?? 30,
+    bufferBeforeMinutes: link.bufferBeforeMinutes ?? 0,
+    bufferAfterMinutes: link.bufferAfterMinutes ?? 0,
+    routingStrategy: link.routingStrategy ?? 'priority',
+    isActive: link.isActive,
+    maxDaysAhead: link.maxDaysAhead ?? 30,
+    ownerId: link.ownerId,
+    createdAt: link.createdAt,
   }
 
   return (

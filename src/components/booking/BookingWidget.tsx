@@ -29,7 +29,7 @@ export default function BookingWidget({ link }: Props) {
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-  const dates = Array.from({ length: link.max_days_ahead }, (_, i) =>
+  const dates = Array.from({ length: link.maxDaysAhead }, (_, i) =>
     addDays(startOfDay(new Date()), i)
   )
 
@@ -67,7 +67,7 @@ export default function BookingWidget({ link }: Props) {
         booking_link_id: link.id,
         host_id: slot.assignedHostId,
         start_time: slot.start,
-        duration_minutes: link.duration_minutes,
+        duration_minutes: link.durationMinutes,
       }),
     })
 
@@ -140,7 +140,7 @@ export default function BookingWidget({ link }: Props) {
               {format(parseISO(selectedSlot.start), 'h:mm a')} –{' '}
               {format(parseISO(selectedSlot.end), 'h:mm a')} ({timezone})
             </p>
-            <p className="text-sm text-gray-500">{link.duration_minutes} minutes</p>
+            <p className="text-sm text-gray-500">{link.durationMinutes} minutes</p>
           </div>
         )}
       </div>
@@ -155,7 +155,7 @@ export default function BookingWidget({ link }: Props) {
         {link.description && (
           <p className="text-gray-500 text-sm mt-1">{link.description}</p>
         )}
-        <p className="text-sm text-gray-400 mt-1">{link.duration_minutes} min · {timezone}</p>
+        <p className="text-sm text-gray-400 mt-1">{link.durationMinutes} min · {timezone}</p>
       </div>
 
       <div className="p-6">
@@ -233,7 +233,7 @@ export default function BookingWidget({ link }: Props) {
                 {format(parseISO(selectedSlot.start), 'h:mm a')} ({timezone})
               </p>
               <p className="text-xs text-blue-700 mt-0.5">
-                Reserved for 5 minutes · {link.duration_minutes} min meeting
+                Reserved for 5 minutes · {link.durationMinutes} min meeting
               </p>
             </div>
 

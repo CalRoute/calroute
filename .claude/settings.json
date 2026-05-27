@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(mkdir -p /Users/jo/GIT/CalRoute/src/app/dashboard/links/\\\\[id\\\\])"
+      "Bash(mkdir -p /Users/jo/GIT/CalRoute/src/app/dashboard/links/\\\\[id\\\\])",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: resolve camelCase/snake_case type mismatches across codebase *)",
+      "Bash(git push *)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links"
