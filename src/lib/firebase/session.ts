@@ -4,17 +4,16 @@ import { redirect } from 'next/navigation'
 
 export async function getServerUser() {
   const cookieStore = await cookies()
-  const session = cookieStore.get('calroute-session')?.value
-  if (!session) return null
+  const token = cookieStore.get('calroute-session')?.value
+  if (!token) return null
 
   try {
-    return await adminAuth.verifySessionCookie(session)
+    return await adminAuth.verifyIdToken(token)
   } catch {
     return null
   }
 }
 
-// Use in server components: redirects to /login?returnTo=<current-path>
 export async function requireUser(path: string) {
   const user = await getServerUser()
   if (!user) redirect(`/login?returnTo=${encodeURIComponent(path)}`)

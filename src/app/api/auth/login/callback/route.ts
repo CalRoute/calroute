@@ -3,6 +3,19 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 
+const SESSION_MAX_AGE = 60 * 60           // 1 hour  — matches Firebase ID token lifetime
+const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days — Firebase refresh tokens don't expire
+
+function cookieOpts(maxAge: number) {
+  return {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    maxAge,
+    path: '/',
+    sameSite: 'lax' as const,
+  }
+}
+
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
@@ -38,14 +51,13 @@ export async function GET(request: NextRequest) {
     })
 
     if (!tokenRes.ok) {
-      const err = await tokenRes.text()
-      console.error('[login/callback] token exchange failed:', err)
+      console.error('[login/callback] token exchange failed:', await tokenRes.text())
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login?error=token_failed`)
     }
 
     const { id_token: googleIdToken } = await tokenRes.json()
 
-    // Exchange Google ID token for Firebase ID token via Identity Toolkit
+    // Exchange Google ID token for Firebase ID token + refresh token
     const firebaseRes = await fetch(
       `https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
       {
@@ -61,12 +73,11 @@ export async function GET(request: NextRequest) {
     )
 
     if (!firebaseRes.ok) {
-      const err = await firebaseRes.text()
-      console.error('[login/callback] firebase signInWithIdp failed:', err)
+      console.error('[login/callback] firebase signInWithIdp failed:', await firebaseRes.text())
       return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}/login?error=firebase_failed`)
     }
 
-    const { idToken } = await firebaseRes.json()
+    const { idToken, refreshToken } = await firebaseRes.json()
 
     // Verify the Firebase ID token
     const decoded = await adminAuth.verifyIdToken(idToken)
@@ -85,19 +96,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    // Create a long-lived session cookie (14 days) from the short-lived ID token
-    const expiresIn = 14 * 24 * 60 * 60 * 1000
-    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
-
-    // Set session cookie and redirect
+    // Set session + refresh cookies and redirect
     const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${returnTo}`)
-    response.cookies.set('calroute-session', sessionCookie, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: expiresIn / 1000,
-      path: '/',
-      sameSite: 'lax',
-    })
+    response.cookies.set('calroute-session', idToken, cookieOpts(SESSION_MAX_AGE))
+    if (refreshToken) {
+      response.cookies.set('calroute-refresh', refreshToken, cookieOpts(REFRESH_MAX_AGE))
+    }
     response.cookies.delete('login_state')
     return response
   } catch (e) {

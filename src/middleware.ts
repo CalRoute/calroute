@@ -1,20 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+const SESSION_MAX_AGE = 60 * 60            // 1 hour
+const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
+
 export async function middleware(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  if (!isDashboardRoute) return NextResponse.next()
 
-  if (isDashboardRoute) {
-    const token = request.cookies.get('calroute-session')?.value
-    if (!token) {
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      url.searchParams.set('returnTo', request.nextUrl.pathname)
-      url.searchParams.set('from', 'middleware')
-      return NextResponse.redirect(url)
+  const session = request.cookies.get('calroute-session')?.value
+  const refresh = request.cookies.get('calroute-refresh')?.value
+
+  // Has a valid (non-expired) session token — proceed
+  if (session) return NextResponse.next()
+
+  // No session but has a refresh token — silently refresh
+  if (refresh) {
+    try {
+      const res = await fetch(
+        `https://securetoken.googleapis.com/v1/token?key=${process.env.NEXT_PUBLIC_FIREBASE_API_KEY}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refresh }),
+        }
+      )
+
+      if (!res.ok) throw new Error('refresh failed')
+
+      const { id_token: newIdToken, refresh_token: newRefresh } = await res.json()
+
+      // Proceed to the page and set the new tokens in the response
+      const response = NextResponse.next()
+      response.cookies.set('calroute-session', newIdToken, {
+        httpOnly: true,
+        secure: true,
+        maxAge: SESSION_MAX_AGE,
+        path: '/',
+        sameSite: 'lax',
+      })
+      if (newRefresh && newRefresh !== refresh) {
+        response.cookies.set('calroute-refresh', newRefresh, {
+          httpOnly: true,
+          secure: true,
+          maxAge: REFRESH_MAX_AGE,
+          path: '/',
+          sameSite: 'lax',
+        })
+      }
+      return response
+    } catch {
+      // Refresh failed — fall through to login redirect
     }
   }
 
-  return NextResponse.next()
+  // No valid session, no refresh token — redirect to login
+  const url = request.nextUrl.clone()
+  url.pathname = '/login'
+  url.searchParams.set('returnTo', request.nextUrl.pathname)
+  url.searchParams.set('from', 'middleware')
+  return NextResponse.redirect(url)
 }
 
 export const config = {
