@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/firebase/client'
+import { getClientToken } from '@/lib/firebase/getClientToken'
 
 export default function DisconnectCalendarButton({
   calendarId,
@@ -18,9 +18,7 @@ export default function DisconnectCalendarButton({
     if (!confirm('Disconnect this calendar?')) return
     setLoading(true)
     try {
-      const user = auth.currentUser
-      if (!user) return
-      const idToken = await user.getIdToken()
+      const idToken = await getClientToken()
       await fetch(`/api/calendars/${calendarId}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${idToken}` },

@@ -20,14 +20,34 @@ export default async function EditBookingLinkPage({
 
   const link = { id: linkSnap.id, ...linkSnap.data() } as any
 
-  // Load host's current availability
-  const availSnap = await adminDb
-    .collection('hosts')
-    .doc(user.uid)
-    .collection('availability')
-    .get()
+  const [availSnap, hostsSnap] = await Promise.all([
+    adminDb.collection('hosts').doc(user.uid).collection('availability').get(),
+    adminDb.collection('booking_links').doc(id).collection('hosts').get(),
+  ])
 
   const savedAvailability = availSnap.docs.map(d => d.data())
 
-  return <EditBookingLinkForm link={link} savedAvailability={savedAvailability} />
+  const initialHosts = await Promise.all(
+    hostsSnap.docs.map(async (doc) => {
+      const data = doc.data()
+      const profileSnap = await adminDb.collection('hosts').doc(data.hostId).get()
+      const profile = profileSnap.data()
+      return {
+        uid: data.hostId,
+        priority: data.priority ?? 1,
+        name: profile?.name ?? data.hostId,
+        email: profile?.email ?? '',
+        avatarUrl: profile?.avatarUrl ?? null,
+      }
+    })
+  )
+
+  return (
+    <EditBookingLinkForm
+      link={link}
+      savedAvailability={savedAvailability}
+      initialHosts={initialHosts}
+      ownerId={user.uid}
+    />
+  )
 }

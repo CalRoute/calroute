@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/firebase/client'
+import { getClientToken } from '@/lib/firebase/getClientToken'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
@@ -61,9 +61,7 @@ export default function NewBookingLinkPage() {
     setError(null)
 
     try {
-      const user = auth.currentUser
-      if (!user) throw new Error('Not authenticated')
-      const idToken = await user.getIdToken()
+      const idToken = await getClientToken()
 
       const res = await fetch('/api/booking-links', {
         method: 'POST',

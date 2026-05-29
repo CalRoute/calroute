@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { auth } from '@/lib/firebase/client'
+import { getClientToken } from '@/lib/firebase/getClientToken'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
@@ -25,12 +25,24 @@ function mergeAvailability(saved: any[]) {
   })
 }
 
+type TeamMember = {
+  uid: string
+  priority: number
+  name: string
+  email: string
+  avatarUrl: string | null
+}
+
 export default function EditBookingLinkForm({
   link,
   savedAvailability,
+  initialHosts,
+  ownerId,
 }: {
   link: any
   savedAvailability: any[]
+  initialHosts: TeamMember[]
+  ownerId: string
 }) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -50,6 +62,14 @@ export default function EditBookingLinkForm({
 
   const [availability, setAvailability] = useState(mergeAvailability(savedAvailability))
 
+  // Team state
+  const [hosts, setHosts] = useState<TeamMember[]>(initialHosts)
+  const [addEmail, setAddEmail] = useState('')
+  const [addPriority, setAddPriority] = useState(1)
+  const [addLoading, setAddLoading] = useState(false)
+  const [addError, setAddError] = useState<string | null>(null)
+  const [removingUid, setRemovingUid] = useState<string | null>(null)
+
   function slugify(val: string) {
     return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   }
@@ -58,18 +78,12 @@ export default function EditBookingLinkForm({
     setAvailability(prev => prev.map((a, i) => (i === index ? { ...a, [field]: value } : a)))
   }
 
-  async function getToken() {
-    const user = auth.currentUser
-    if (!user) throw new Error('Not authenticated')
-    return user.getIdToken()
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
     try {
-      const idToken = await getToken()
+      const idToken = await getClientToken()
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
@@ -92,7 +106,7 @@ export default function EditBookingLinkForm({
     if (!confirm(`Delete "${link.title}"? This cannot be undone.`)) return
     setDeleting(true)
     try {
-      const idToken = await getToken()
+      const idToken = await getClientToken()
       await fetch(`/api/booking-links/${link.id}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${idToken}` },
@@ -102,6 +116,66 @@ export default function EditBookingLinkForm({
       setError('Failed to delete link')
       setDeleting(false)
     }
+  }
+
+  async function handleAddMember(e: React.FormEvent) {
+    e.preventDefault()
+    setAddLoading(true)
+    setAddError(null)
+    try {
+      const idToken = await getClientToken()
+      const res = await fetch(`/api/booking-links/${link.id}/hosts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ email: addEmail.trim(), priority: addPriority }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Failed to add member')
+      setHosts(prev => [...prev, data])
+      setAddEmail('')
+      setAddPriority(1)
+    } catch (err: any) {
+      setAddError(err.message)
+    } finally {
+      setAddLoading(false)
+    }
+  }
+
+  async function handleRemoveMember(uid: string) {
+    if (!confirm('Remove this team member from this booking link?')) return
+    setRemovingUid(uid)
+    try {
+      const idToken = await getClientToken()
+      const res = await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${idToken}` },
+      })
+      if (!res.ok) throw new Error('Failed to remove member')
+      setHosts(prev => prev.filter(h => h.uid !== uid))
+    } catch (err: any) {
+      setAddError(err.message)
+    } finally {
+      setRemovingUid(null)
+    }
+  }
+
+  async function handlePriorityChange(uid: string, priority: number) {
+    setHosts(prev => prev.map(h => h.uid === uid ? { ...h, priority } : h))
+    try {
+      const idToken = await getClientToken()
+      await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        body: JSON.stringify({ priority }),
+      })
+    } catch {
+      // silently revert on failure
+      setHosts(prev => prev.map(h => h.uid === uid ? { ...h, priority: hosts.find(x => x.uid === uid)?.priority ?? priority } : h))
+    }
+  }
+
+  function initials(name: string) {
+    return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
   return (
@@ -271,6 +345,97 @@ export default function EditBookingLinkForm({
           </div>
 
         </form>
+
+        {/* Team members — outside the form, saves immediately */}
+        <div className="mt-6 bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Team members</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Bookings are routed to available team members based on the strategy above.
+            </p>
+          </div>
+
+          {/* Current members */}
+          <div className="space-y-2">
+            {hosts.map(host => (
+              <div key={host.uid} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                  {host.avatarUrl
+                    ? <img src={host.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />
+                    : initials(host.name)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {host.name}
+                    {host.uid === ownerId && <span className="ml-1.5 text-xs text-gray-400 font-normal">(you)</span>}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{host.email}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <label className="text-xs text-gray-500 hidden sm:block">Priority</label>
+                  <select
+                    value={host.priority}
+                    onChange={e => handlePriorityChange(host.uid, Number(e.target.value))}
+                    className="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    {[1, 2, 3, 4, 5].map(p => (
+                      <option key={p} value={p}>{p}</option>
+                    ))}
+                  </select>
+                  {host.uid !== ownerId && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMember(host.uid)}
+                      disabled={removingUid === host.uid}
+                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 px-1"
+                    >
+                      {removingUid === host.uid ? '…' : 'Remove'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Add member form */}
+          <form onSubmit={handleAddMember} className="pt-1 space-y-3">
+            <p className="text-xs font-medium text-gray-700">Add a team member</p>
+            {addError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">{addError}</div>
+            )}
+            <div className="flex gap-2">
+              <input
+                type="email"
+                required
+                placeholder="colleague@company.com"
+                value={addEmail}
+                onChange={e => setAddEmail(e.target.value)}
+                className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+              />
+              <select
+                value={addPriority}
+                onChange={e => setAddPriority(Number(e.target.value))}
+                className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                title="Priority"
+              >
+                {[1, 2, 3, 4, 5].map(p => (
+                  <option key={p} value={p}>P{p}</option>
+                ))}
+              </select>
+              <button
+                type="submit"
+                disabled={addLoading || !addEmail.trim()}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex-shrink-0"
+              >
+                {addLoading ? 'Adding…' : 'Add'}
+              </button>
+            </div>
+            <p className="text-xs text-gray-400">
+              They must have a CalRoute account. Their availability and calendar will be included in routing.
+            </p>
+          </form>
+        </div>
+
       </div>
     </main>
   )
