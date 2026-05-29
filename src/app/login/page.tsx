@@ -1,48 +1,78 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { signInWithRedirect, getRedirectResult } from 'firebase/auth'
+import { signInWithRedirect, getRedirectResult, onAuthStateChanged } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase/client'
 import { useRouter } from 'next/navigation'
+
+async function createServerSession(idToken: string): Promise<boolean> {
+  const res = await fetch('/api/auth/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  })
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}))
+    console.error('[login] session error:', body)
+    return false
+  }
+  return true
+}
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
-  // On mount: check if we're returning from a Google redirect
   useEffect(() => {
-    getRedirectResult(auth)
-      .then(async (result) => {
-        if (!result) {
-          // Not a redirect return — just show the button
-          setLoading(false)
-          return
-        }
+    let cancelled = false
 
-        // We got a user back from Google
-        const idToken = await result.user.getIdToken()
-        const res = await fetch('/api/auth/session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        })
+    async function init() {
+      try {
+        // Case 1: returning from a Google redirect
+        const result = await getRedirectResult(auth)
+        if (cancelled) return
 
-        if (!res.ok) {
-          const body = await res.json().catch(() => ({}))
-          console.error('[login] session error:', body)
+        if (result?.user) {
+          const idToken = await result.user.getIdToken()
+          const ok = await createServerSession(idToken)
+          if (cancelled) return
+          if (ok) { router.push('/dashboard'); return }
           setError('Sign in failed. Please try again.')
           setLoading(false)
           return
         }
 
-        router.push('/dashboard')
-      })
-      .catch((err) => {
-        console.error('[login] getRedirectResult error:', err)
-        setError('Sign in failed. Please try again.')
-        setLoading(false)
-      })
+        // Case 2: already authenticated client-side (Firebase persists state)
+        // This happens when the server session cookie expired but Firebase is still logged in
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          unsubscribe()
+          if (cancelled) return
+
+          if (user) {
+            try {
+              const idToken = await user.getIdToken(true) // force-refresh token
+              const ok = await createServerSession(idToken)
+              if (cancelled) return
+              if (ok) { router.push('/dashboard'); return }
+            } catch {
+              // Token refresh failed — fall through to show the button
+            }
+          }
+
+          if (!cancelled) setLoading(false)
+        })
+      } catch (err: any) {
+        console.error('[login] init error:', err)
+        if (!cancelled) {
+          setError('Sign in failed. Please try again.')
+          setLoading(false)
+        }
+      }
+    }
+
+    init()
+    return () => { cancelled = true }
   }, [router])
 
   async function handleGoogleSignIn() {
@@ -50,7 +80,6 @@ export default function LoginPage() {
     setError(null)
     try {
       await signInWithRedirect(auth, googleProvider)
-      // Browser will navigate away — no code runs after this
     } catch (err) {
       console.error('[login] signInWithRedirect error:', err)
       setError('Sign in failed. Please try again.')
@@ -58,15 +87,14 @@ export default function LoginPage() {
     }
   }
 
-  // Show spinner while checking redirect result on mount
   if (loading) {
     return (
-      <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">CalRoute</h1>
-          <p className="text-gray-400 text-sm">Signing you in…</p>
+      <main className="min-h-screen bg-[#F7F4EF] flex items-center justify-center p-4">
+        <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-8 text-center">
+          <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">CalRoute</h1>
+          <p className="text-[#1a1a1a]/40 text-sm">Signing you in…</p>
           <div className="mt-6 flex justify-center">
-            <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-600 rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-[#1a1a1a]/10 border-t-[#0D7377] rounded-full animate-spin" />
           </div>
         </div>
       </main>
@@ -74,11 +102,11 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+    <main className="min-h-screen bg-[#F7F4EF] flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-8">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-gray-900">CalRoute</h1>
-          <p className="text-gray-500 text-sm mt-1">Smart scheduling for teams</p>
+          <h1 className="text-2xl font-bold text-[#1a1a1a]">CalRoute</h1>
+          <p className="text-[#1a1a1a]/40 text-sm mt-1">Smart scheduling for teams</p>
         </div>
 
         {error && (
@@ -89,7 +117,7 @@ export default function LoginPage() {
 
         <button
           onClick={handleGoogleSignIn}
-          className="flex items-center justify-center gap-3 w-full py-3 px-4 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+          className="flex items-center justify-center gap-3 w-full py-3 px-4 border border-[#1a1a1a]/10 rounded-xl text-sm font-medium text-[#1a1a1a]/70 hover:bg-[#1a1a1a]/[0.03] transition-colors"
         >
           <svg className="w-5 h-5" viewBox="0 0 24 24">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -100,7 +128,7 @@ export default function LoginPage() {
           Continue with Google
         </button>
 
-        <p className="text-center text-xs text-gray-400 mt-6">
+        <p className="text-center text-xs text-[#1a1a1a]/30 mt-6">
           By signing in you agree to our Terms of Service.
         </p>
       </div>
