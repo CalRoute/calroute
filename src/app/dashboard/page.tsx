@@ -20,29 +20,35 @@ export default async function DashboardPage() {
   const links = linksSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
 
   // Links I'm a team member on (but don't own)
-  const memberSnap = await adminDb
-    .collectionGroup('hosts')
-    .where('hostId', '==', user.uid)
-    .get()
+  // Requires a collection group index on hosts.hostId — degrades gracefully if not yet built
+  let teamLinks: any[] = []
+  try {
+    const memberSnap = await adminDb
+      .collectionGroup('hosts')
+      .where('hostId', '==', user.uid)
+      .get()
 
-  const teamLinks = (
-    await Promise.all(
-      memberSnap.docs.map(async (doc) => {
-        const linkId = doc.ref.parent.parent?.id
-        if (!linkId) return null
-        const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
-        if (!linkSnap.exists) return null
-        const data = linkSnap.data()!
-        if (data.ownerId === user.uid) return null // skip own links
-        const ownerSnap = await adminDb.collection('hosts').doc(data.ownerId).get()
-        return {
-          id: linkSnap.id,
-          ...data,
-          ownerName: ownerSnap.data()?.name ?? data.ownerId,
-        }
-      })
-    )
-  ).filter(Boolean) as any[]
+    teamLinks = (
+      await Promise.all(
+        memberSnap.docs.map(async (doc) => {
+          const linkId = doc.ref.parent.parent?.id
+          if (!linkId) return null
+          const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
+          if (!linkSnap.exists) return null
+          const data = linkSnap.data()!
+          if (data.ownerId === user.uid) return null // skip own links
+          const ownerSnap = await adminDb.collection('hosts').doc(data.ownerId).get()
+          return {
+            id: linkSnap.id,
+            ...data,
+            ownerName: ownerSnap.data()?.name ?? data.ownerId,
+          }
+        })
+      )
+    ).filter(Boolean) as any[]
+  } catch {
+    // Index not yet built — team section will appear once index is ready
+  }
 
   return (
     <main className="min-h-screen bg-[#F7F4EF]">
