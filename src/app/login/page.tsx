@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState, Suspense } from 'react'
-import { signInWithPopup, onAuthStateChanged } from 'firebase/auth'
+import { signInWithRedirect, getRedirectResult } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase/client'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 
 async function createServerSession(idToken: string): Promise<boolean> {
   const res = await fetch('/api/auth/session', {
@@ -20,63 +20,50 @@ async function createServerSession(idToken: string): Promise<boolean> {
 }
 
 function LoginForm() {
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [status, setStatus] = useState<'checking' | 'ready' | 'signing-in' | 'error'>('checking')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const searchParams = useSearchParams()
   const returnTo = searchParams.get('returnTo') ?? '/dashboard'
 
   useEffect(() => {
-    let cancelled = false
-
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      unsubscribe()
-      if (cancelled) return
-
-      if (user) {
-        try {
-          const idToken = await user.getIdToken(true)
+    // Check if we're returning from a Google redirect
+    getRedirectResult(auth)
+      .then(async (result) => {
+        if (result?.user) {
+          setStatus('signing-in')
+          const idToken = await result.user.getIdToken()
           const ok = await createServerSession(idToken)
-          if (cancelled) return
-          if (ok) { window.location.href = returnTo; return }
-        } catch {
-          // Token refresh failed — fall through to show the button
+          if (ok) {
+            window.location.href = returnTo
+          } else {
+            setErrorMsg('Session creation failed. Please try again.')
+            setStatus('error')
+          }
+          return
         }
-      }
+        // No redirect result — show the sign-in button
+        setStatus('ready')
+      })
+      .catch((err: any) => {
+        console.error('[login] getRedirectResult error:', err)
+        setErrorMsg(err?.code ? `${err.code}: ${err.message}` : (err?.message ?? 'Sign in failed.'))
+        setStatus('error')
+      })
+  }, [returnTo])
 
-      if (!cancelled) setLoading(false)
-    })
-
-    return () => { cancelled = true }
-  }, [router, returnTo])
-
-  async function handleGoogleSignIn() {
-    setLoading(true)
-    setError(null)
-    try {
-      const result = await signInWithPopup(auth, googleProvider)
-      const idToken = await result.user.getIdToken()
-      const ok = await createServerSession(idToken)
-      if (ok) {
-        window.location.href = returnTo
-      } else {
-        setError('Sign in failed. Please try again.')
-        setLoading(false)
-      }
-    } catch (err: any) {
-      console.error('[login] signInWithPopup error:', err)
-      // Show the actual Firebase error code so we can diagnose
-      const msg = err?.code ? `${err.code}: ${err.message}` : (err?.message ?? 'Sign in failed.')
-      setError(msg)
-      setLoading(false)
-    }
+  async function handleSignIn() {
+    setStatus('signing-in')
+    await signInWithRedirect(auth, googleProvider)
+    // Browser navigates away — nothing runs after this
   }
 
-  if (loading) {
+  if (status === 'checking' || status === 'signing-in') {
     return (
       <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-8 text-center">
         <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">CalRoute</h1>
-        <p className="text-[#1a1a1a]/40 text-sm">Signing you in…</p>
+        <p className="text-[#1a1a1a]/40 text-sm mt-1">
+          {status === 'signing-in' ? 'Signing you in…' : 'Loading…'}
+        </p>
         <div className="mt-6 flex justify-center">
           <div className="w-6 h-6 border-2 border-[#1a1a1a]/10 border-t-[#0D7377] rounded-full animate-spin" />
         </div>
@@ -91,14 +78,14 @@ function LoginForm() {
         <p className="text-[#1a1a1a]/40 text-sm mt-1">Smart scheduling for teams</p>
       </div>
 
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          {error}
+      {(status === 'error' || errorMsg) && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm break-all">
+          {errorMsg ?? 'Something went wrong.'}
         </div>
       )}
 
       <button
-        onClick={handleGoogleSignIn}
+        onClick={handleSignIn}
         className="flex items-center justify-center gap-3 w-full py-3 px-4 border border-[#1a1a1a]/10 rounded-xl text-sm font-medium text-[#1a1a1a]/70 hover:bg-[#1a1a1a]/[0.03] transition-colors"
       >
         <svg className="w-5 h-5" viewBox="0 0 24 24">
