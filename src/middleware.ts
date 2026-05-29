@@ -8,6 +8,8 @@ export async function middleware(request: NextRequest) {
     if (!token) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'
+      url.searchParams.set('returnTo', request.nextUrl.pathname)
+      url.searchParams.set('from', 'middleware')
       return NextResponse.redirect(url)
     }
   }
