@@ -7,6 +7,15 @@ import { computeAvailableSlots } from '@/lib/scheduling/engine'
 import { addDays, startOfDay, endOfDay, parseISO } from 'date-fns'
 
 export async function GET(request: NextRequest) {
+  try {
+    return await handleAvailability(request)
+  } catch (e: any) {
+    console.error('[availability] unhandled error:', e)
+    return NextResponse.json({ error: e?.message ?? String(e) }, { status: 500 })
+  }
+}
+
+async function handleAvailability(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const slug = searchParams.get('slug')
   const startDateParam = searchParams.get('start')
