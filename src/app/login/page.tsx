@@ -38,7 +38,7 @@ function LoginForm() {
           const idToken = await user.getIdToken(true)
           const ok = await createServerSession(idToken)
           if (cancelled) return
-          if (ok) { router.push(returnTo); return }
+          if (ok) { window.location.href = returnTo; return }
         } catch {
           // Token refresh failed — fall through to show the button
         }
@@ -58,14 +58,16 @@ function LoginForm() {
       const idToken = await result.user.getIdToken()
       const ok = await createServerSession(idToken)
       if (ok) {
-        router.push(returnTo)
+        window.location.href = returnTo
       } else {
         setError('Sign in failed. Please try again.')
         setLoading(false)
       }
     } catch (err: any) {
       console.error('[login] signInWithPopup error:', err)
-      setError(err?.message ?? 'Sign in failed. Please try again.')
+      // Show the actual Firebase error code so we can diagnose
+      const msg = err?.code ? `${err.code}: ${err.message}` : (err?.message ?? 'Sign in failed.')
+      setError(msg)
       setLoading(false)
     }
   }
