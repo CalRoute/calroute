@@ -52,13 +52,6 @@
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
-    },
-    {
-      "collectionGroup": "hosts",
-      "queryScope": "COLLECTION_GROUP",
-      "fields": [
-        { "fieldPath": "hostId", "order": "ASCENDING" }
-      ]
     }
   ],
   "fieldOverrides": []
