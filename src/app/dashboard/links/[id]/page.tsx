@@ -1,7 +1,7 @@
 export const dynamic = 'force-dynamic'
 
+import { requireUser } from '@/lib/firebase/session'
 import { redirect } from 'next/navigation'
-import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import EditBookingLinkForm from './EditBookingLinkForm'
 
@@ -10,10 +10,8 @@ export default async function EditBookingLinkPage({
 }: {
   params: Promise<{ id: string }>
 }) {
-  const user = await getServerUser()
-  if (!user) redirect('/login')
-
   const { id } = await params
+  const user = await requireUser(`/dashboard/links/${id}`)
 
   const linkSnap = await adminDb.collection('booking_links').doc(id).get()
   if (!linkSnap.exists || linkSnap.data()?.ownerId !== user.uid) {

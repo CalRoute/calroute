@@ -1,7 +1,6 @@
 export const dynamic = 'force-dynamic'
 
-import { redirect } from 'next/navigation'
-import { getServerUser } from '@/lib/firebase/session'
+import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import type { ConnectedCalendar } from '@/types/database'
@@ -12,8 +11,7 @@ export default async function SettingsPage({
 }: {
   searchParams: Promise<{ success?: string; error?: string }>
 }) {
-  const user = await getServerUser()
-  if (!user) redirect('/login')
+  const user = await requireUser('/dashboard/settings')
 
   const params = await searchParams
 

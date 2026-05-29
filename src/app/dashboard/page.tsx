@@ -1,13 +1,11 @@
 export const dynamic = 'force-dynamic'
 
-import { redirect } from 'next/navigation'
-import { getServerUser } from '@/lib/firebase/session'
+import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 
 export default async function DashboardPage() {
-  const user = await getServerUser()
-  if (!user) redirect('/login')
+  const user = await requireUser('/dashboard')
 
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
