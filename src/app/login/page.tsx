@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { signInWithRedirect, getRedirectResult, onAuthStateChanged } from 'firebase/auth'
+import { signInWithPopup, onAuthStateChanged } from 'firebase/auth'
 import { auth, googleProvider } from '@/lib/firebase/client'
 import { useRouter } from 'next/navigation'
 
@@ -24,54 +24,29 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
 
+  // On mount: if Firebase already has an auth session, silently restore the
+  // server cookie without making the user click through Google again.
   useEffect(() => {
     let cancelled = false
 
-    async function init() {
-      try {
-        // Case 1: returning from a Google redirect
-        const result = await getRedirectResult(auth)
-        if (cancelled) return
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      unsubscribe()
+      if (cancelled) return
 
-        if (result?.user) {
-          const idToken = await result.user.getIdToken()
+      if (user) {
+        try {
+          const idToken = await user.getIdToken(true)
           const ok = await createServerSession(idToken)
           if (cancelled) return
           if (ok) { router.push('/dashboard'); return }
-          setError('Sign in failed. Please try again.')
-          setLoading(false)
-          return
-        }
-
-        // Case 2: already authenticated client-side (Firebase persists state)
-        // This happens when the server session cookie expired but Firebase is still logged in
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
-          unsubscribe()
-          if (cancelled) return
-
-          if (user) {
-            try {
-              const idToken = await user.getIdToken(true) // force-refresh token
-              const ok = await createServerSession(idToken)
-              if (cancelled) return
-              if (ok) { router.push('/dashboard'); return }
-            } catch {
-              // Token refresh failed — fall through to show the button
-            }
-          }
-
-          if (!cancelled) setLoading(false)
-        })
-      } catch (err: any) {
-        console.error('[login] init error:', err)
-        if (!cancelled) {
-          setError('Sign in failed. Please try again.')
-          setLoading(false)
+        } catch {
+          // Token refresh failed — fall through to show the button
         }
       }
-    }
 
-    init()
+      if (!cancelled) setLoading(false)
+    })
+
     return () => { cancelled = true }
   }, [router])
 
@@ -79,10 +54,18 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
     try {
-      await signInWithRedirect(auth, googleProvider)
-    } catch (err) {
-      console.error('[login] signInWithRedirect error:', err)
-      setError('Sign in failed. Please try again.')
+      const result = await signInWithPopup(auth, googleProvider)
+      const idToken = await result.user.getIdToken()
+      const ok = await createServerSession(idToken)
+      if (ok) {
+        router.push('/dashboard')
+      } else {
+        setError('Sign in failed. Please try again.')
+        setLoading(false)
+      }
+    } catch (err: any) {
+      console.error('[login] signInWithPopup error:', err)
+      setError(err?.message ?? 'Sign in failed. Please try again.')
       setLoading(false)
     }
   }
