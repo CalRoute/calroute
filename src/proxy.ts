@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 const SESSION_MAX_AGE = 60 * 60            // 1 hour
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
   if (!isDashboardRoute) return NextResponse.next()
 
@@ -57,7 +57,6 @@ export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone()
   url.pathname = '/login'
   url.searchParams.set('returnTo', request.nextUrl.pathname)
-  url.searchParams.set('from', 'middleware')
   return NextResponse.redirect(url)
 }
 
