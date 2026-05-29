@@ -140,7 +140,7 @@ export default async function SettingsPage({
                     <span className={`text-xs px-2 py-0.5 rounded-full hidden sm:inline-flex ${cal.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                       {cal.isActive ? 'Active' : 'Inactive'}
                     </span>
-                    <DisconnectCalendarButton calendarId={cal.id} hostId={user.uid} />
+                    <DisconnectCalendarButton calendarId={cal.id} />
                   </div>
                 </div>
               ))}

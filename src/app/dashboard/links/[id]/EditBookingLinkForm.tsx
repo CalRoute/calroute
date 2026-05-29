@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { getClientToken } from '@/lib/firebase/getClientToken'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
@@ -83,10 +82,9 @@ export default function EditBookingLinkForm({
     setLoading(true)
     setError(null)
     try {
-      const idToken = await getClientToken()
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...form,
           availability: availability.filter(a => a.enabled),
@@ -106,11 +104,7 @@ export default function EditBookingLinkForm({
     if (!confirm(`Delete "${link.title}"? This cannot be undone.`)) return
     setDeleting(true)
     try {
-      const idToken = await getClientToken()
-      await fetch(`/api/booking-links/${link.id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${idToken}` },
-      })
+      await fetch(`/api/booking-links/${link.id}`, { method: 'DELETE' })
       router.push('/dashboard')
     } catch {
       setError('Failed to delete link')
@@ -123,10 +117,9 @@ export default function EditBookingLinkForm({
     setAddLoading(true)
     setAddError(null)
     try {
-      const idToken = await getClientToken()
       const res = await fetch(`/api/booking-links/${link.id}/hosts`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: addEmail.trim(), priority: addPriority }),
       })
       const data = await res.json()
@@ -145,11 +138,7 @@ export default function EditBookingLinkForm({
     if (!confirm('Remove this team member from this booking link?')) return
     setRemovingUid(uid)
     try {
-      const idToken = await getClientToken()
-      const res = await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${idToken}` },
-      })
+      const res = await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed to remove member')
       setHosts(prev => prev.filter(h => h.uid !== uid))
     } catch (err: any) {
@@ -162,10 +151,9 @@ export default function EditBookingLinkForm({
   async function handlePriorityChange(uid: string, priority: number) {
     setHosts(prev => prev.map(h => h.uid === uid ? { ...h, priority } : h))
     try {
-      const idToken = await getClientToken()
       await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ priority }),
       })
     } catch {

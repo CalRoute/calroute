@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { getClientToken } from '@/lib/firebase/getClientToken'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -38,10 +37,9 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
     setError(null)
     setSaved(false)
     try {
-      const idToken = await getClientToken()
       const res = await fetch('/api/hosts/me/availability', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${idToken}` },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ availability: availability.filter(a => a.enabled) }),
       })
       if (!res.ok) {
@@ -92,9 +90,7 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
         ))}
       </div>
 
-      {error && (
-        <p className="text-sm text-red-600">{error}</p>
-      )}
+      {error && <p className="text-sm text-red-600">{error}</p>}
 
       <button
         type="button"

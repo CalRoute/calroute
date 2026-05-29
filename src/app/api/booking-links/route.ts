@@ -1,22 +1,14 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
+import { getServerUser } from '@/lib/firebase/session'
 
 export async function POST(request: NextRequest) {
-  // Verify Firebase token
-  const authHeader = request.headers.get('Authorization')
-  const token = authHeader?.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const user = await getServerUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  let uid: string
-  try {
-    const decoded = await adminAuth.verifyIdToken(token)
-    uid = decoded.uid
-  } catch {
-    return NextResponse.json({ error: 'Invalid token' }, { status: 401 })
-  }
-
+  const uid = user.uid
   const body = await request.json()
   const {
     title, description, slug,

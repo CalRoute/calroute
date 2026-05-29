@@ -4,7 +4,7 @@ export async function middleware(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
 
   if (isDashboardRoute) {
-    const token = request.cookies.get('firebase-token')?.value
+    const token = request.cookies.get('calroute-session')?.value
     if (!token) {
       const url = request.nextUrl.clone()
       url.pathname = '/login'

@@ -1,19 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
+import { getServerUser } from '@/lib/firebase/session'
 
-async function verifyOwner(request: NextRequest, linkId: string) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  try {
-    const decoded = await adminAuth.verifyIdToken(token)
-    const snap = await adminDb.collection('booking_links').doc(linkId).get()
-    if (!snap.exists || snap.data()?.ownerId !== decoded.uid) return null
-    return { uid: decoded.uid, snap }
-  } catch {
-    return null
-  }
+async function verifyOwner(linkId: string) {
+  const user = await getServerUser()
+  if (!user) return null
+  const snap = await adminDb.collection('booking_links').doc(linkId).get()
+  if (!snap.exists || snap.data()?.ownerId !== user.uid) return null
+  return { uid: user.uid, snap }
 }
 
 export async function PATCH(
@@ -21,7 +17,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const auth = await verifyOwner(request, id)
+  const auth = await verifyOwner(id)
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const body = await request.json()
@@ -80,7 +76,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const auth = await verifyOwner(request, id)
+  const auth = await verifyOwner(id)
   if (!auth) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   await adminDb.collection('booking_links').doc(id).delete()

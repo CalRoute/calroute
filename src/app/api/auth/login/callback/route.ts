@@ -85,12 +85,16 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Create a long-lived session cookie (14 days) from the short-lived ID token
+    const expiresIn = 14 * 24 * 60 * 60 * 1000
+    const sessionCookie = await adminAuth.createSessionCookie(idToken, { expiresIn })
+
     // Set session cookie and redirect
     const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${returnTo}`)
-    response.cookies.set('firebase-token', idToken, {
+    response.cookies.set('calroute-session', sessionCookie, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      maxAge: 60 * 60,
+      maxAge: expiresIn / 1000,
       path: '/',
       sameSite: 'lax',
     })

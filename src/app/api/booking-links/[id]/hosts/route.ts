@@ -1,19 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
+import { getServerUser } from '@/lib/firebase/session'
 
-async function getAuthedOwner(request: NextRequest, linkId: string) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  try {
-    const decoded = await adminAuth.verifyIdToken(token)
-    const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
-    if (!linkSnap.exists || linkSnap.data()?.ownerId !== decoded.uid) return null
-    return decoded
-  } catch {
-    return null
-  }
+async function getAuthedOwner(linkId: string) {
+  const user = await getServerUser()
+  if (!user) return null
+  const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
+  if (!linkSnap.exists || linkSnap.data()?.ownerId !== user.uid) return null
+  return user
 }
 
 // GET: list all hosts on a booking link with their profile data
@@ -22,14 +18,8 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
-  try {
-    await adminAuth.verifyIdToken(token)
-  } catch {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const user = await getServerUser()
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const hostsSnap = await adminDb
     .collection('booking_links').doc(id).collection('hosts').get()
@@ -58,7 +48,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params
-  const user = await getAuthedOwner(request, id)
+  const user = await getAuthedOwner(id)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { email, priority = 1 } = await request.json()

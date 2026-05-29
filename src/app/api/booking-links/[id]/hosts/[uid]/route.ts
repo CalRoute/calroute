@@ -1,19 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { adminDb } from '@/lib/firebase/admin'
+import { getServerUser } from '@/lib/firebase/session'
 
-async function getAuthedOwner(request: NextRequest, linkId: string) {
-  const token = request.headers.get('Authorization')?.replace('Bearer ', '')
-  if (!token) return null
-  try {
-    const decoded = await adminAuth.verifyIdToken(token)
-    const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
-    if (!linkSnap.exists || linkSnap.data()?.ownerId !== decoded.uid) return null
-    return decoded
-  } catch {
-    return null
-  }
+async function getAuthedOwner(linkId: string) {
+  const user = await getServerUser()
+  if (!user) return null
+  const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
+  if (!linkSnap.exists || linkSnap.data()?.ownerId !== user.uid) return null
+  return user
 }
 
 // DELETE: remove a host from the booking link
@@ -22,7 +18,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string; uid: string }> }
 ) {
   const { id, uid } = await params
-  const user = await getAuthedOwner(request, id)
+  const user = await getAuthedOwner(id)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   await adminDb
@@ -37,7 +33,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string; uid: string }> }
 ) {
   const { id, uid } = await params
-  const user = await getAuthedOwner(request, id)
+  const user = await getAuthedOwner(id)
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const { priority } = await request.json()
