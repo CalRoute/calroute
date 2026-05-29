@@ -431,7 +431,8 @@ export default function EditBookingLinkForm({
               </button>
             </div>
             <p className="text-xs text-gray-400">
-              They must have a CalRoute account. Their availability and calendar will be included in routing.
+              They must have a CalRoute account. Each member sets their own hours in their{' '}
+              <a href="/dashboard/settings" className="underline hover:text-gray-600">Settings</a>.
             </p>
           </form>
         </div>

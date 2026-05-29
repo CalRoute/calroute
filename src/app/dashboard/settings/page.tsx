@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import type { ConnectedCalendar } from '@/types/database'
 import DisconnectCalendarButton from './DisconnectCalendarButton'
+import AvailabilityEditor from './AvailabilityEditor'
 
 export default async function SettingsPage({
   searchParams,
@@ -17,6 +18,14 @@ export default async function SettingsPage({
 
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
+
+  const availSnap = await adminDb
+    .collection('hosts')
+    .doc(user.uid)
+    .collection('availability')
+    .get()
+
+  const savedAvailability = availSnap.docs.map(d => d.data())
 
   const calsSnap = await adminDb
     .collection('hosts')
@@ -74,6 +83,17 @@ export default async function SettingsPage({
               <span>{host?.timezone ?? '—'}</span>
             </div>
           </div>
+        </div>
+
+        {/* Availability */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Your availability</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              The hours you&apos;re available to take bookings. Applies to all links where you&apos;re a host.
+            </p>
+          </div>
+          <AvailabilityEditor savedAvailability={savedAvailability} />
         </div>
 
         {/* Connected calendars */}
