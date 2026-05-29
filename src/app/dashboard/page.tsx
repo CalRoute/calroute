@@ -10,17 +10,36 @@ export default async function DashboardPage() {
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
 
-  // Links I own
+  // Links I own — with team member count
   const linksSnap = await adminDb
     .collection('booking_links')
     .where('ownerId', '==', user.uid)
     .orderBy('createdAt', 'desc')
     .get()
 
-  const links = linksSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
+  const links = await Promise.all(
+    linksSnap.docs.map(async (d) => {
+      const hostsSnap = await adminDb
+        .collection('booking_links').doc(d.id).collection('hosts').get()
+
+      const members = await Promise.all(
+        hostsSnap.docs.map(async (hDoc) => {
+          const hData = hDoc.data()
+          const profileSnap = await adminDb.collection('hosts').doc(hData.hostId).get()
+          const profile = profileSnap.data()
+          return {
+            uid: hData.hostId,
+            name: profile?.name ?? hData.hostId,
+            avatarUrl: profile?.avatarUrl ?? null,
+          }
+        })
+      )
+
+      return { id: d.id, ...d.data(), members } as any
+    })
+  )
 
   // Links I'm a team member on (but don't own)
-  // Requires a collection group index on hosts.hostId — degrades gracefully if not yet built
   let teamLinks: any[] = []
   try {
     const memberSnap = await adminDb
@@ -36,7 +55,7 @@ export default async function DashboardPage() {
           const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
           if (!linkSnap.exists) return null
           const data = linkSnap.data()!
-          if (data.ownerId === user.uid) return null // skip own links
+          if (data.ownerId === user.uid) return null
           const ownerSnap = await adminDb.collection('hosts').doc(data.ownerId).get()
           return {
             id: linkSnap.id,
@@ -46,8 +65,12 @@ export default async function DashboardPage() {
         })
       )
     ).filter(Boolean) as any[]
-  } catch {
-    // Index not yet built — team section will appear once index is ready
+  } catch (e) {
+    console.error('[dashboard] collectionGroup query failed:', e)
+  }
+
+  function initials(name: string) {
+    return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
   return (
@@ -114,6 +137,30 @@ export default async function DashboardPage() {
                       >
                         /book/{link.slug}
                       </a>
+
+                      {/* Team member avatars */}
+                      {link.members.length > 0 && (
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <div className="flex -space-x-1.5">
+                            {link.members.slice(0, 5).map((m: any) => (
+                              <div
+                                key={m.uid}
+                                title={m.name}
+                                className="w-6 h-6 rounded-full border-2 border-white bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-semibold overflow-hidden flex-shrink-0"
+                              >
+                                {m.avatarUrl
+                                  ? <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
+                                  : initials(m.name)}
+                              </div>
+                            ))}
+                          </div>
+                          <span className="text-xs text-gray-400">
+                            {link.members.length === 1
+                              ? '1 host'
+                              : `${link.members.length} hosts`}
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <Link
@@ -160,7 +207,7 @@ export default async function DashboardPage() {
               ))}
             </div>
             <p className="text-xs text-gray-400 mt-3">
-              Set your availability hours in{' '}
+              Set your availability in{' '}
               <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link>{' '}
               so bookings route to you correctly.
             </p>
