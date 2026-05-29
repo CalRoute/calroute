@@ -16,6 +16,8 @@ export async function GET(request: NextRequest) {
   }
 
   if (token) {
+    result.token_length = token.length
+    result.token_parts = token.split('.').length
     try {
       const decoded = await adminAuth.verifyIdToken(token)
       result.token_valid = true
@@ -26,6 +28,13 @@ export async function GET(request: NextRequest) {
     } catch (e: any) {
       result.token_valid = false
       result.token_error = e?.message ?? String(e)
+      // Try to decode header without verification to see what we got
+      try {
+        const header = JSON.parse(Buffer.from(token.split('.')[0], 'base64').toString())
+        result.token_header = header
+      } catch {
+        result.token_header = 'unparseable'
+      }
     }
   }
 
