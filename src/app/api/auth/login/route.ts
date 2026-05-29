@@ -9,8 +9,9 @@ export async function GET(request: NextRequest) {
   const state = Buffer.from(JSON.stringify({ returnTo, nonce })).toString('base64url')
 
   const url = new URL('https://accounts.google.com/o/oauth2/v2/auth')
-  url.searchParams.set('client_id', process.env.GOOGLE_CLIENT_ID!)
+  url.searchParams.set('client_id', process.env.GOOGLE_LOGIN_CLIENT_ID!)
   url.searchParams.set('redirect_uri', `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/login/callback`)
+  url.searchParams.set('prompt', 'select_account')
   url.searchParams.set('response_type', 'code')
   url.searchParams.set('scope', 'openid email profile')
   url.searchParams.set('state', state)
