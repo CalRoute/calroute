@@ -54,6 +54,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // No valid session, no refresh token — redirect to login
+  console.log('[proxy] no session/refresh for', request.nextUrl.pathname, '— redirecting to login')
   const url = request.nextUrl.clone()
   url.pathname = '/login'
   url.searchParams.set('returnTo', request.nextUrl.pathname)
