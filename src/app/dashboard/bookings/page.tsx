@@ -2,7 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
-import { format, parseISO, isPast } from 'date-fns'
+import { format, parseISO } from 'date-fns'
 import Link from 'next/link'
 import BookingActions from './BookingActions'
 
@@ -12,22 +12,23 @@ export default async function BookingsPage() {
   const snap = await adminDb
     .collection('bookings')
     .where('hostId', '==', user.uid)
-    .orderBy('startTime', 'asc')
     .get()
 
-  const bookings = await Promise.all(
-    snap.docs
-      .filter(d => d.data().status === 'confirmed')
-      .map(async (d) => {
-        const data = d.data()
-        const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
-        const link = linkSnap.data()
-        return { id: d.id, ...data, linkTitle: link?.title ?? 'Deleted link' } as any
-      })
+  const allBookings = await Promise.all(
+    snap.docs.map(async (d) => {
+      const data = d.data()
+      const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
+      return { id: d.id, ...data, linkTitle: linkSnap.data()?.title ?? 'Deleted link' } as any
+    })
   )
 
-  const upcoming = bookings.filter(b => !isPast(parseISO(b.startTime)))
-  const past = bookings.filter(b => isPast(parseISO(b.startTime)))
+  const bookings = allBookings
+    .filter(b => b.status === 'confirmed')
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+
+  const now = new Date().toISOString()
+  const upcoming = bookings.filter(b => b.startTime >= now)
+  const past = bookings.filter(b => b.startTime < now)
 
   return (
     <main className="min-h-screen bg-[#F7F4EF]">
