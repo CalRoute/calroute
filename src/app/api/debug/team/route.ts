@@ -2,37 +2,57 @@ export const dynamic = 'force-dynamic'
 
 import { NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
-import { getServerUser } from '@/lib/firebase/session'
-import { hasSecret } from '@/lib/session-jwt'
+import { cookies } from 'next/headers'
+import { verifySession, hasSecret } from '@/lib/session-jwt'
 
 export async function GET() {
-  if (!hasSecret()) {
-    return NextResponse.json({ error: 'SESSION_SECRET env var not set on this deployment' }, { status: 500 })
+  const result: any = {
+    step: 'start',
+    hasSecret: hasSecret(),
+    sessionSecretLength: process.env.SESSION_SECRET?.length ?? 0,
   }
 
-  const user = await getServerUser()
-  if (!user) return NextResponse.json({ error: 'Not logged in — session cookie missing or invalid' }, { status: 401 })
+  try {
+    result.step = 'reading cookie'
+    const cookieStore = await cookies()
+    const token = cookieStore.get('calroute-session')?.value
+    result.hasCookie = !!token
+    result.cookiePrefix = token ? token.slice(0, 30) + '...' : null
 
-  // What collectionGroup finds for this uid
-  const memberSnap = await adminDb
-    .collectionGroup('hosts')
-    .where('hostId', '==', user.uid)
-    .get()
+    if (!token) {
+      result.step = 'no cookie'
+      return NextResponse.json(result)
+    }
 
-  const found = memberSnap.docs.map(d => ({
-    path: d.ref.path,
-    data: d.data(),
-    parentId: d.ref.parent.parent?.id ?? null,
-  }))
+    result.step = 'verifying session'
+    const payload = await verifySession(token)
+    result.sessionValid = !!payload
+    result.uid = payload?.uid ?? null
+    result.email = payload?.email ?? null
 
-  // Also check top-level hosts doc
-  const hostDoc = await adminDb.collection('hosts').doc(user.uid).get()
+    if (!payload) {
+      result.step = 'invalid session'
+      return NextResponse.json(result)
+    }
 
-  return NextResponse.json({
-    uid: user.uid,
-    email: user.email,
-    hostProfile: hostDoc.exists ? hostDoc.data() : null,
-    collectionGroupResults: found,
-    resultCount: found.length,
-  })
+    result.step = 'querying firestore'
+    const memberSnap = await adminDb
+      .collectionGroup('hosts')
+      .where('hostId', '==', payload.uid)
+      .get()
+
+    result.step = 'done'
+    result.memberCount = memberSnap.size
+    result.members = memberSnap.docs.map(d => ({
+      path: d.ref.path,
+      hostId: d.data().hostId,
+      parentId: d.ref.parent.parent?.id ?? null,
+    }))
+
+    return NextResponse.json(result)
+  } catch (e: any) {
+    result.error = e?.message ?? String(e)
+    result.stack = e?.stack?.slice(0, 500)
+    return NextResponse.json(result, { status: 500 })
+  }
 }
