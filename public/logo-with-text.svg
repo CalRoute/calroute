@@ -1,39 +1,35 @@
-<svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 100" width="100%" height="100%">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0D7377;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0a5f63;stop-opacity:1" />
+    <linearGradient id="text-route-grad-trans" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#10b981" />
     </linearGradient>
   </defs>
+  
+  <!-- Inline Identifiable Calendar Object -->
+  <g transform="translate(16, 12) scale(0.8)">
+    <rect x="0" y="6" width="60" height="62" rx="10" fill="#1e293b" />
+    <path d="M 0 16 L 60 16 L 60 16 C 60 10.47, 55.53 6, 50 6 L 10 6 C 4.47 6, 0 10.47, 0 16 Z" fill="#334155" />
+    <rect x="14" y="0" width="6" height="10" rx="3" fill="#64748b" />
+    <rect x="40" y="0" width="6" height="10" rx="3" fill="#64748b" />
+    
+    <rect x="10" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="25" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="10" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="10" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="25" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
 
-  <!-- Icon: Calendar with routing -->
-  <g>
-    <!-- Main calendar shape -->
-    <rect x="20" y="20" width="80" height="80" rx="10" fill="url(#grad)" />
-
-    <!-- Calendar header bar -->
-    <rect x="20" y="20" width="80" height="16" rx="10" ry="0" fill="#0a5f63" />
-
-    <!-- Calendar grid lines -->
-    <line x1="33" y1="20" x2="33" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-    <line x1="46" y1="20" x2="46" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-    <line x1="59" y1="20" x2="59" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-    <line x1="72" y1="20" x2="72" y2="100" stroke="rgba(255,255,255,0.2)" stroke-width="1.2" />
-
-    <!-- Horizontal lines -->
-    <line x1="20" y1="48" x2="100" y2="48" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" />
-    <line x1="20" y1="76" x2="100" y2="76" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" />
-
-    <!-- Routing dots -->
-    <circle cx="39" cy="62" r="2.8" fill="white" opacity="0.8" />
-    <circle cx="66" cy="62" r="2.8" fill="white" opacity="0.8" />
-    <circle cx="52" cy="90" r="2.8" fill="white" opacity="0.8" />
-
-    <!-- Connecting lines -->
-    <path d="M 39 62 Q 52 76 52 90" stroke="white" stroke-width="1.2" fill="none" opacity="0.6" stroke-linecap="round" />
-    <path d="M 66 62 Q 52 76 52 90" stroke="white" stroke-width="1.2" fill="none" opacity="0.6" stroke-linecap="round" />
+    <path d="M -6 35 C 4 35, 12 44, 30 44" fill="none" stroke="url(#text-route-grad-trans)" stroke-width="5" stroke-linecap="round" />
+    <rect x="25" y="39" width="10" height="10" rx="2.5" fill="none" stroke="#ffffff" stroke-width="2" />
+    <circle cx="30" cy="44" r="2.5" fill="#ffffff" />
+    <path d="M 30 44 L 68 44" fill="none" stroke="url(#text-route-grad-trans)" stroke-width="5" stroke-linecap="round" />
+    <path d="M 61 38 L 68 44 L 61 50" fill="none" stroke="url(#text-route-grad-trans)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
   </g>
 
-  <!-- Text: CalRoute -->
-  <text x="120" y="75" font-family="Segoe UI, Arial, sans-serif" font-size="48" font-weight="700" fill="#1a1a1a" letter-spacing="-0.5">CalRoute</text>
+  <!-- Typography Brand Set -->
+  <text x="96" y="52" font-family="system-ui, -apple-system, sans-serif" font-weight="800" font-size="34" fill="#ffffff" letter-spacing="-0.5">Cal<tspan fill="url(#text-route-grad-trans)">Route</tspan></text>
+  <text x="98" y="74" font-family="system-ui, -apple-system, sans-serif" font-weight="600" font-size="11" fill="#64748b" letter-spacing="4.5">MULTI-CALENDAR TEAM ROUTING</text>
 </svg>

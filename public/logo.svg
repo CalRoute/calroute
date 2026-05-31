@@ -1,34 +1,48 @@
-<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-  <!-- Calendar icon with routing concept -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
   <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#0D7377;stop-opacity:1" />
-      <stop offset="100%" style="stop-color:#0a5f63;stop-opacity:1" />
+    <!-- Vibrant gradient for the prominent routing path -->
+    <linearGradient id="bold-route-grad-trans" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="50%" stop-color="#3b82f6" />
+      <stop offset="100%" stop-color="#10b981" />
     </linearGradient>
   </defs>
+  
+  <g transform="translate(20, 16)">
+    <!-- Main Calendar Body Shield -->
+    <rect x="0" y="6" width="60" height="62" rx="10" fill="#1e293b" />
+    
+    <!-- Distinct Calendar Top Header Bar -->
+    <path d="M 0 16 L 60 16 L 60 16 C 60 10.47, 55.53 6, 50 6 L 10 6 C 4.47 6, 0 10.47, 0 16 Z" fill="#334155" />
+    
+    <!-- Calendar Binder Rings/Tabs -->
+    <rect x="14" y="0" width="6" height="10" rx="3" fill="#64748b" />
+    <rect x="40" y="0" width="6" height="10" rx="3" fill="#64748b" />
+    
+    <!-- Explicit Grid Layout (Cutouts/Slots inside the calendar) -->
+    <!-- Row 1 -->
+    <rect x="10" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="25" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    
+    <!-- Row 2 -->
+    <rect x="10" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    
+    <!-- Row 3 -->
+    <rect x="10" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="25" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+    <rect x="40" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
 
-  <!-- Main calendar shape -->
-  <rect x="50" y="50" width="100" height="100" rx="12" fill="url(#grad)" />
-
-  <!-- Calendar header bar -->
-  <rect x="50" y="50" width="100" height="20" rx="12" ry="0" fill="#0a5f63" />
-
-  <!-- Calendar grid lines -->
-  <line x1="67" y1="50" x2="67" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
-  <line x1="84" y1="50" x2="84" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
-  <line x1="101" y1="50" x2="101" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
-  <line x1="118" y1="50" x2="118" y2="150" stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
-
-  <!-- Horizontal lines -->
-  <line x1="50" y1="80" x2="150" y2="80" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
-  <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(255,255,255,0.15)" stroke-width="1" />
-
-  <!-- Routing dots (representing team members) -->
-  <circle cx="75" cy="95" r="3.5" fill="white" opacity="0.8" />
-  <circle cx="110" cy="95" r="3.5" fill="white" opacity="0.8" />
-  <circle cx="93" cy="130" r="3.5" fill="white" opacity="0.8" />
-
-  <!-- Connecting lines (routing) -->
-  <path d="M 75 95 Q 93 110 93 130" stroke="white" stroke-width="1.5" fill="none" opacity="0.6" stroke-linecap="round" />
-  <path d="M 110 95 Q 93 110 93 130" stroke="white" stroke-width="1.5" fill="none" opacity="0.6" stroke-linecap="round" />
+    <!-- THE ROUTE: Slices dynamically into the calendar page -->
+    <path d="M -6 35 C 4 35, 12 44, 30 44" fill="none" stroke="url(#bold-route-grad-trans)" stroke-width="5" stroke-linecap="round" />
+    
+    <!-- Targeted Target Slot Highlight -->
+    <rect x="25" y="39" width="10" height="10" rx="2.5" fill="none" stroke="#ffffff" stroke-width="2" />
+    <circle cx="30" cy="44" r="2.5" fill="#ffffff" />
+    
+    <!-- Sweeping arrow emerging from the targeted host slot out the side -->
+    <path d="M 30 44 L 68 44" fill="none" stroke="url(#bold-route-grad-trans)" stroke-width="5" stroke-linecap="round" />
+    <path d="M 61 38 L 68 44 L 61 50" fill="none" stroke="url(#bold-route-grad-trans)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round" />
+  </g>
 </svg>
