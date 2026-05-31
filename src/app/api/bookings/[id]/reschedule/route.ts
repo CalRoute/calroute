@@ -121,6 +121,7 @@ export async function POST(
       hostName: host.name,
       newStartTime: newStart,
       durationMinutes: link.durationMinutes,
+      timezone: booking.timezone ?? 'UTC',
       rescheduleUrl,
       cancelUrl,
     })
@@ -131,6 +132,7 @@ export async function POST(
       customerEmail: booking.customerEmail,
       newStartTime: newStart,
       previousStartTime: parseISO(booking.startTime),
+      timezone: booking.timezone ?? 'UTC',
     })
 
     await Promise.all([

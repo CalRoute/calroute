@@ -86,6 +86,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
         customer_email: form.email,
         customer_notes: form.notes || undefined,
         language: selectedLanguage || undefined,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
     })
     const data = await res.json()

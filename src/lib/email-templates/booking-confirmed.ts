@@ -1,4 +1,5 @@
 import { emailLayout } from './layout'
+import { formatTimeInTimezone } from '@/lib/format-time'
 
 export function bookingConfirmedEmail(data: {
   title: string
@@ -6,6 +7,7 @@ export function bookingConfirmedEmail(data: {
   hostName: string
   startTime: Date
   durationMinutes: number
+  timezone: string
   rescheduleUrl: string
   cancelUrl: string
 }): string {
@@ -13,7 +15,7 @@ export function bookingConfirmedEmail(data: {
     <h2>Your meeting is confirmed!</h2>
     <ul>
       <li><strong>What:</strong> ${data.title}</li>
-      <li><strong>When:</strong> ${data.startTime.toLocaleString()}</li>
+      <li><strong>When:</strong> ${formatTimeInTimezone(data.startTime, data.timezone)}</li>
       <li><strong>Duration:</strong> ${data.durationMinutes} minutes</li>
       <li><strong>With:</strong> ${data.hostName}</li>
     </ul>

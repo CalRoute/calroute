@@ -78,12 +78,14 @@ export async function POST(
     const guestHtml = bookingCancelledGuestEmail({
       title: link.title,
       startTime: parseISO(booking.startTime),
+      timezone: booking.timezone ?? 'UTC',
     })
 
     const hostHtml = bookingCancelledHostEmail({
       title: link.title,
       customerName: booking.customerName,
       startTime: parseISO(booking.startTime),
+      timezone: booking.timezone ?? 'UTC',
       cancelledBy,
     })
 

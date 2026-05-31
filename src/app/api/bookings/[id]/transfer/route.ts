@@ -98,6 +98,7 @@ export async function POST(
       customerName: booking.customerName,
       customerEmail: booking.customerEmail,
       startTime,
+      timezone: booking.timezone ?? 'UTC',
       transferredBy: oldHost.name,
     })
 
@@ -105,6 +106,7 @@ export async function POST(
       title: link.title,
       newHostName: newHost.name,
       startTime,
+      timezone: booking.timezone ?? 'UTC',
     })
 
     await Promise.all([
