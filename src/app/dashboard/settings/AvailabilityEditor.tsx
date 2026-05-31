@@ -71,6 +71,29 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
     ))
   }
 
+  function mergeRanges(ranges: Range[]): Range[] {
+    const toMinutes = (t: string) => {
+      const [h, m] = t.split(':').map(Number)
+      return h * 60 + m
+    }
+    const fromMinutes = (m: number) => {
+      const h = Math.floor(m / 60).toString().padStart(2, '0')
+      const min = (m % 60).toString().padStart(2, '0')
+      return `${h}:${min}`
+    }
+    const sorted = [...ranges].sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime))
+    const merged: Range[] = []
+    for (const r of sorted) {
+      const last = merged[merged.length - 1]
+      if (last && toMinutes(r.startTime) <= toMinutes(last.endTime)) {
+        last.endTime = fromMinutes(Math.max(toMinutes(last.endTime), toMinutes(r.endTime)))
+      } else {
+        merged.push({ ...r })
+      }
+    }
+    return merged
+  }
+
   async function handleSave() {
     setSaving(true)
     setError(null)
@@ -78,7 +101,14 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
     try {
       const availability = days
         .filter(d => d.enabled && d.ranges.length > 0)
-        .map(d => ({ dayOfWeek: d.dayOfWeek, ranges: d.ranges }))
+        .map(d => ({ dayOfWeek: d.dayOfWeek, ranges: mergeRanges(d.ranges) }))
+
+      // Update UI to reflect merged ranges
+      setDays(prev => prev.map(d => {
+        if (!d.enabled) return d
+        const merged = mergeRanges(d.ranges)
+        return merged.length !== d.ranges.length ? { ...d, ranges: merged } : d
+      }))
 
       const res = await fetch('/api/hosts/me/availability', {
         method: 'PUT',
