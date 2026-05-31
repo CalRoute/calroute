@@ -117,7 +117,7 @@ export default function DashboardLayout({ children, user }: Props) {
               <p className="text-sm font-medium text-gray-900 truncate mt-1">{user.name || user.email}</p>
             </div>
             <Link
-              href="/api/auth/logout"
+              href="/api/auth/signout"
               className="w-full px-3 py-2 text-sm text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg text-center transition-colors"
             >
               Sign out
