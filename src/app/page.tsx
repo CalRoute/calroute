@@ -7,29 +7,33 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F4EF]/90 backdrop-blur-xl border-b border-[#1a1a1a]/[0.06]">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <svg viewBox="0 0 400 120" className="w-32 h-auto" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 440 100" className="w-40 h-auto" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+              <linearGradient id="text-route-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#10b981" />
               </linearGradient>
             </defs>
-            <g>
-              <rect x="20" y="20" width="80" height="80" rx="10" fill="url(#grad)" />
-              <rect x="20" y="20" width="80" height="16" rx="10" ry="0" fill="#0a5f63" />
-              <line x1="33" y1="20" x2="33" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
-              <line x1="46" y1="20" x2="46" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
-              <line x1="59" y1="20" x2="59" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
-              <line x1="72" y1="20" x2="72" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
-              <line x1="20" y1="48" x2="100" y2="48" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
-              <line x1="20" y1="76" x2="100" y2="76" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
-              <circle cx="39" cy="62" r="2.8" fill="white" opacity="0.8" />
-              <circle cx="66" cy="62" r="2.8" fill="white" opacity="0.8" />
-              <circle cx="52" cy="90" r="2.8" fill="white" opacity="0.8" />
-              <path d="M 39 62 Q 52 76 52 90" stroke="white" strokeWidth="1.2" fill="none" opacity="0.6" strokeLinecap="round" />
-              <path d="M 66 62 Q 52 76 52 90" stroke="white" strokeWidth="1.2" fill="none" opacity="0.6" strokeLinecap="round" />
+            <g transform="translate(16, 12) scale(0.8)">
+              <rect x="0" y="6" width="60" height="62" rx="10" fill="#1e293b" />
+              <path d="M 0 16 L 60 16 L 60 16 C 60 10.47, 55.53 6, 50 6 L 10 6 C 4.47 6, 0 10.47, 0 16 Z" fill="#334155" />
+              <rect x="14" y="0" width="6" height="10" rx="3" fill="#64748b" />
+              <rect x="40" y="0" width="6" height="10" rx="3" fill="#64748b" />
+              <rect x="10" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="25" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="40" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="10" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="40" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="10" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="25" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <rect x="40" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
+              <path d="M -6 35 C 4 35, 12 44, 30 44" fill="none" stroke="url(#text-route-grad)" strokeWidth="5" strokeLinecap="round" />
+              <rect x="25" y="39" width="10" height="10" rx="2.5" fill="none" stroke="#ffffff" strokeWidth="2" />
+              <circle cx="30" cy="44" r="2.5" fill="#ffffff" />
+              <path d="M 30 44 L 68 44" fill="none" stroke="url(#text-route-grad)" strokeWidth="5" strokeLinecap="round" />
+              <path d="M 61 38 L 68 44 L 61 50" fill="none" stroke="url(#text-route-grad)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
             </g>
-            <text x="120" y="75" fontFamily="Segoe UI, Arial, sans-serif" fontSize="48" fontWeight="700" fill="#1a1a1a" letterSpacing="-0.5">CalRoute</text>
+            <text x="96" y="52" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="34" fill="#1a1a1a" letterSpacing="-0.5">Cal<tspan fill="url(#text-route-grad)">Route</tspan></text>
           </svg>
           <div className="flex items-center gap-8">
             <a href="#features" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Features</a>

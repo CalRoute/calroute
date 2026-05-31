@@ -23,26 +23,25 @@ export default function DashboardLayout({ children, user }: Props) {
       {/* Mobile header */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-40 md:hidden">
         <Link href="/" className="flex items-center gap-2 h-8">
-          <svg viewBox="0 0 200 200" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+          <svg viewBox="0 0 100 100" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
             <defs>
-              <linearGradient id="mobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
-                <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+              <linearGradient id="mobFaviconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#2563eb" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#10b981" />
               </linearGradient>
             </defs>
-            <rect x="50" y="50" width="100" height="100" rx="12" fill="url(#mobGrad)" />
-            <rect x="50" y="50" width="100" height="20" rx="12" ry="0" fill="#0a5f63" />
-            <line x1="67" y1="50" x2="67" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-            <line x1="84" y1="50" x2="84" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-            <line x1="101" y1="50" x2="101" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-            <line x1="118" y1="50" x2="118" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-            <line x1="50" y1="80" x2="150" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-            <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-            <circle cx="75" cy="95" r="3.5" fill="white" opacity="0.8" />
-            <circle cx="110" cy="95" r="3.5" fill="white" opacity="0.8" />
-            <circle cx="93" cy="130" r="3.5" fill="white" opacity="0.8" />
-            <path d="M 75 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
-            <path d="M 110 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+            <g transform="translate(15, 12)">
+              <rect x="0" y="8" width="70" height="72" rx="14" fill="#1e293b" />
+              <path d="M 0 20 L 70 20 L 70 20 C 70 13.37, 63.63 8, 56 8 L 14 8 C 6.37 8, 0 13.37, 0 20 Z" fill="#334155" />
+              <rect x="16" y="0" width="8" height="14" rx="4" fill="#64748b" />
+              <rect x="46" y="0" width="8" height="14" rx="4" fill="#64748b" />
+              <path d="M 12 56 C 24 56, 26 38, 44 38" fill="none" stroke="url(#mobFaviconGrad)" strokeWidth="7" strokeLinecap="round" />
+              <rect x="36" y="30" width="16" height="16" rx="4" fill="none" stroke="#ffffff" strokeWidth="3" />
+              <circle cx="44" cy="38" r="3.5" fill="#ffffff" />
+              <path d="M 44 38 L 78 38" fill="none" stroke="url(#mobFaviconGrad)" strokeWidth="7" strokeLinecap="round" />
+              <path d="M 69 30 L 78 38 L 69 46" fill="none" stroke="url(#mobFaviconGrad)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+            </g>
           </svg>
           <span className="text-lg font-bold text-gray-900">CalRoute</span>
         </Link>
@@ -71,28 +70,27 @@ export default function DashboardLayout({ children, user }: Props) {
         {/* Logo */}
         <div className="px-6 py-6 border-b border-gray-200">
           <Link href="/" className="flex items-center gap-2 group">
-            <svg viewBox="0 0 200 200" className="w-10 h-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+            <svg viewBox="0 0 100 100" className="w-10 h-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
               <defs>
-                <linearGradient id="sideGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                  <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
-                  <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+                <linearGradient id="sideFaviconGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#2563eb" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#10b981" />
                 </linearGradient>
               </defs>
-              <rect x="50" y="50" width="100" height="100" rx="12" fill="url(#sideGrad)" />
-              <rect x="50" y="50" width="100" height="20" rx="12" ry="0" fill="#0a5f63" />
-              <line x1="67" y1="50" x2="67" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-              <line x1="84" y1="50" x2="84" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-              <line x1="101" y1="50" x2="101" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-              <line x1="118" y1="50" x2="118" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
-              <line x1="50" y1="80" x2="150" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
-              <circle cx="75" cy="95" r="3.5" fill="white" opacity="0.8" />
-              <circle cx="110" cy="95" r="3.5" fill="white" opacity="0.8" />
-              <circle cx="93" cy="130" r="3.5" fill="white" opacity="0.8" />
-              <path d="M 75 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
-              <path d="M 110 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+              <g transform="translate(15, 12)">
+                <rect x="0" y="8" width="70" height="72" rx="14" fill="#1e293b" />
+                <path d="M 0 20 L 70 20 L 70 20 C 70 13.37, 63.63 8, 56 8 L 14 8 C 6.37 8, 0 13.37, 0 20 Z" fill="#334155" />
+                <rect x="16" y="0" width="8" height="14" rx="4" fill="#64748b" />
+                <rect x="46" y="0" width="8" height="14" rx="4" fill="#64748b" />
+                <path d="M 12 56 C 24 56, 26 38, 44 38" fill="none" stroke="url(#sideFaviconGrad)" strokeWidth="7" strokeLinecap="round" />
+                <rect x="36" y="30" width="16" height="16" rx="4" fill="none" stroke="#ffffff" strokeWidth="3" />
+                <circle cx="44" cy="38" r="3.5" fill="#ffffff" />
+                <path d="M 44 38 L 78 38" fill="none" stroke="url(#sideFaviconGrad)" strokeWidth="7" strokeLinecap="round" />
+                <path d="M 69 30 L 78 38 L 69 46" fill="none" stroke="url(#sideFaviconGrad)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
             </svg>
-            <span className="text-lg font-bold text-gray-900 group-hover:text-[#0D7377] transition-colors">CalRoute</span>
+            <span className="text-lg font-bold text-gray-900 group-hover:text-[#3b82f6] transition-colors">CalRoute</span>
           </Link>
         </div>
 
