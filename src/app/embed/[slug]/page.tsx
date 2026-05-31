@@ -52,8 +52,31 @@ export default async function EmbedPage({ params }: Props) {
   }
 
   return (
-    <div className="p-4">
-      <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
-    </div>
+    <html>
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>{link.title}</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+          }
+          html, body {
+            width: 100%;
+            height: auto;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: transparent;
+          }
+          body {
+            padding: 16px;
+          }
+        </style>
+      </head>
+      <body>
+        <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
+      </body>
+    </html>
   )
 }
