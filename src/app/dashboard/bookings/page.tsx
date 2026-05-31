@@ -12,17 +12,18 @@ export default async function BookingsPage() {
   const snap = await adminDb
     .collection('bookings')
     .where('hostId', '==', user.uid)
-    .where('status', '==', 'confirmed')
     .orderBy('startTime', 'asc')
     .get()
 
   const bookings = await Promise.all(
-    snap.docs.map(async (d) => {
-      const data = d.data()
-      const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
-      const link = linkSnap.data()
-      return { id: d.id, ...data, linkTitle: link?.title ?? 'Deleted link' } as any
-    })
+    snap.docs
+      .filter(d => d.data().status === 'confirmed')
+      .map(async (d) => {
+        const data = d.data()
+        const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
+        const link = linkSnap.data()
+        return { id: d.id, ...data, linkTitle: link?.title ?? 'Deleted link' } as any
+      })
   )
 
   const upcoming = bookings.filter(b => !isPast(parseISO(b.startTime)))
