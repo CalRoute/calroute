@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import { createCalendarEvent } from '@/lib/google/calendar'
 import { addMinutes, parseISO } from 'date-fns'
 import { Resend } from 'resend'
+import { randomUUID } from 'crypto'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -73,6 +74,8 @@ export async function POST(request: NextRequest) {
   }
 
   // 5. Create booking document
+  const cancelToken = randomUUID()
+  const rescheduleToken = randomUUID()
   const bookingRef = adminDb.collection('bookings').doc()
   await bookingRef.set({
     bookingLinkId: link.id,
@@ -84,6 +87,8 @@ export async function POST(request: NextRequest) {
     endTime: endTime.toISOString(),
     googleEventId: null,
     status: 'confirmed',
+    cancelToken,
+    rescheduleToken,
     createdAt: new Date().toISOString(),
   })
 
@@ -140,6 +145,10 @@ export async function POST(request: NextRequest) {
   await reservationSnap.docs[0].ref.delete()
 
   // 9. Send emails
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL
+  const cancelUrl = `${appUrl}/booking/${bookingRef.id}/cancel?token=${cancelToken}`
+  const rescheduleUrl = `${appUrl}/booking/${bookingRef.id}/reschedule?token=${rescheduleToken}`
+
   try {
     await Promise.all([
       resend.emails.send({
@@ -154,6 +163,12 @@ export async function POST(request: NextRequest) {
             <li><strong>With:</strong> ${host.name}</li>
           </ul>
           <p>A Google Meet link is in your calendar invite.</p>
+          <hr style="margin:24px 0;border:none;border-top:1px solid #eee"/>
+          <p style="font-size:13px;color:#666">
+            Need to make a change? You can
+            <a href="${rescheduleUrl}">reschedule</a> or
+            <a href="${cancelUrl}">cancel</a> up to 24 hours before the meeting.
+          </p>
         `,
       }),
       resend.emails.send({

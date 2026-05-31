@@ -79,6 +79,9 @@ export default async function DashboardPage() {
       <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
         <h1 className="text-base sm:text-lg font-semibold text-gray-900 flex-shrink-0">CalRoute</h1>
         <div className="flex items-center gap-3 sm:gap-4">
+          <Link href="/dashboard/bookings" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+            Bookings
+          </Link>
           <Link href="/dashboard/team" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
             Team
           </Link>
