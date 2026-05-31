@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
+import DashboardLayout from '@/components/DashboardLayout'
 
 function initials(name: string) {
   return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -117,14 +118,8 @@ export default async function TeamPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F4EF]">
-      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">← Dashboard</Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">Team</span>
-      </nav>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+    <DashboardLayout user={{ email: user.email }}>
+      <div className="space-y-8">
 
         {/* Teams I own */}
         {hasLinks && (
@@ -216,6 +211,6 @@ export default async function TeamPage() {
           </section>
         )}
       </div>
-    </main>
+    </DashboardLayout>
   )
 }

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
+import DashboardLayout from '@/components/DashboardLayout'
 
 export default async function DashboardPage() {
   const user = await requireUser('/dashboard')
@@ -74,41 +75,16 @@ export default async function DashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#F7F4EF]">
-      {/* Nav */}
-      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center justify-between gap-3">
-        <h1 className="text-base sm:text-lg font-semibold text-gray-900 flex-shrink-0">CalRoute</h1>
-        <div className="flex items-center gap-3 sm:gap-4">
-          <Link href="/dashboard/bookings" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Bookings
-          </Link>
-          <Link href="/dashboard/team" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Team
-          </Link>
-          <Link href="/dashboard/settings" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-            Settings
-          </Link>
-          <Link
-            href="/api/auth/signout"
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors hidden sm:block"
-          >
-            Sign out
-          </Link>
+    <DashboardLayout user={{ email: user.email }}>
+      <div className="space-y-8">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-2xl font-bold text-gray-900">Manage your booking links</h2>
           <Link
             href="/dashboard/links/new"
             className="bg-[#0D7377] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium hover:bg-[#0a5f63] transition-colors whitespace-nowrap"
           >
             + New link
           </Link>
-        </div>
-      </nav>
-
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
-        <div>
-          <h2 className="text-lg sm:text-xl font-semibold text-gray-900">
-            Welcome back, {host?.name ?? 'there'} 👋
-          </h2>
-          <p className="text-sm text-gray-500 mt-0.5">Manage your booking links below.</p>
         </div>
 
         {/* My links */}
@@ -227,6 +203,6 @@ export default async function DashboardPage() {
           </Link>
         </div>
       </div>
-    </main>
+    </DashboardLayout>
   )
 }

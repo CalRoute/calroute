@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import { format, parseISO } from 'date-fns'
-import Link from 'next/link'
+import DashboardLayout from '@/components/DashboardLayout'
 import BookingActions from './BookingActions'
 
 export default async function BookingsPage() {
@@ -55,14 +55,8 @@ export default async function BookingsPage() {
   const past = bookings.filter(b => b.startTime < now)
 
   return (
-    <main className="min-h-screen bg-[#F7F4EF]">
-      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">← Dashboard</Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">Bookings</span>
-      </nav>
-
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
+    <DashboardLayout user={{ email: user.email }}>
+      <div className="space-y-8">
 
         {/* Upcoming */}
         <section className="space-y-3">
@@ -140,6 +134,6 @@ export default async function BookingsPage() {
           </section>
         )}
       </div>
-    </main>
+    </DashboardLayout>
   )
 }

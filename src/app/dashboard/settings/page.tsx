@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import type { ConnectedCalendar } from '@/types/database'
+import DashboardLayout from '@/components/DashboardLayout'
 import DisconnectCalendarButton from './DisconnectCalendarButton'
 import AvailabilityEditor from './AvailabilityEditor'
 import LanguageEditor from './LanguageEditor'
@@ -42,20 +43,8 @@ export default async function SettingsPage({
   })) as ConnectedCalendar[]
 
   return (
-    <main className="min-h-screen bg-[#F7F4EF]">
-      <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
-          ← Dashboard
-        </Link>
-        <span className="text-gray-300">/</span>
-        <Link href="/dashboard/team" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
-          Team
-        </Link>
-        <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">Settings</span>
-      </nav>
-
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-4 sm:space-y-6">
+    <DashboardLayout user={{ email: user.email }}>
+      <div className="space-y-4 sm:space-y-6">
 
         {params.success === 'calendar_connected' && (
           <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">
@@ -167,6 +156,6 @@ export default async function SettingsPage({
         </div>
 
       </div>
-    </main>
+    </DashboardLayout>
   )
 }
