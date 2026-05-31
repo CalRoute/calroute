@@ -107,7 +107,7 @@ export default async function SettingsPage({
           <div>
             <h2 className="font-semibold text-gray-900">Meeting languages</h2>
             <p className="text-sm text-gray-500 mt-0.5">
-              Which languages can you hold meetings in? Applies to all links where you&apos;re a host.
+              Languages you can hold meetings in. Used to route bookings on team links.
             </p>
           </div>
           <LanguageEditor savedLanguages={savedLanguages} />
