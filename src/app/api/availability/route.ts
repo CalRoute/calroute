@@ -139,8 +139,8 @@ async function handleAvailability(request: NextRequest) {
       timezone: h.host?.timezone ?? 'UTC',
       availability: h.availability.map((a: any) => ({
         dayOfWeek: a.dayOfWeek,
-        startTime: a.startTime,
-        endTime: a.endTime,
+        // Support both old format (startTime/endTime) and new (ranges)
+        ranges: a.ranges ?? (a.startTime ? [{ startTime: a.startTime, endTime: a.endTime }] : []),
       })),
       busySlots: allBusy,
       priority: h.priority,

@@ -9,8 +9,7 @@ export interface TimeSlot {
 
 export interface HostAvailability {
   dayOfWeek: number  // 0=Sun, 6=Sat
-  startTime: string  // "09:00"
-  endTime: string    // "17:00"
+  ranges: { startTime: string; endTime: string }[]
 }
 
 export interface HostWithCalendars {
@@ -41,48 +40,44 @@ function getSlotsForHostOnDay(
   bufferAfterMinutes: number,
 ): TimeSlot[] {
   const dayOfWeek = getDay(day)
-  const availWindow = host.availability.find(a => a.dayOfWeek === dayOfWeek)
-  if (!availWindow) return []
-
-  const { hours: startH, minutes: startM } = parseTime(availWindow.startTime)
-  const { hours: endH, minutes: endM } = parseTime(availWindow.endTime)
-
-  // Convert availability window to UTC using host's timezone
-  const windowStart = fromZonedTime(
-    set(day, { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 }),
-    host.timezone
-  )
-  const windowEnd = fromZonedTime(
-    set(day, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 }),
-    host.timezone
-  )
+  const availDay = host.availability.find(a => a.dayOfWeek === dayOfWeek)
+  if (!availDay || availDay.ranges.length === 0) return []
 
   const slots: TimeSlot[] = []
-  let cursor = windowStart
 
-  while (addMinutes(cursor, durationMinutes) <= windowEnd) {
-    const slotStart = cursor
-    const slotEnd = addMinutes(cursor, durationMinutes)
+  for (const range of availDay.ranges) {
+    const { hours: startH, minutes: startM } = parseTime(range.startTime)
+    const { hours: endH, minutes: endM } = parseTime(range.endTime)
 
-    // Check against busy slots (including buffer zones)
-    const effectiveStart = addMinutes(slotStart, -bufferBeforeMinutes)
-    const effectiveEnd = addMinutes(slotEnd, bufferAfterMinutes)
+    const windowStart = fromZonedTime(
+      set(day, { hours: startH, minutes: startM, seconds: 0, milliseconds: 0 }),
+      host.timezone
+    )
+    const windowEnd = fromZonedTime(
+      set(day, { hours: endH, minutes: endM, seconds: 0, milliseconds: 0 }),
+      host.timezone
+    )
 
-    const isBusy = host.busySlots.some(busy => {
-      const busyStart = parseISO(busy.start)
-      const busyEnd = parseISO(busy.end)
-      return areIntervalsOverlapping(
-        { start: effectiveStart, end: effectiveEnd },
-        { start: busyStart, end: busyEnd },
-        { inclusive: false }
-      )
-    })
+    let cursor = windowStart
+    while (addMinutes(cursor, durationMinutes) <= windowEnd) {
+      const slotStart = cursor
+      const slotEnd = addMinutes(cursor, durationMinutes)
+      const effectiveStart = addMinutes(slotStart, -bufferBeforeMinutes)
+      const effectiveEnd = addMinutes(slotEnd, bufferAfterMinutes)
 
-    if (!isBusy) {
-      slots.push({ start: slotStart, end: slotEnd })
+      const isBusy = host.busySlots.some(busy => {
+        const busyStart = parseISO(busy.start)
+        const busyEnd = parseISO(busy.end)
+        return areIntervalsOverlapping(
+          { start: effectiveStart, end: effectiveEnd },
+          { start: busyStart, end: busyEnd },
+          { inclusive: false }
+        )
+      })
+
+      if (!isBusy) slots.push({ start: slotStart, end: slotEnd })
+      cursor = addMinutes(cursor, durationMinutes)
     }
-
-    cursor = addMinutes(cursor, durationMinutes)
   }
 
   return slots

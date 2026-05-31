@@ -4,7 +4,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 
-// PUT: replace the caller's entire availability schedule
 export async function PUT(request: NextRequest) {
   const user = await getServerUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -22,8 +21,7 @@ export async function PUT(request: NextRequest) {
       .collection('availability').doc(String(a.dayOfWeek))
     batch.set(ref, {
       dayOfWeek: a.dayOfWeek,
-      startTime: a.startTime,
-      endTime: a.endTime,
+      ranges: a.ranges,
     })
   }
 
