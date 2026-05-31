@@ -45,6 +45,10 @@ export default async function SettingsPage({
           ← Dashboard
         </Link>
         <span className="text-gray-300">/</span>
+        <Link href="/dashboard/team" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
+          Team
+        </Link>
+        <span className="text-gray-300">/</span>
         <span className="text-sm text-gray-700 font-medium">Settings</span>
       </nav>
 
