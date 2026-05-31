@@ -12,12 +12,17 @@ interface Slot {
 
 interface Props {
   link: BookingLink
+  availableLanguages: string[]
 }
 
-type Step = 'select-date' | 'select-time' | 'fill-form' | 'confirmed'
+type Step = 'select-language' | 'select-date' | 'select-time' | 'fill-form' | 'confirmed'
 
-export default function BookingWidget({ link }: Props) {
-  const [step, setStep] = useState<Step>('select-date')
+export default function BookingWidget({ link, availableLanguages }: Props) {
+  const needsLanguagePick = availableLanguages.length > 1
+  const [step, setStep] = useState<Step>(needsLanguagePick ? 'select-language' : 'select-date')
+  const [selectedLanguage, setSelectedLanguage] = useState<string | null>(
+    availableLanguages.length === 1 ? availableLanguages[0] : null
+  )
   const [slots, setSlots] = useState<Slot[]>([])
   const [loading, setLoading] = useState(false)
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -40,7 +45,8 @@ export default function BookingWidget({ link }: Props) {
     setSlots([])
     setError(null)
 
-    fetch(`/api/availability?slug=${link.slug}&start=${selectedDate}&timezone=${encodeURIComponent(timezone)}`)
+    const langParam = selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : ''
+    fetch(`/api/availability?slug=${link.slug}&start=${selectedDate}&timezone=${encodeURIComponent(timezone)}${langParam}`)
       .then(r => r.json())
       .then(data => {
         setSlots(data.slots ?? [])
@@ -48,7 +54,7 @@ export default function BookingWidget({ link }: Props) {
       })
       .catch(() => setError('Failed to load availability. Please try again.'))
       .finally(() => setLoading(false))
-  }, [selectedDate, link.slug, timezone])
+  }, [selectedDate, link.slug, timezone, selectedLanguage])
 
   const slotsOnDate = slots.filter(s =>
     format(parseISO(s.start), 'yyyy-MM-dd') === selectedDate
@@ -152,13 +158,49 @@ export default function BookingWidget({ link }: Props) {
         {link.description && (
           <p className="text-gray-500 text-sm mt-1">{link.description}</p>
         )}
-        <p className="text-sm text-gray-400 mt-1">{link.durationMinutes} min · {timezone}</p>
+        <p className="text-sm text-gray-400 mt-1">
+          {link.durationMinutes} min · {timezone}
+          {selectedLanguage && (
+            <>
+              {' · '}{selectedLanguage}
+              {needsLanguagePick && (
+                <button
+                  onClick={() => { setStep('select-language'); setSelectedDate(null); setSlots([]) }}
+                  className="ml-1.5 underline hover:text-gray-600 transition-colors"
+                >
+                  change
+                </button>
+              )}
+            </>
+          )}
+        </p>
       </div>
 
       <div className="p-5 sm:p-6">
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
             {error}
+          </div>
+        )}
+
+        {/* Language selection */}
+        {step === 'select-language' && (
+          <div className="space-y-4">
+            <h2 className="text-sm font-medium text-gray-700">What language would you like your meeting in?</h2>
+            <div className="grid grid-cols-2 gap-2">
+              {availableLanguages.map(lang => (
+                <button
+                  key={lang}
+                  onClick={() => {
+                    setSelectedLanguage(lang)
+                    setStep('select-date')
+                  }}
+                  className="py-3 px-4 rounded-xl border border-gray-200 text-sm font-medium text-gray-700 hover:border-[#0D7377] hover:text-[#0D7377] hover:bg-[#0D7377]/5 transition-colors text-left"
+                >
+                  {lang}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

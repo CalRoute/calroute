@@ -6,6 +6,7 @@ import Link from 'next/link'
 import type { ConnectedCalendar } from '@/types/database'
 import DisconnectCalendarButton from './DisconnectCalendarButton'
 import AvailabilityEditor from './AvailabilityEditor'
+import LanguageEditor from './LanguageEditor'
 
 export default async function SettingsPage({
   searchParams,
@@ -26,6 +27,7 @@ export default async function SettingsPage({
     .get()
 
   const savedAvailability = availSnap.docs.map(d => d.data())
+  const savedLanguages: string[] = host?.languages ?? []
 
   const calsSnap = await adminDb
     .collection('hosts')
@@ -98,6 +100,17 @@ export default async function SettingsPage({
             </p>
           </div>
           <AvailabilityEditor savedAvailability={savedAvailability} />
+        </div>
+
+        {/* Languages */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Meeting languages</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Which languages can you hold meetings in? Applies to all links where you&apos;re a host.
+            </p>
+          </div>
+          <LanguageEditor savedLanguages={savedLanguages} />
         </div>
 
         {/* Connected calendars */}

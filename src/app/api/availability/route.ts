@@ -20,6 +20,7 @@ async function handleAvailability(request: NextRequest) {
   const slug = searchParams.get('slug')
   const startDateParam = searchParams.get('start')
   const timezone = searchParams.get('timezone') ?? 'UTC'
+  const language = searchParams.get('language') ?? null
 
   if (!slug) {
     return NextResponse.json({ error: 'slug is required' }, { status: 400 })
@@ -81,8 +82,20 @@ async function handleAvailability(request: NextRequest) {
     })
   )
 
+  // 4b. Filter by language if requested
+  const filteredHostsData = language
+    ? hostsData.filter(h => {
+        const langs: string[] = h.host?.languages ?? []
+        return langs.includes(language)
+      })
+    : hostsData
+
+  if (filteredHostsData.length === 0) {
+    return NextResponse.json({ slots: [] })
+  }
+
   // 5. Fetch freeBusy for all calendars
-  const allCalendars = hostsData.flatMap(h =>
+  const allCalendars = filteredHostsData.flatMap(h =>
     h.calendars.map((c: any) => ({
       ...c,
       host_id: h.hostId,
@@ -101,7 +114,7 @@ async function handleAvailability(request: NextRequest) {
     startDate,
     endDate,
     async (calendarDocId, token, expiresAt) => {
-      for (const h of hostsData) {
+      for (const h of filteredHostsData) {
         const cal = h.calendars.find((c: any) => c.id === calendarDocId)
         if (cal) {
           await adminDb
@@ -117,7 +130,7 @@ async function handleAvailability(request: NextRequest) {
   )
 
   // 6. Build host structs for engine
-  const hosts = hostsData.map(h => {
+  const hosts = filteredHostsData.map(h => {
     const allBusy = h.calendars.flatMap((cal: any) =>
       busyByCalendarId.get(cal.id) ?? []
     )
