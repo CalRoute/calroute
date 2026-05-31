@@ -35,7 +35,6 @@ export default function EditBookingLinkForm({
     description: link.description ?? '',
     slug: link.slug ?? '',
     durationMinutes: link.durationMinutes ?? 30,
-    bufferBeforeMinutes: link.bufferBeforeMinutes ?? 0,
     bufferAfterMinutes: link.bufferAfterMinutes ?? 0,
     routingStrategy: link.routingStrategy ?? 'priority',
     maxDaysAhead: link.maxDaysAhead ?? 30,
@@ -61,7 +60,7 @@ export default function EditBookingLinkForm({
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, bufferBeforeMinutes: 0 }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to update link')
@@ -218,20 +217,14 @@ export default function EditBookingLinkForm({
                 ))}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Buffer before (min)</label>
-                <input type="number" min={0} max={60} value={form.bufferBeforeMinutes}
-                  onChange={e => setForm(f => ({ ...f, bufferBeforeMinutes: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Buffer after (min)</label>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer between meetings (min)</label>
+              <div className="flex items-center gap-2">
                 <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
                   onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+                <span className="text-sm text-gray-500">min gap after each meeting</span>
               </div>
             </div>
             <div>
