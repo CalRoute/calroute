@@ -85,6 +85,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
         customer_name: form.name,
         customer_email: form.email,
         customer_notes: form.notes || undefined,
+        language: selectedLanguage || undefined,
       }),
     })
     const data = await res.json()

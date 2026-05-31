@@ -76,6 +76,7 @@ export default async function ReschedulePage({ params, searchParams }: Props) {
             token={token}
             link={link}
             currentStartTime={booking.startTime}
+            language={booking.language}
           />
         )}
       </div>

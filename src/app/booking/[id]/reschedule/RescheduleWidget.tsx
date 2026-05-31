@@ -12,12 +12,13 @@ interface Slot { start: string; end: string; assignedHostId: string }
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 export default function RescheduleWidget({
-  bookingId, token, link, currentStartTime,
+  bookingId, token, link, currentStartTime, language,
 }: {
   bookingId: string
   token: string
   link: any
   currentStartTime: string
+  language?: string
 }) {
   const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()))
   const [selectedDate, setSelectedDate] = useState<string | null>(null)
@@ -35,12 +36,18 @@ export default function RescheduleWidget({
     if (!selectedDate) return
     setLoading(true)
     setSlots([])
-    fetch(`/api/availability?slug=${link.slug}&start=${selectedDate}&timezone=${encodeURIComponent(timezone)}`)
+    const params = new URLSearchParams({
+      slug: link.slug,
+      start: selectedDate,
+      timezone,
+      ...(language && { language }),
+    })
+    fetch(`/api/availability?${params}`)
       .then(r => r.json())
       .then(data => setSlots(data.slots ?? []))
       .catch(() => setError('Failed to load slots'))
       .finally(() => setLoading(false))
-  }, [selectedDate, link.slug, timezone])
+  }, [selectedDate, link.slug, timezone, language])
 
   const slotsOnDate = slots.filter(s =>
     format(parseISO(s.start), 'yyyy-MM-dd') === selectedDate &&

@@ -12,7 +12,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { slug, start_time, host_id, session_token, customer_name, customer_email, customer_notes } = body
+  const { slug, start_time, host_id, session_token, customer_name, customer_email, customer_notes, language } = body
 
   if (!slug || !start_time || !host_id || !session_token || !customer_name || !customer_email) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -90,6 +90,7 @@ export async function POST(request: NextRequest) {
     status: 'confirmed',
     cancelToken,
     rescheduleToken,
+    language: language ?? null,
     createdAt: new Date().toISOString(),
   })
 
