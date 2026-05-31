@@ -151,24 +151,68 @@ export default function HomePage() {
 
       {/* Features */}
       <section id="features" className="py-20 sm:py-32 px-6">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">Features</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-10 sm:mb-16 max-w-lg leading-tight">
-            Everything a team needs to stop playing calendar ping-pong
-          </h2>
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16 sm:mb-20">
+            <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Features</p>
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 leading-tight">
+              Everything you need for seamless team scheduling
+            </h2>
+            <p className="text-lg text-[#1a1a1a]/40 max-w-2xl mx-auto">Built for teams who actually want to keep their customers happy.</p>
+          </div>
 
-          <div className="grid md:grid-cols-3 gap-5">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: '📅', title: 'Multi-calendar merging', desc: 'Connect up to 5 Google Calendars per person. Work, personal, side projects — all merged into one honest view.' },
-              { icon: '🎯', title: 'Smart host routing', desc: 'Priority or round-robin — CalRoute assigns the right person automatically. Zero spreadsheet required.' },
-              { icon: '⚡', title: 'Race condition proof', desc: 'Slots are held for 5 minutes while someone books. Two people trying at once? Only one gets it. Always.' },
-              { icon: '🌍', title: 'Timezone aware', desc: 'Customers see their timezone. Hosts see theirs. No "which timezone is that?" emails. Ever.' },
-              { icon: '📧', title: 'Instant confirmations', desc: 'Both sides get an email the second a booking is confirmed, with the Google Meet link included.' },
-              { icon: '🔗', title: 'Embeddable widget', desc: 'One iframe tag. Drop it into any website or Notion page and the full booking widget appears inline.' },
+              {
+                icon: '👥',
+                title: 'Team booking links',
+                desc: 'One link for your entire team. CalRoute automatically routes each meeting to whoever is actually free.'
+              },
+              {
+                icon: '📅',
+                title: 'Multi-calendar merging',
+                desc: 'Each team member connects up to 5 calendars. Work, personal, side projects — all merged into one honest view.'
+              },
+              {
+                icon: '🎯',
+                title: 'Smart routing',
+                desc: 'Round-robin, priority-based, or first-available. Set it once and let CalRoute assign automatically.'
+              },
+              {
+                icon: '🌐',
+                title: 'Language-based selection',
+                desc: 'For global teams, customers pick their language. CalRoute shows only hosts who speak it.'
+              },
+              {
+                icon: '⏰',
+                title: 'Timezone intelligence',
+                desc: 'Customers book in their timezone. Your team sees their own. No more "which timezone?" confusion.'
+              },
+              {
+                icon: '🔄',
+                title: 'Guest-managed rescheduling',
+                desc: 'Customers can reschedule or cancel their own bookings up to 24h before. Notification sent to your team.'
+              },
+              {
+                icon: '📱',
+                title: 'Mobile-friendly widget',
+                desc: 'Premium month-calendar view with full-width time slots. Looks great on any device.'
+              },
+              {
+                icon: '📧',
+                title: 'Automatic confirmations',
+                desc: 'Customers and hosts both get emails with Google Meet links. Real-time calendar sync.'
+              },
+              {
+                icon: '🔗',
+                title: 'Embeddable anywhere',
+                desc: 'Drop one iframe into your website, Notion, or email. The booking widget appears inline — no redirects.'
+              },
             ].map(f => (
-              <div key={f.title} className="bg-white rounded-2xl p-6 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-md hover:shadow-[#0D7377]/[0.06] transition-all group">
-                <span className="text-2xl mb-4 block">{f.icon}</span>
-                <h3 className="text-sm font-semibold mb-2 group-hover:text-[#0D7377] transition-colors">{f.title}</h3>
+              <div key={f.title} className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all duration-300 group">
+                <div className="w-12 h-12 bg-[#0D7377]/10 rounded-2xl flex items-center justify-center text-xl mb-5 group-hover:bg-[#0D7377]/15 transition-colors">
+                  {f.icon}
+                </div>
+                <h3 className="text-base font-semibold mb-3 group-hover:text-[#0D7377] transition-colors">{f.title}</h3>
                 <p className="text-sm text-[#1a1a1a]/40 leading-relaxed">{f.desc}</p>
               </div>
             ))}
@@ -203,30 +247,34 @@ export default function HomePage() {
 
       {/* Vs */}
       <section className="py-20 sm:py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
-        <div className="max-w-3xl mx-auto">
-          <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">Why CalRoute</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-3">Calendly is for individuals.</h2>
-          <p className="text-[#1a1a1a]/40 mb-8 sm:mb-12">We built what they left unfinished.</p>
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Why CalRoute</p>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-6">Built for teams, not individuals.</h2>
+            <p className="text-lg text-[#1a1a1a]/40">We did what other scheduling tools left unfinished.</p>
+          </div>
 
-          <div className="rounded-2xl border border-[#1a1a1a]/[0.06] overflow-hidden bg-white">
-            <div className="grid grid-cols-2 border-b border-[#1a1a1a]/[0.06]">
-              <div className="px-4 sm:px-6 py-3 text-xs font-semibold text-[#1a1a1a]/30 uppercase tracking-wider border-r border-[#1a1a1a]/[0.06]">Others</div>
-              <div className="px-4 sm:px-6 py-3 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
+          <div className="rounded-3xl border border-[#1a1a1a]/[0.08] overflow-hidden bg-white shadow-lg shadow-[#1a1a1a]/[0.04]">
+            <div className="grid grid-cols-2 border-b border-[#1a1a1a]/[0.08] bg-[#f9f7f3]">
+              <div className="px-6 sm:px-8 py-4 text-xs font-semibold text-[#1a1a1a]/40 uppercase tracking-wider border-r border-[#1a1a1a]/[0.08]">Standard solutions</div>
+              <div className="px-6 sm:px-8 py-4 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
             </div>
             {[
-              { them: 'One calendar per person', us: 'Up to 5 calendars merged' },
-              { them: 'Manual round-robin setup', us: 'Automatic routing, in seconds' },
-              { them: 'Per-seat pricing adds up fast', us: 'Flat pricing, whole team included' },
-              { them: 'Redirect-only booking pages', us: 'Native embeddable iframe widget' },
+              { them: 'One calendar per person', us: 'Up to 5 calendars merged per person' },
+              { them: 'Manual round-robin setup', us: 'Automatic routing, configured in seconds' },
+              { them: 'Basic availability blocks', us: 'Multiple time blocks with auto-merge' },
+              { them: 'Per-seat pricing', us: 'Flat team pricing — add hosts for free' },
+              { them: 'Redirect to external page', us: 'Embed directly on your website' },
+              { them: 'Limited customization', us: 'Premium month-calendar UI' },
             ].map((r, i) => (
-              <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 3 ? 'border-b border-[#1a1a1a]/[0.06]' : ''}`}>
-                <div className="px-4 sm:px-6 py-3 sm:py-4 text-[#1a1a1a]/35 flex items-start sm:items-center gap-2 sm:gap-3 border-r border-[#1a1a1a]/[0.06]">
-                  <span className="text-[#1a1a1a]/20 flex-shrink-0 mt-0.5 sm:mt-0">✕</span>
+              <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 5 ? 'border-b border-[#1a1a1a]/[0.08]' : ''}`}>
+                <div className="px-6 sm:px-8 py-4 sm:py-5 text-[#1a1a1a]/40 flex items-start sm:items-center gap-3 border-r border-[#1a1a1a]/[0.08]">
+                  <span className="text-[#1a1a1a]/15 flex-shrink-0 mt-0.5 sm:mt-0 text-lg">✕</span>
                   <span>{r.them}</span>
                 </div>
-                <div className="px-4 sm:px-6 py-3 sm:py-4 text-[#1a1a1a]/70 flex items-start sm:items-center gap-2 sm:gap-3 bg-[#0D7377]/[0.02]">
-                  <span className="text-[#0D7377] flex-shrink-0 mt-0.5 sm:mt-0">✓</span>
-                  <span>{r.us}</span>
+                <div className="px-6 sm:px-8 py-4 sm:py-5 text-[#1a1a1a]/70 flex items-start sm:items-center gap-3 bg-[#0D7377]/[0.03]">
+                  <span className="text-[#0D7377] flex-shrink-0 mt-0.5 sm:mt-0 text-lg font-bold">✓</span>
+                  <span className="text-[#1a1a1a]/80">{r.us}</span>
                 </div>
               </div>
             ))}
@@ -235,16 +283,22 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 sm:py-32 px-6 bg-[#0D7377] text-white text-center">
-        <div className="max-w-2xl mx-auto">
-          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">Ready to stop the chaos?</h2>
-          <p className="text-white/60 text-lg mb-10">Free forever for individuals. No credit card required.</p>
+      <section className="py-20 sm:py-32 px-6 bg-gradient-to-b from-[#0D7377] to-[#0a5f63] text-white text-center relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl" />
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl" />
+        </div>
+        <div className="max-w-3xl mx-auto relative z-10">
+          <h2 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6 leading-tight">Ready to get your team synced?</h2>
+          <p className="text-white/70 text-xl mb-3">Stop email ping-pong. Start working.</p>
+          <p className="text-white/50 text-lg mb-12">Free forever for teams. No credit card required.</p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 bg-white text-[#0D7377] font-bold text-sm px-10 py-4 rounded-xl hover:bg-[#F7F4EF] transition-colors"
+            className="inline-flex items-center gap-2 bg-white text-[#0D7377] font-bold text-lg px-12 py-4 rounded-xl hover:bg-[#F7F4EF] transition-all shadow-2xl shadow-black/20 hover:shadow-2xl hover:shadow-white/30"
           >
             Create your booking link →
           </Link>
+          <p className="text-white/40 text-sm mt-8">Takes under 2 minutes. No credit card needed.</p>
         </div>
       </section>
 
