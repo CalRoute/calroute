@@ -5,24 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
-const DEFAULT_AVAILABILITY = [
-  { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 6, startTime: '09:00', endTime: '17:00', enabled: false },
-  { dayOfWeek: 0, startTime: '09:00', endTime: '17:00', enabled: false },
-]
-
-function mergeAvailability(saved: any[]) {
-  return DEFAULT_AVAILABILITY.map(def => {
-    const found = saved.find((s: any) => s.dayOfWeek === def.dayOfWeek)
-    return found ? { ...found, enabled: true } : def
-  })
-}
 
 type TeamMember = {
   uid: string
@@ -34,12 +17,10 @@ type TeamMember = {
 
 export default function EditBookingLinkForm({
   link,
-  savedAvailability,
   initialHosts,
   ownerId,
 }: {
   link: any
-  savedAvailability: any[]
   initialHosts: TeamMember[]
   ownerId: string
 }) {
@@ -59,8 +40,6 @@ export default function EditBookingLinkForm({
     maxDaysAhead: link.maxDaysAhead ?? 30,
   })
 
-  const [availability, setAvailability] = useState(mergeAvailability(savedAvailability))
-
   // Team state
   const [hosts, setHosts] = useState<TeamMember[]>(initialHosts)
   const [addEmail, setAddEmail] = useState('')
@@ -73,10 +52,6 @@ export default function EditBookingLinkForm({
     return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   }
 
-  function updateAvailability(index: number, field: string, value: any) {
-    setAvailability(prev => prev.map((a, i) => (i === index ? { ...a, [field]: value } : a)))
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -85,10 +60,7 @@ export default function EditBookingLinkForm({
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          availability: availability.filter(a => a.enabled),
-        }),
+        body: JSON.stringify(form),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to update link')
@@ -279,42 +251,6 @@ export default function EditBookingLinkForm({
                   <p className="font-medium text-sm text-gray-900">{opt.label}</p>
                   <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Availability */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">Your availability</h2>
-            <p className="text-sm text-gray-500">Set the hours customers can book with you.</p>
-            <div className="space-y-2">
-              {availability.map((a, i) => (
-                <div key={a.dayOfWeek} className="flex items-center gap-3">
-                  <button type="button"
-                    onClick={() => updateAvailability(i, 'enabled', !a.enabled)}
-                    className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${a.enabled ? 'bg-blue-600' : 'bg-gray-200'}`}
-                  >
-                    <span className={`block w-4 h-4 bg-white rounded-full shadow mx-auto transition-transform ${a.enabled ? 'translate-x-2' : '-translate-x-2'}`} />
-                  </button>
-                  <span className={`w-8 text-sm font-medium ${a.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                    {DAYS[a.dayOfWeek]}
-                  </span>
-                  {a.enabled ? (
-                    <div className="flex items-center gap-2 flex-1">
-                      <input type="time" value={a.startTime}
-                        onChange={e => updateAvailability(i, 'startTime', e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <span className="text-gray-400 text-sm">to</span>
-                      <input type="time" value={a.endTime}
-                        onChange={e => updateAvailability(i, 'endTime', e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-400">Unavailable</span>
-                  )}
-                </div>
               ))}
             </div>
           </div>

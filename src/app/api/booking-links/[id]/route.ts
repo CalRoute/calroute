@@ -24,7 +24,7 @@ export async function PATCH(
   const {
     title, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
-    routingStrategy, maxDaysAhead, availability,
+    routingStrategy, maxDaysAhead,
   } = body
 
   if (!title || !slug) {
@@ -53,20 +53,6 @@ export async function PATCH(
     maxDaysAhead: maxDaysAhead ?? 30,
     updatedAt: new Date().toISOString(),
   })
-
-  // Update availability
-  if (availability) {
-    const batch = adminDb.batch()
-    for (const a of availability) {
-      const ref = adminDb
-        .collection('hosts')
-        .doc(auth.uid)
-        .collection('availability')
-        .doc(String(a.dayOfWeek))
-      batch.set(ref, { dayOfWeek: a.dayOfWeek, startTime: a.startTime, endTime: a.endTime })
-    }
-    await batch.commit()
-  }
 
   return NextResponse.json({ id, slug })
 }
