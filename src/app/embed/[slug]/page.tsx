@@ -37,9 +37,21 @@ export default async function EmbedPage({ params }: Props) {
     createdAt: link.createdAt,
   }
 
+  const hostsSnap = await adminDb
+    .collection('booking_links').doc(link.id).collection('hosts').get()
+
+  const hostLanguages = await Promise.all(
+    hostsSnap.docs.map(async (hDoc) => {
+      const hostSnap = await adminDb.collection('hosts').doc(hDoc.data().hostId).get()
+      return (hostSnap.data()?.languages ?? []) as string[]
+    })
+  )
+
+  const availableLanguages = [...new Set(hostLanguages.flat())]
+
   return (
     <div className="p-4">
-      <BookingWidget link={normalisedLink} />
+      <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
     </div>
   )
 }
