@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
         email: decoded.email ?? '',
         name: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
         avatarUrl: decoded.picture ?? null,
-        timezone: 'UTC',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
         createdAt: new Date().toISOString(),
       })
     }

@@ -7,6 +7,7 @@ import type { ConnectedCalendar } from '@/types/database'
 import DisconnectCalendarButton from './DisconnectCalendarButton'
 import AvailabilityEditor from './AvailabilityEditor'
 import LanguageEditor from './LanguageEditor'
+import TimezoneSelector from './TimezoneSelector'
 
 export default async function SettingsPage({
   searchParams,
@@ -73,7 +74,7 @@ export default async function SettingsPage({
         )}
 
         {/* Profile */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
           <h2 className="font-semibold text-gray-900">Profile</h2>
           <div className="text-sm text-gray-600 space-y-1.5">
             <div className="flex items-center gap-2">
@@ -84,10 +85,10 @@ export default async function SettingsPage({
               <span className="font-medium text-gray-700 w-16 flex-shrink-0">Email</span>
               <span className="truncate">{user.email}</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Timezone</span>
-              <span>{host?.timezone ?? '—'}</span>
-            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
+            <TimezoneSelector savedTimezone={host?.timezone ?? 'UTC'} />
           </div>
         </div>
 
