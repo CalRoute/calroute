@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   const {
     title, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
-    routingStrategy, maxDaysAhead, availability,
+    routingStrategy, maxDaysAhead,
   } = body
 
   if (!title || !slug) {
@@ -53,22 +53,6 @@ export async function POST(request: NextRequest) {
     priority: 1,
     lastBookedAt: null,
   })
-
-  // Save availability to host's subcollection
-  const batch = adminDb.batch()
-  for (const a of (availability ?? [])) {
-    const ref = adminDb
-      .collection('hosts')
-      .doc(uid)
-      .collection('availability')
-      .doc(String(a.dayOfWeek))
-    batch.set(ref, {
-      dayOfWeek: a.dayOfWeek,
-      startTime: a.startTime,
-      endTime: a.endTime,
-    })
-  }
-  await batch.commit()
 
   return NextResponse.json({ id: linkRef.id, slug })
 }

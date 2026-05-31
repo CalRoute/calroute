@@ -5,17 +5,6 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
-const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
-
-const DEFAULT_AVAILABILITY = [
-  { dayOfWeek: 1, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 2, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 3, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 4, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 5, startTime: '09:00', endTime: '17:00', enabled: true },
-  { dayOfWeek: 6, startTime: '09:00', endTime: '17:00', enabled: false },
-  { dayOfWeek: 0, startTime: '09:00', endTime: '17:00', enabled: false },
-]
 
 export default function NewBookingLinkPage() {
   const router = useRouter()
@@ -33,8 +22,6 @@ export default function NewBookingLinkPage() {
     maxDaysAhead: 30,
   })
 
-  const [availability, setAvailability] = useState(DEFAULT_AVAILABILITY)
-
   function slugify(val: string) {
     return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   }
@@ -48,30 +35,18 @@ export default function NewBookingLinkPage() {
     }))
   }
 
-  function updateAvailability(index: number, field: string, value: any) {
-    setAvailability(prev =>
-      prev.map((a, i) => (i === index ? { ...a, [field]: value } : a))
-    )
-  }
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError(null)
-
     try {
       const res = await fetch('/api/booking-links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...form,
-          availability: availability.filter(a => a.enabled),
-        }),
+        body: JSON.stringify(form),
       })
-
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to create link')
-
       router.push('/dashboard')
     } catch (err: any) {
       setError(err.message)
@@ -102,43 +77,31 @@ export default function NewBookingLinkPage() {
           {/* Basic info */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
             <h2 className="font-semibold text-gray-900">Basic info</h2>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
               <input
-                type="text"
-                required
-                value={form.title}
-                onChange={handleTitleChange}
+                type="text" required value={form.title} onChange={handleTitleChange}
                 placeholder="e.g. 30-min intro call"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
               <textarea
-                rows={2}
-                value={form.description}
+                rows={2} value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                 placeholder="What is this meeting about?"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
               />
             </div>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Link slug *
-                <span className="text-gray-400 font-normal ml-1">— your booking URL</span>
+                Link slug * <span className="text-gray-400 font-normal ml-1">— your booking URL</span>
               </label>
-              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">
-                  /book/
-                </span>
+              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
+                <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
                 <input
-                  type="text"
-                  required
-                  value={form.slug}
+                  type="text" required value={form.slug}
                   onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
                   placeholder="intro-call"
                   className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
@@ -150,64 +113,40 @@ export default function NewBookingLinkPage() {
           {/* Duration & buffers */}
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
             <h2 className="font-semibold text-gray-900">Duration & buffers</h2>
-
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
               <div className="flex flex-wrap gap-2">
                 {DURATIONS.map(d => (
-                  <button
-                    key={d}
-                    type="button"
-                    onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
+                  <button key={d} type="button" onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
                     className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      form.durationMinutes === d
-                        ? 'bg-blue-600 text-white border-blue-600'
-                        : 'border-gray-300 text-gray-700 hover:border-blue-400'
+                      form.durationMinutes === d ? 'bg-[#0D7377] text-white border-[#0D7377]' : 'border-gray-300 text-gray-700 hover:border-[#0D7377]'
                     }`}
-                  >
-                    {d} min
-                  </button>
+                  >{d} min</button>
                 ))}
               </div>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buffer before (min)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={60}
-                  value={form.bufferBeforeMinutes}
+                <input type="number" min={0} max={60} value={form.bufferBeforeMinutes}
                   onChange={e => setForm(f => ({ ...f, bufferBeforeMinutes: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Buffer after (min)</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={60}
-                  value={form.bufferAfterMinutes}
+                <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
                   onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
               </div>
             </div>
-
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                How far ahead can customers book?
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">How far ahead can customers book?</label>
               <div className="flex items-center gap-2">
-                <input
-                  type="number"
-                  min={1}
-                  max={90}
-                  value={form.maxDaysAhead}
+                <input type="number" min={1} max={90} value={form.maxDaysAhead}
                   onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
                 <span className="text-sm text-gray-500">days ahead</span>
               </div>
@@ -218,20 +157,15 @@ export default function NewBookingLinkPage() {
           <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
             <h2 className="font-semibold text-gray-900">Host routing</h2>
             <p className="text-sm text-gray-500">When multiple hosts are free at the same time, who gets assigned?</p>
-
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { value: 'priority', label: 'Priority', desc: 'Always assign the highest-priority host first' },
                 { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly — whoever was booked longest ago goes next' },
               ].map(opt => (
-                <button
-                  key={opt.value}
-                  type="button"
+                <button key={opt.value} type="button"
                   onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
                   className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                    form.routingStrategy === opt.value
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                    form.routingStrategy === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <p className="font-medium text-sm text-gray-900">{opt.label}</p>
@@ -241,58 +175,12 @@ export default function NewBookingLinkPage() {
             </div>
           </div>
 
-          {/* Availability */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">Your availability</h2>
-            <p className="text-sm text-gray-500">Set the hours customers can book with you.</p>
+          <p className="text-xs text-gray-400 text-center">
+            Set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link> — it applies to all your booking links.
+          </p>
 
-            <div className="space-y-2">
-              {availability.map((a, i) => (
-                <div key={a.dayOfWeek} className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 py-1">
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => updateAvailability(i, 'enabled', !a.enabled)}
-                      className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${
-                        a.enabled ? 'bg-[#0D7377]' : 'bg-gray-200'
-                      }`}
-                    >
-                      <span className={`block w-4 h-4 bg-white rounded-full shadow mx-auto transition-transform ${
-                        a.enabled ? 'translate-x-2' : '-translate-x-2'
-                      }`} />
-                    </button>
-                    <span className={`w-10 text-sm font-medium ${a.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                      {DAYS[a.dayOfWeek]}
-                    </span>
-                  </div>
-                  {a.enabled ? (
-                    <div className="flex items-center gap-2 flex-1 pl-13 sm:pl-0">
-                      <input
-                        type="time"
-                        value={a.startTime}
-                        onChange={e => updateAvailability(i, 'startTime', e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
-                      />
-                      <span className="text-gray-400 text-sm flex-shrink-0">to</span>
-                      <input
-                        type="time"
-                        value={a.endTime}
-                        onChange={e => updateAvailability(i, 'endTime', e.target.value)}
-                        className="flex-1 border border-gray-300 rounded-lg px-2 sm:px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
-                      />
-                    </div>
-                  ) : (
-                    <span className="text-sm text-gray-400 pl-13 sm:pl-0">Unavailable</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading || !form.title || !form.slug}
-            className="w-full py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          <button type="submit" disabled={loading || !form.title || !form.slug}
+            className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-medium hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {loading ? 'Creating…' : 'Create booking link'}
           </button>
