@@ -7,8 +7,12 @@ export interface SessionPayload {
 
 function secret() {
   const key = process.env.SESSION_SECRET
-  if (!key) throw new Error('SESSION_SECRET env var is not set')
+  if (!key) throw new Error('SESSION_SECRET is not configured')
   return new TextEncoder().encode(key)
+}
+
+export function hasSecret() {
+  return !!process.env.SESSION_SECRET
 }
 
 export async function signSession(payload: SessionPayload): Promise<string> {
