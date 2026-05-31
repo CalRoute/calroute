@@ -57,7 +57,7 @@ export default async function EmbedPage({ params }: Props) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>{link.title}</title>
-        <style>
+        <style dangerouslySetInnerHTML={{ __html: `
           * {
             margin: 0;
             padding: 0;
@@ -72,7 +72,7 @@ export default async function EmbedPage({ params }: Props) {
           body {
             padding: 16px;
           }
-        </style>
+        ` }} />
       </head>
       <body>
         <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
