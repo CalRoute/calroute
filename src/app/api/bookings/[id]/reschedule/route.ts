@@ -6,6 +6,7 @@ import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, addMinutes, parseISO } from 'date-fns'
+import { bookingRescheduledGuestEmail, bookingRescheduledHostEmail } from '@/lib/email-templates/booking-rescheduled'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -115,41 +116,35 @@ export async function POST(
   const rescheduleUrl = `${appUrl}/booking/${id}/reschedule?token=${booking.rescheduleToken}`
 
   try {
+    const guestHtml = bookingRescheduledGuestEmail({
+      title: link.title,
+      hostName: host.name,
+      newStartTime: newStart,
+      durationMinutes: link.durationMinutes,
+      rescheduleUrl,
+      cancelUrl,
+    })
+
+    const hostHtml = bookingRescheduledHostEmail({
+      title: link.title,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      newStartTime: newStart,
+      previousStartTime: parseISO(booking.startTime),
+    })
+
     await Promise.all([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: booking.customerEmail,
         subject: `Meeting rescheduled: ${link.title}`,
-        html: `
-          <h2>Your meeting has been rescheduled</h2>
-          <ul>
-            <li><strong>What:</strong> ${link.title}</li>
-            <li><strong>New time:</strong> ${newStart.toLocaleString()}</li>
-            <li><strong>With:</strong> ${host.name}</li>
-          </ul>
-          <p>Your calendar invite has been updated.</p>
-          <hr style="margin:24px 0;border:none;border-top:1px solid #eee"/>
-          <p style="font-size:13px;color:#666">
-            Need to change again? You can
-            <a href="${rescheduleUrl}">reschedule</a> or
-            <a href="${cancelUrl}">cancel</a> up to 24 hours before the meeting.
-          </p>
-        `,
+        html: guestHtml,
       }),
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: host.email,
         subject: `Meeting rescheduled: ${booking.customerName} — ${link.title}`,
-        html: `
-          <h2>A meeting has been rescheduled</h2>
-          <ul>
-            <li><strong>Customer:</strong> ${booking.customerName} (${booking.customerEmail})</li>
-            <li><strong>Meeting:</strong> ${link.title}</li>
-            <li><strong>New time:</strong> ${newStart.toLocaleString()}</li>
-            <li><strong>Previous time:</strong> ${new Date(booking.startTime).toLocaleString()}</li>
-          </ul>
-          <p>Your calendar has been updated.</p>
-        `,
+        html: hostHtml,
       }),
     ])
   } catch (e) {

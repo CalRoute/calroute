@@ -6,6 +6,7 @@ import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, parseISO } from 'date-fns'
+import { bookingCancelledGuestEmail, bookingCancelledHostEmail } from '@/lib/email-templates/booking-cancelled'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -74,27 +75,30 @@ export async function POST(
   const link = linkSnap.data()!
 
   try {
+    const guestHtml = bookingCancelledGuestEmail({
+      title: link.title,
+      startTime: parseISO(booking.startTime),
+    })
+
+    const hostHtml = bookingCancelledHostEmail({
+      title: link.title,
+      customerName: booking.customerName,
+      startTime: parseISO(booking.startTime),
+      cancelledBy,
+    })
+
     await Promise.all([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: booking.customerEmail,
         subject: `Booking cancelled: ${link.title}`,
-        html: `
-          <h2>Your booking has been cancelled</h2>
-          <p>Your meeting <strong>${link.title}</strong> on ${new Date(booking.startTime).toLocaleString()} has been cancelled.</p>
-          ${cancelledBy === 'host' ? '<p>The host cancelled this meeting.</p>' : ''}
-          <p>You can book a new time at any time.</p>
-        `,
+        html: guestHtml,
       }),
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: host.email,
         subject: `Booking cancelled: ${booking.customerName} — ${link.title}`,
-        html: `
-          <h2>A booking has been cancelled</h2>
-          <p><strong>${booking.customerName}</strong>'s meeting (<strong>${link.title}</strong>) on ${new Date(booking.startTime).toLocaleString()} has been cancelled.</p>
-          ${cancelledBy === 'guest' ? '<p>The guest cancelled this meeting.</p>' : ''}
-        `,
+        html: hostHtml,
       }),
     ])
   } catch (e) {

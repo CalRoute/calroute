@@ -6,6 +6,7 @@ import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { parseISO, addMinutes } from 'date-fns'
+import { bookingTransferredNewHostEmail, bookingTransferredGuestEmail } from '@/lib/email-templates/booking-transferred'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -92,27 +93,32 @@ export async function POST(
 
   // Notify everyone
   try {
+    const newHostHtml = bookingTransferredNewHostEmail({
+      title: link.title,
+      customerName: booking.customerName,
+      customerEmail: booking.customerEmail,
+      startTime,
+      transferredBy: oldHost.name,
+    })
+
+    const guestHtml = bookingTransferredGuestEmail({
+      title: link.title,
+      newHostName: newHost.name,
+      startTime,
+    })
+
     await Promise.all([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: newHost.email,
         subject: `Booking transferred to you: ${booking.customerName} — ${link.title}`,
-        html: `<h2>A booking has been transferred to you</h2>
-          <ul>
-            <li><strong>Customer:</strong> ${booking.customerName} (${booking.customerEmail})</li>
-            <li><strong>Meeting:</strong> ${link.title}</li>
-            <li><strong>When:</strong> ${startTime.toLocaleString()}</li>
-            <li><strong>Transferred by:</strong> ${oldHost.name}</li>
-          </ul>
-          <p>Check your calendar for the invite.</p>`,
+        html: newHostHtml,
       }),
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: booking.customerEmail,
         subject: `Meeting update: ${link.title}`,
-        html: `<h2>Your meeting host has changed</h2>
-          <p>Your meeting <strong>${link.title}</strong> on ${startTime.toLocaleString()} will now be with <strong>${newHost.name}</strong>.</p>
-          <p>Your calendar invite has been updated.</p>`,
+        html: guestHtml,
       }),
     ])
   } catch (e) {

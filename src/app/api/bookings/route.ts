@@ -6,6 +6,7 @@ import { createCalendarEvent } from '@/lib/google/calendar'
 import { addMinutes, parseISO } from 'date-fns'
 import { Resend } from 'resend'
 import { randomUUID } from 'crypto'
+import { bookingConfirmedEmail, bookingConfirmedHostEmail } from '@/lib/email-templates/booking-confirmed'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -150,40 +151,36 @@ export async function POST(request: NextRequest) {
   const rescheduleUrl = `${appUrl}/booking/${bookingRef.id}/reschedule?token=${rescheduleToken}`
 
   try {
+    const guestHtml = bookingConfirmedEmail({
+      title: link.title,
+      customerName: customer_name,
+      hostName: host.name,
+      startTime,
+      durationMinutes: link.durationMinutes,
+      rescheduleUrl,
+      cancelUrl,
+    })
+
+    const hostHtml = bookingConfirmedHostEmail({
+      title: link.title,
+      customerName: customer_name,
+      customerEmail: customer_email,
+      customerNotes: customer_notes ?? undefined,
+      startTime,
+    })
+
     await Promise.all([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: customer_email,
         subject: `Booking confirmed: ${link.title}`,
-        html: `
-          <h2>Your meeting is confirmed!</h2>
-          <ul>
-            <li><strong>What:</strong> ${link.title}</li>
-            <li><strong>When:</strong> ${startTime.toLocaleString()}</li>
-            <li><strong>With:</strong> ${host.name}</li>
-          </ul>
-          <p>A Google Meet link is in your calendar invite.</p>
-          <hr style="margin:24px 0;border:none;border-top:1px solid #eee"/>
-          <p style="font-size:13px;color:#666">
-            Need to make a change? You can
-            <a href="${rescheduleUrl}">reschedule</a> or
-            <a href="${cancelUrl}">cancel</a> up to 24 hours before the meeting.
-          </p>
-        `,
+        html: guestHtml,
       }),
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: host.email,
         subject: `New booking: ${customer_name} — ${link.title}`,
-        html: `
-          <h2>New booking received</h2>
-          <ul>
-            <li><strong>Meeting:</strong> ${link.title}</li>
-            <li><strong>When:</strong> ${startTime.toLocaleString()}</li>
-            <li><strong>Customer:</strong> ${customer_name} (${customer_email})</li>
-            ${customer_notes ? `<li><strong>Notes:</strong> ${customer_notes}</li>` : ''}
-          </ul>
-        `,
+        html: hostHtml,
       }),
     ])
   } catch (emailError) {
