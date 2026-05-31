@@ -35,20 +35,41 @@ export async function GET() {
       return NextResponse.json(result)
     }
 
-    result.step = 'querying firestore'
+    result.step = 'querying owned links'
+    const ownedSnap = await adminDb
+      .collection('booking_links')
+      .where('ownerId', '==', payload.uid)
+      .orderBy('createdAt', 'desc')
+      .get()
+    result.ownedLinkCount = ownedSnap.size
+    result.ownedLinks = ownedSnap.docs.map(d => ({ id: d.id, ownerId: d.data().ownerId, title: d.data().title }))
+
+    result.step = 'querying member links'
     const memberSnap = await adminDb
       .collectionGroup('hosts')
       .where('hostId', '==', payload.uid)
       .get()
+    result.memberCount = memberSnap.size
+
+    result.step = 'resolving member links'
+    const resolved = await Promise.all(
+      memberSnap.docs.map(async (doc) => {
+        const linkId = doc.ref.parent.parent?.id
+        if (!linkId) return { linkId: null, reason: 'no parent' }
+        const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
+        if (!linkSnap.exists) return { linkId, reason: 'link not found' }
+        const data = linkSnap.data()!
+        return {
+          linkId,
+          title: data.title,
+          ownerId: data.ownerId,
+          isOwner: data.ownerId === payload.uid,
+        }
+      })
+    )
+    result.resolvedMembers = resolved
 
     result.step = 'done'
-    result.memberCount = memberSnap.size
-    result.members = memberSnap.docs.map(d => ({
-      path: d.ref.path,
-      hostId: d.data().hostId,
-      parentId: d.ref.parent.parent?.id ?? null,
-    }))
-
     return NextResponse.json(result)
   } catch (e: any) {
     result.error = e?.message ?? String(e)
