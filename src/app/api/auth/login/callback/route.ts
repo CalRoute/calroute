@@ -2,9 +2,10 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
+import { signSession } from '@/lib/session-jwt'
 
-const SESSION_MAX_AGE = 60 * 60           // 1 hour  — matches Firebase ID token lifetime
-const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days — Firebase refresh tokens don't expire
+const SESSION_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
+const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 
 function cookieOpts(maxAge: number) {
   return {
@@ -96,9 +97,12 @@ export async function GET(request: NextRequest) {
       })
     }
 
+    // Sign our own session JWT (no external verification needed later)
+    const sessionToken = await signSession({ uid: decoded.uid, email: decoded.email ?? '' })
+
     // Set session + refresh cookies and redirect
     const response = NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}${returnTo}`)
-    response.cookies.set('calroute-session', idToken, cookieOpts(SESSION_MAX_AGE))
+    response.cookies.set('calroute-session', sessionToken, cookieOpts(SESSION_MAX_AGE))
     if (refreshToken) {
       response.cookies.set('calroute-refresh', refreshToken, cookieOpts(REFRESH_MAX_AGE))
     }

@@ -1,6 +1,6 @@
-import { adminAuth } from './admin'
 import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { verifySession } from '@/lib/session-jwt'
 
 export async function getServerUser() {
   const cookieStore = await cookies()
@@ -10,13 +10,13 @@ export async function getServerUser() {
     return null
   }
 
-  try {
-    return await adminAuth.verifyIdToken(token)
-  } catch (e: unknown) {
-    const err = e as { code?: string; message?: string }
-    console.error('[session] verifyIdToken failed — code:', err?.code, 'message:', err?.message, 'token prefix:', token.slice(0, 40))
+  const payload = await verifySession(token)
+  if (!payload) {
+    console.log('[session] session token invalid or expired')
     return null
   }
+
+  return { uid: payload.uid, email: payload.email }
 }
 
 export async function requireUser(path: string) {

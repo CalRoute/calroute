@@ -1,19 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { verifySession, signSession, decodeFirebaseTokenPayload } from '@/lib/session-jwt'
 
-const SESSION_MAX_AGE = 60 * 60            // 1 hour
+const SESSION_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 
 export async function proxy(request: NextRequest) {
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
   if (!isDashboardRoute) return NextResponse.next()
 
-  const session = request.cookies.get('calroute-session')?.value
+  const sessionToken = request.cookies.get('calroute-session')?.value
   const refresh = request.cookies.get('calroute-refresh')?.value
 
-  // Has a valid (non-expired) session token — proceed
-  if (session) return NextResponse.next()
+  // Valid session — proceed
+  if (sessionToken) {
+    const payload = await verifySession(sessionToken)
+    if (payload) return NextResponse.next()
+  }
 
-  // No session but has a refresh token — silently refresh
+  // No valid session but has refresh token — get a new Firebase token and sign our own
   if (refresh) {
     try {
       const res = await fetch(
@@ -29,9 +33,15 @@ export async function proxy(request: NextRequest) {
 
       const { id_token: newIdToken, refresh_token: newRefresh } = await res.json()
 
-      // Proceed to the page and set the new tokens in the response
+      // Decode the Firebase token to get uid/email (already validated by Firebase)
+      const { uid, email } = decodeFirebaseTokenPayload(newIdToken)
+      if (!uid) throw new Error('no uid in token')
+
+      // Sign our own session JWT
+      const newSessionToken = await signSession({ uid, email: email ?? '' })
+
       const response = NextResponse.next()
-      response.cookies.set('calroute-session', newIdToken, {
+      response.cookies.set('calroute-session', newSessionToken, {
         httpOnly: true,
         secure: true,
         maxAge: SESSION_MAX_AGE,
@@ -53,8 +63,8 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // No valid session, no refresh token — redirect to login
-  console.log('[proxy] no session/refresh for', request.nextUrl.pathname, '— redirecting to login')
+  // No valid session — redirect to login
+  console.log('[proxy] no session/refresh for', request.nextUrl.pathname)
   const url = request.nextUrl.clone()
   url.pathname = '/login'
   url.searchParams.set('returnTo', request.nextUrl.pathname)
