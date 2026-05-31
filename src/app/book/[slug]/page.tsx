@@ -41,19 +41,20 @@ export default async function BookPage({ params }: Props) {
 
   const link = { id: snap.docs[0].id, ...snap.docs[0].data() } as any
 
-  // Collect languages from all hosts on this link
+  // Language picker only makes sense for team links (2+ hosts)
   const hostsSnap = await adminDb
     .collection('booking_links').doc(link.id).collection('hosts').get()
 
-  const hostLanguages = await Promise.all(
-    hostsSnap.docs.map(async (hDoc) => {
-      const hostSnap = await adminDb.collection('hosts').doc(hDoc.data().hostId).get()
-      return (hostSnap.data()?.languages ?? []) as string[]
-    })
-  )
-
-  // Union of all languages — only show picker if 2+ distinct languages exist
-  const availableLanguages = [...new Set(hostLanguages.flat())]
+  let availableLanguages: string[] = []
+  if (hostsSnap.docs.length > 1) {
+    const hostLanguages = await Promise.all(
+      hostsSnap.docs.map(async (hDoc) => {
+        const hostSnap = await adminDb.collection('hosts').doc(hDoc.data().hostId).get()
+        return (hostSnap.data()?.languages ?? []) as string[]
+      })
+    )
+    availableLanguages = [...new Set(hostLanguages.flat())]
+  }
 
   const normalisedLink = {
     id: link.id,
