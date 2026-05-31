@@ -69,7 +69,7 @@
         { "fieldPath": "ownerId", "order": "ASCENDING" },
         { "fieldPath": "createdAt", "order": "DESCENDING" }
       ]
-    }
+    },
   ],
   "fieldOverrides": []
 }
