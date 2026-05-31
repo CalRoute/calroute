@@ -22,7 +22,7 @@ export async function PATCH(
 
   const body = await request.json()
   const {
-    title, description, slug,
+    title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
     routingStrategy, maxDaysAhead,
   } = body
@@ -45,6 +45,7 @@ export async function PATCH(
   await adminDb.collection('booking_links').doc(id).update({
     slug,
     title,
+    teamName: teamName || null,
     description: description || null,
     durationMinutes: durationMinutes ?? 30,
     bufferBeforeMinutes: bufferBeforeMinutes ?? 0,

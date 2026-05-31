@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const uid = user.uid
   const body = await request.json()
   const {
-    title, description, slug,
+    title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
     routingStrategy, maxDaysAhead,
   } = body
@@ -37,6 +37,7 @@ export async function POST(request: NextRequest) {
     ownerId: uid,
     slug,
     title,
+    teamName: teamName || null,
     description: description || null,
     durationMinutes: durationMinutes ?? 30,
     bufferBeforeMinutes: bufferBeforeMinutes ?? 0,

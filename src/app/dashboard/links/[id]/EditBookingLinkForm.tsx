@@ -31,6 +31,7 @@ export default function EditBookingLinkForm({
 
   const [form, setForm] = useState({
     title: link.title ?? '',
+    teamName: link.teamName ?? '',
     description: link.description ?? '',
     slug: link.slug ?? '',
     durationMinutes: link.durationMinutes ?? 30,
@@ -159,12 +160,24 @@ export default function EditBookingLinkForm({
           <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
             <h2 className="font-semibold text-gray-900">Basic info</h2>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+              <input
+                type="text" value={form.teamName}
+                onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+                placeholder="e.g. Sales Team, Support Team"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-xs text-gray-400 mt-1">Shown to team members on their dashboard.</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Booking link title *</label>
               <input
                 type="text" required value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="e.g. 30-min intro call"
                 className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+              <p className="text-xs text-gray-400 mt-1">Shown to customers on the booking page.</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
