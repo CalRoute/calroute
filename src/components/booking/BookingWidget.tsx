@@ -324,14 +324,19 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
                   )}
 
                   {!loading && slotsOnDate.length > 0 && (
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
+                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
                       {slotsOnDate.map(slot => (
                         <button
                           key={slot.start}
                           onClick={() => handleSlotSelect(slot)}
-                          className="py-2.5 rounded-xl border-2 border-gray-200 text-sm font-medium text-gray-700 hover:border-[#0D7377] hover:text-[#0D7377] hover:bg-[#0D7377]/5 transition-all"
+                          className="group w-full flex items-center justify-between px-4 py-3 rounded-xl border border-gray-200 hover:border-[#0D7377] hover:bg-[#0D7377]/5 transition-all"
                         >
-                          {format(parseISO(slot.start), 'h:mm a')}
+                          <span className="text-sm font-semibold text-gray-800 group-hover:text-[#0D7377] transition-colors">
+                            {format(parseISO(slot.start), 'h:mm a')}
+                          </span>
+                          <span className="text-xs text-gray-400 group-hover:text-[#0D7377]/70 transition-colors">
+                            {link.durationMinutes} min →
+                          </span>
                         </button>
                       ))}
                     </div>
