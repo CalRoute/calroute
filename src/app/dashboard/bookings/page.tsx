@@ -18,7 +18,31 @@ export default async function BookingsPage() {
     snap.docs.map(async (d) => {
       const data = d.data()
       const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
-      return { id: d.id, ...data, linkTitle: linkSnap.data()?.title ?? 'Deleted link' } as any
+      const link = linkSnap.data()
+
+      // Load other team members on this link (for transfer)
+      const hostsSnap = await adminDb
+        .collection('booking_links').doc(data.bookingLinkId)
+        .collection('hosts').get()
+
+      const teamMembers = await Promise.all(
+        hostsSnap.docs
+          .filter(h => h.data().hostId !== user.uid)
+          .map(async h => {
+            const profileSnap = await adminDb.collection('hosts').doc(h.data().hostId).get()
+            const profile = profileSnap.data()
+            return { uid: h.data().hostId, name: profile?.name ?? h.data().hostId }
+          })
+      )
+
+      return {
+        id: d.id,
+        ...data,
+        linkTitle: link?.title ?? 'Deleted link',
+        linkSlug: link?.slug ?? '',
+        durationMinutes: link?.durationMinutes ?? 30,
+        teamMembers,
+      } as any
     })
   )
 
@@ -75,7 +99,13 @@ export default async function BookingsPage() {
                 </div>
 
                 <div className="px-5 pb-4">
-                  <BookingActions bookingId={booking.id} customerEmail={booking.customerEmail} />
+                  <BookingActions
+                    bookingId={booking.id}
+                    customerEmail={booking.customerEmail}
+                    linkSlug={booking.linkSlug}
+                    durationMinutes={booking.durationMinutes}
+                    teamMembers={booking.teamMembers}
+                  />
                 </div>
               </div>
             ))
