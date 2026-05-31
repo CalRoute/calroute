@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
       <div className="max-w-3xl mx-auto px-6 py-16">
         <h1 className="text-4xl font-bold tracking-tight mb-2">Privacy Policy</h1>
-        <p className="text-sm text-[#1a1a1a]/40 mb-12">Last updated: May 27, 2026</p>
+        <p className="text-sm text-[#1a1a1a]/40 mb-12">Last updated: May 31, 2026</p>
 
         <div className="prose prose-gray max-w-none space-y-8 text-[#1a1a1a]/70 text-sm leading-relaxed">
 
@@ -61,7 +61,7 @@ export default function PrivacyPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">6. Data retention</h2>
-            <p>We retain your account data for as long as your account is active. Booking records are retained for 12 months. You may request deletion of your data at any time by contacting us.</p>
+            <p>We retain your account data for as long as your account is active. Booking records are retained for 3 months. You may request deletion of your data at any time by contacting us.</p>
           </section>
 
           <section>
@@ -85,7 +85,12 @@ export default function PrivacyPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">10. Contact</h2>
+            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">10. Terms of Service</h2>
+            <p>This Privacy Policy is complementary to our <Link href="/terms" className="text-[#0D7377] underline">Terms of Service</Link>, which govern your use of CalRoute. Please review both documents to understand your rights and obligations.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">11. Contact</h2>
             <p>For privacy-related questions or data requests, contact us at: <a href="mailto:dolbyjoab@gmail.com" className="text-[#0D7377] underline">dolbyjoab@gmail.com</a></p>
           </section>
 
