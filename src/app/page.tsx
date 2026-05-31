@@ -7,7 +7,30 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F4EF]/90 backdrop-blur-xl border-b border-[#1a1a1a]/[0.06]">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <span className="text-sm font-semibold tracking-tight">CalRoute</span>
+          <svg viewBox="0 0 400 120" className="w-32 h-auto" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            <g>
+              <rect x="20" y="20" width="80" height="80" rx="10" fill="url(#grad)" />
+              <rect x="20" y="20" width="80" height="16" rx="10" ry="0" fill="#0a5f63" />
+              <line x1="33" y1="20" x2="33" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+              <line x1="46" y1="20" x2="46" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+              <line x1="59" y1="20" x2="59" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+              <line x1="72" y1="20" x2="72" y2="100" stroke="rgba(255,255,255,0.2)" strokeWidth="1.2" />
+              <line x1="20" y1="48" x2="100" y2="48" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
+              <line x1="20" y1="76" x2="100" y2="76" stroke="rgba(255,255,255,0.15)" strokeWidth="0.8" />
+              <circle cx="39" cy="62" r="2.8" fill="white" opacity="0.8" />
+              <circle cx="66" cy="62" r="2.8" fill="white" opacity="0.8" />
+              <circle cx="52" cy="90" r="2.8" fill="white" opacity="0.8" />
+              <path d="M 39 62 Q 52 76 52 90" stroke="white" strokeWidth="1.2" fill="none" opacity="0.6" strokeLinecap="round" />
+              <path d="M 66 62 Q 52 76 52 90" stroke="white" strokeWidth="1.2" fill="none" opacity="0.6" strokeLinecap="round" />
+            </g>
+            <text x="120" y="75" fontFamily="Segoe UI, Arial, sans-serif" fontSize="48" fontWeight="700" fill="#1a1a1a" letterSpacing="-0.5">CalRoute</text>
+          </svg>
           <div className="flex items-center gap-8">
             <a href="#features" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Features</a>
             <a href="#how" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">How it works</a>

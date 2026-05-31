@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'CalRoute — Smart scheduling for teams',
   description: 'Connect multiple Google Calendars and share a single booking link.',
+  icons: {
+    icon: '/favicon-logo.svg',
+  },
 }
 
 export default function RootLayout({

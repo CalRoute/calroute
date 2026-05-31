@@ -22,8 +22,29 @@ export default function DashboardLayout({ children, user }: Props) {
     <div className="flex min-h-screen bg-[#F7F4EF]">
       {/* Mobile header */}
       <div className="fixed top-0 left-0 right-0 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between z-40 md:hidden">
-        <Link href="/" className="text-lg font-bold text-gray-900">
-          CalRoute
+        <Link href="/" className="flex items-center gap-2 h-8">
+          <svg viewBox="0 0 200 200" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="mobGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
+                <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+              </linearGradient>
+            </defs>
+            <rect x="50" y="50" width="100" height="100" rx="12" fill="url(#mobGrad)" />
+            <rect x="50" y="50" width="100" height="20" rx="12" ry="0" fill="#0a5f63" />
+            <line x1="67" y1="50" x2="67" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+            <line x1="84" y1="50" x2="84" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+            <line x1="101" y1="50" x2="101" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+            <line x1="118" y1="50" x2="118" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+            <line x1="50" y1="80" x2="150" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+            <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+            <circle cx="75" cy="95" r="3.5" fill="white" opacity="0.8" />
+            <circle cx="110" cy="95" r="3.5" fill="white" opacity="0.8" />
+            <circle cx="93" cy="130" r="3.5" fill="white" opacity="0.8" />
+            <path d="M 75 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+            <path d="M 110 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+          </svg>
+          <span className="text-lg font-bold text-gray-900">CalRoute</span>
         </Link>
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
@@ -49,8 +70,29 @@ export default function DashboardLayout({ children, user }: Props) {
       } md:top-0`}>
         {/* Logo */}
         <div className="px-6 py-6 border-b border-gray-200">
-          <Link href="/" className="text-xl font-bold text-gray-900">
-            CalRoute
+          <Link href="/" className="flex items-center gap-2 group">
+            <svg viewBox="0 0 200 200" className="w-10 h-10 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="sideGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style={{ stopColor: '#0D7377', stopOpacity: 1 }} />
+                  <stop offset="100%" style={{ stopColor: '#0a5f63', stopOpacity: 1 }} />
+                </linearGradient>
+              </defs>
+              <rect x="50" y="50" width="100" height="100" rx="12" fill="url(#sideGrad)" />
+              <rect x="50" y="50" width="100" height="20" rx="12" ry="0" fill="#0a5f63" />
+              <line x1="67" y1="50" x2="67" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              <line x1="84" y1="50" x2="84" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              <line x1="101" y1="50" x2="101" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              <line x1="118" y1="50" x2="118" y2="150" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+              <line x1="50" y1="80" x2="150" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              <line x1="50" y1="110" x2="150" y2="110" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+              <circle cx="75" cy="95" r="3.5" fill="white" opacity="0.8" />
+              <circle cx="110" cy="95" r="3.5" fill="white" opacity="0.8" />
+              <circle cx="93" cy="130" r="3.5" fill="white" opacity="0.8" />
+              <path d="M 75 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+              <path d="M 110 95 Q 93 110 93 130" stroke="white" strokeWidth="1.5" fill="none" opacity="0.6" strokeLinecap="round" />
+            </svg>
+            <span className="text-lg font-bold text-gray-900 group-hover:text-[#0D7377] transition-colors">CalRoute</span>
           </Link>
         </div>
 

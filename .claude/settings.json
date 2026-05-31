@@ -56,13 +56,24 @@
       "Bash(curl -sv \"https://calroute.me/api/availability?slug=test-availability&start=2026-06-01&timezone=America%2FToronto\")",
       "Bash(mkdir -p /Users/jo/GIT/CalRoute/src/app/api/booking-links/[id]/hosts/[uid])",
       "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/api/booking-links/[id]/hosts/[uid]')",
-      "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/api/calendars/[id]')"
+      "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/api/calendars/[id]')",
+      "Bash(git reset *)",
+      "Bash(node -e \"console.log\\(require\\('/Users/jo/GIT/CalRoute/node_modules/next/package.json'\\).version\\)\")",
+      "Bash(node -e ' *)",
+      "Bash(mkdir -p /Users/jo/GIT/CalRoute/src/app/api/bookings/[id]/cancel /Users/jo/GIT/CalRoute/src/app/api/bookings/[id]/reschedule)",
+      "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/api/bookings/[id]/cancel' '/Users/jo/GIT/CalRoute/src/app/api/bookings/[id]/reschedule')",
+      "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/booking/[id]/cancel' '/Users/jo/GIT/CalRoute/src/app/booking/[id]/reschedule')",
+      "Bash(firebase deploy *)",
+      "Bash(grep -E \"^jose$|^iron|^jsonwebtoken\")",
+      "Bash(npm run *)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
       "/Users/jo/GIT/CalRoute/src/app/book/\\[slug\\]",
       "/Users/jo/GIT/CalRoute/src/app/api/booking-links/[id]/hosts",
-      "/Users/jo/GIT/CalRoute/src/app/api/calendars"
+      "/Users/jo/GIT/CalRoute/src/app/api/calendars",
+      "/Users/jo/GIT/CalRoute/src/app/api/bookings/[id]",
+      "/Users/jo/GIT/CalRoute/src/app/booking/[id]"
     ]
   }
 }
