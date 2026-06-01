@@ -5,7 +5,6 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import { format, parseISO, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
 import DashboardLayout from '@/components/DashboardLayout'
-import InviteDashboardAction from './InviteDashboardAction'
 import TeamAvailabilityWidget from './TeamAvailabilityWidget'
 
 export default async function DashboardPage() {
@@ -162,8 +161,6 @@ export default async function DashboardPage() {
     console.error('[dashboard] failed to load team members:', e)
   }
 
-  const firstLinkSlug = links.length > 0 ? links[0].slug : null
-
   return (
     <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Dashboard">
       <div className="space-y-8">
@@ -231,14 +228,13 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
           <Link
             href="/dashboard/links/new"
             className="bg-[#0D7377] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors text-center"
           >
             + New link
           </Link>
-          <InviteDashboardAction firstLinkSlug={firstLinkSlug} />
           <Link
             href="/dashboard/bookings"
             className="bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
