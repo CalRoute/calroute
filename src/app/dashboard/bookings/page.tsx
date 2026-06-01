@@ -94,7 +94,10 @@ export default async function BookingsPage() {
   }
 
   return (
-    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Bookings">
+    <DashboardLayout
+      user={{ email: user.email, name: host?.name }}
+      breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Bookings' }]}
+    >
       <BookingsClient
         upcoming={upcoming}
         past={past}

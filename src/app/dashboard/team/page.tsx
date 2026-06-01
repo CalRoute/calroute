@@ -21,11 +21,21 @@ function Avatar({ name, avatarUrl, size = 8 }: { name: string; avatarUrl: string
   )
 }
 
-function StatusDot({ hasAvailability, hasCalendar }: { hasAvailability: boolean; hasCalendar: boolean }) {
+function StatusLabel({ hasAvailability, hasCalendar }: { hasAvailability: boolean; hasCalendar: boolean }) {
   if (hasAvailability && hasCalendar) {
-    return <div className="w-2.5 h-2.5 rounded-full bg-green-500" title="Setup complete" />
+    return (
+      <div className="flex items-center gap-1 text-xs font-medium text-green-600">
+        <div className="w-2 h-2 rounded-full bg-green-500" />
+        Available
+      </div>
+    )
   }
-  return <div className="w-2.5 h-2.5 rounded-full bg-amber-400" title="Incomplete setup" />
+  return (
+    <div className="flex items-center gap-1 text-xs font-medium text-amber-600">
+      <div className="w-2 h-2 rounded-full bg-amber-400" />
+      Setup required
+    </div>
+  )
 }
 
 export default async function TeamPage() {
@@ -42,6 +52,7 @@ export default async function TeamPage() {
 
   const ownedLinks = await Promise.all(
     linksSnap.docs.map(async (d) => {
+      const linkData = d.data() as any
       const hostsSnap = await adminDb
         .collection('booking_links').doc(d.id).collection('hosts').get()
 
@@ -53,13 +64,38 @@ export default async function TeamPage() {
 
           const availSnap = await adminDb
             .collection('hosts').doc(hData.hostId)
-            .collection('availability').limit(1).get()
-          const hasAvailability = !availSnap.empty
+            .collection('availability').get()
+          const hasAvailability = availSnap.docs.length > 0
+          const availabilityDayCount = availSnap.docs.filter(doc => {
+            const availData = doc.data()
+            return availData.ranges && availData.ranges.length > 0
+          }).length
 
           const calSnap = await adminDb
             .collection('hosts').doc(hData.hostId)
             .collection('connected_calendars').limit(1).get()
           const hasCalendar = !calSnap.empty
+
+          const bookingsSnap = await adminDb
+            .collection('bookings')
+            .where('hostId', '==', hData.hostId)
+            .where('status', '==', 'confirmed')
+            .get()
+          const bookingCount = bookingsSnap.size
+
+          const timezone = profile?.timezone ?? 'UTC'
+          let tzAbbr = 'UTC'
+          try {
+            const formatter = new Intl.DateTimeFormat('en-US', {
+              timeZoneName: 'short',
+              timeZone: timezone,
+            })
+            const parts = formatter.formatToParts(new Date())
+            const tzPart = parts.find(p => p.type === 'timeZoneName')
+            if (tzPart) tzAbbr = tzPart.value
+          } catch (e) {
+            tzAbbr = timezone.split('/').pop() || 'UTC'
+          }
 
           return {
             uid: hData.hostId,
@@ -69,11 +105,16 @@ export default async function TeamPage() {
             priority: hData.priority ?? 1,
             hasAvailability,
             hasCalendar,
+            bookingCount,
+            availabilityDayCount,
+            timezone,
+            tzAbbr,
+            role: hData.hostId === linkData.ownerId ? 'Owner' : 'Member',
           }
         })
       )
 
-      return { id: d.id, ...d.data(), members } as any
+      return { id: d.id, ...linkData, members } as any
     })
   )
 
@@ -112,7 +153,10 @@ export default async function TeamPage() {
   const hasMemberships = teamLinks.length > 0
 
   return (
-    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Team">
+    <DashboardLayout
+      user={{ email: user.email, name: host?.name }}
+      breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Team' }]}
+    >
       {!hasLinks && !hasMemberships ? (
         <div className="max-w-3xl mx-auto text-center space-y-4 py-16">
           <div className="w-14 h-14 bg-[#0D7377]/10 rounded-2xl flex items-center justify-center mx-auto">
@@ -171,14 +215,30 @@ export default async function TeamPage() {
                       ) : (
                         <div className="divide-y divide-gray-50">
                           {link.members.map((m: any) => (
-                            <div key={m.uid} className="flex items-center gap-3 py-2.5 first:pt-1 last:pb-1">
-                              <Avatar name={m.name} avatarUrl={m.avatarUrl} />
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
-                                <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                            <div key={m.uid} className="py-3 first:pt-1 last:pb-1 space-y-2">
+                              <div className="flex items-center gap-3">
+                                <Avatar name={m.name} avatarUrl={m.avatarUrl} />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-0.5">
+                                    <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
+                                    {m.role === 'Owner' && (
+                                      <span className="text-[10px] font-semibold text-white bg-[#0D7377] rounded-md px-1.5 py-0.5">Owner</span>
+                                    )}
+                                  </div>
+                                  <p className="text-xs text-gray-400 truncate">{m.email}</p>
+                                </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                <StatusDot hasAvailability={m.hasAvailability} hasCalendar={m.hasCalendar} />
+                              <div className="pl-11 flex flex-wrap items-center gap-3">
+                                <StatusLabel hasAvailability={m.hasAvailability} hasCalendar={m.hasCalendar} />
+                                <div className="text-xs text-gray-500">
+                                  {m.bookingCount} booking{m.bookingCount !== 1 ? 's' : ''}
+                                </div>
+                                <div className="text-xs text-gray-500">
+                                  {m.availabilityDayCount}/7 days
+                                </div>
+                                <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                  {m.tzAbbr}
+                                </span>
                                 {link.routingStrategy === 'priority' && (
                                   <span className="text-[10px] font-medium text-gray-400 bg-gray-50 border border-gray-200 rounded-md px-2 py-0.5">
                                     P{m.priority}

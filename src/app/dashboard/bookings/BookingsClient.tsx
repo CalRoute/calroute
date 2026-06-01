@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic'
 import { format, parseISO } from 'date-fns'
 import BookingActions from './BookingActions'
 import { useToast } from '@/components/Toast'
+import RescheduleDialog from './RescheduleDialog'
 
 const WeekCalendar = dynamic(() => import('./WeekCalendar'), { ssr: false })
 
@@ -50,6 +51,7 @@ export default function BookingsClient({
   const [viewMode, setViewMode] = useState<'list' | 'week'>('list')
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
+  const [showRescheduleDialog, setShowRescheduleDialog] = useState(false)
 
   const filterBookings = (bookings: Booking[]) => {
     return bookings.filter(b => {
@@ -78,6 +80,63 @@ export default function BookingsClient({
   const confirmedPct = metrics.total > 0 ? Math.round((metrics.confirmed / metrics.total) * 100) : 0
   const cancelledPct = metrics.total > 0 ? Math.round((metrics.cancelled / metrics.total) * 100) : 0
   const rescheduledPct = metrics.total > 0 ? Math.round((metrics.rescheduled / metrics.total) * 100) : 0
+
+  const handleBulkCancel = async () => {
+    if (!window.confirm(`Cancel ${selectedIds.size} booking${selectedIds.size !== 1 ? 's' : ''}? Confirmation emails will be sent.`)) {
+      return
+    }
+
+    setBulkLoading(true)
+    try {
+      const res = await fetch('/api/bookings/bulk/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingIds: Array.from(selectedIds) }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        showToast(err.error || 'Failed to cancel bookings', 'error')
+        return
+      }
+
+      const data = await res.json()
+      setSelectedIds(new Set())
+      showToast(`${data.successful} booking${data.successful !== 1 ? 's' : ''} cancelled`, 'success')
+      window.location.reload()
+    } catch (error) {
+      showToast('Error cancelling bookings', 'error')
+    } finally {
+      setBulkLoading(false)
+    }
+  }
+
+  const handleBulkReschedule = async (newStartTime: string) => {
+    setBulkLoading(true)
+    try {
+      const res = await fetch('/api/bookings/bulk/reschedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bookingIds: Array.from(selectedIds), newStartTime }),
+      })
+
+      if (!res.ok) {
+        const err = await res.json()
+        showToast(err.error || 'Failed to reschedule bookings', 'error')
+        return
+      }
+
+      const data = await res.json()
+      setSelectedIds(new Set())
+      setShowRescheduleDialog(false)
+      showToast(`${data.successful} booking${data.successful !== 1 ? 's' : ''} rescheduled`, 'success')
+      window.location.reload()
+    } catch (error) {
+      showToast('Error rescheduling bookings', 'error')
+    } finally {
+      setBulkLoading(false)
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -200,13 +259,18 @@ export default function BookingsClient({
           <p className="text-sm font-medium text-gray-900">{selectedIds.size} selected</p>
           <div className="flex gap-2">
             <button
-              onClick={() => {
-                showToast('Bulk cancel feature coming soon', 'info')
-              }}
+              onClick={handleBulkCancel}
               disabled={bulkLoading}
               className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg disabled:opacity-50"
             >
-              Cancel all
+              {bulkLoading ? 'Cancelling...' : 'Cancel all'}
+            </button>
+            <button
+              onClick={() => setShowRescheduleDialog(true)}
+              disabled={bulkLoading}
+              className="px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg disabled:opacity-50"
+            >
+              Reschedule
             </button>
             <button
               onClick={() => {
@@ -251,7 +315,16 @@ export default function BookingsClient({
 
       {/* Week Calendar View */}
       {viewMode === 'week' && (
-        <WeekCalendar allBookings={[...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]} />
+        <WeekCalendar
+          allBookings={[...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]}
+          selectedIds={selectedIds}
+          onToggleSelect={(id) => {
+            const newIds = new Set(selectedIds)
+            if (newIds.has(id)) newIds.delete(id)
+            else newIds.add(id)
+            setSelectedIds(newIds)
+          }}
+        />
       )}
 
       {/* List View */}
@@ -353,6 +426,16 @@ export default function BookingsClient({
         </div>
       )}
         </>
+      )}
+
+      {/* Reschedule Dialog */}
+      {showRescheduleDialog && (
+        <RescheduleDialog
+          onClose={() => setShowRescheduleDialog(false)}
+          onConfirm={handleBulkReschedule}
+          isLoading={bulkLoading}
+          count={selectedIds.size}
+        />
       )}
     </div>
   )

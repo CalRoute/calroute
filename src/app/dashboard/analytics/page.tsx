@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
 import { startOfMonth, startOfYear, endOfYear, parseISO, format } from 'date-fns'
+import AnalyticsExportButton from './AnalyticsExportButton'
 
 export default async function AnalyticsPage() {
   const user = await requireUser('/dashboard/analytics')
@@ -49,8 +50,72 @@ export default async function AnalyticsPage() {
 
   const maxMonthlyCount = Math.max(...monthlyStats.map(m => m.count), 1)
 
+  // Peak booking times (hours)
+  const hourCounts: { [key: number]: number } = {}
+  allBookings.forEach(b => {
+    if (b.status === 'confirmed') {
+      const hour = parseISO(b.startTime).getHours()
+      hourCounts[hour] = (hourCounts[hour] || 0) + 1
+    }
+  })
+  const peakHours = Object.entries(hourCounts)
+    .map(([hour, count]) => ({ hour: parseInt(hour), count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 8)
+  const maxHourCount = Math.max(...peakHours.map(h => h.count), 1)
+
+  // Booking link performance
+  const linkCounts: { [key: string]: number } = {}
+  const linkTitles: { [key: string]: string } = {}
+  allBookings.forEach(b => {
+    if (b.status === 'confirmed') {
+      linkCounts[b.bookingLinkId] = (linkCounts[b.bookingLinkId] || 0) + 1
+      if (!linkTitles[b.bookingLinkId]) {
+        linkTitles[b.bookingLinkId] = b.bookingLinkId
+      }
+    }
+  })
+  // Fetch link titles
+  const linkTitleMap = new Map<string, string>()
+  for (const linkId of Object.keys(linkCounts)) {
+    const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
+    if (linkSnap.exists) {
+      linkTitleMap.set(linkId, linkSnap.data()!.title)
+    }
+  }
+  const topLinks = Object.entries(linkCounts)
+    .map(([linkId, count]) => ({
+      linkId,
+      title: linkTitleMap.get(linkId) || 'Unknown',
+      count,
+    }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 5)
+  const maxLinkCount = Math.max(...topLinks.map(l => l.count), 1)
+
+  // Day of week distribution
+  const dayCounts: { [key: number]: number } = {}
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  for (let i = 0; i < 7; i++) {
+    dayCounts[i] = 0
+  }
+  allBookings.forEach(b => {
+    if (b.status === 'confirmed') {
+      const day = parseISO(b.startTime).getDay()
+      dayCounts[day]++
+    }
+  })
+  const dayStats = dayNames.map((name, idx) => ({
+    day: name,
+    count: dayCounts[idx],
+  }))
+  const maxDayCount = Math.max(...dayStats.map(d => d.count), 1)
+
   return (
-    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Analytics">
+    <DashboardLayout
+      user={{ email: user.email, name: host?.name }}
+      breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Analytics' }]}
+    >
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Analytics</h1>
@@ -134,6 +199,79 @@ export default async function AnalyticsPage() {
             </div>
           </div>
         </div>
+
+        {/* Peak Booking Times */}
+        {peakHours.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <h2 className="font-semibold text-gray-900">Peak booking times</h2>
+            <div className="space-y-2">
+              {peakHours.map(stat => (
+                <div key={stat.hour} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600 w-8">{String(stat.hour).padStart(2, '0')}:00</span>
+                  <div className="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
+                    {stat.count > 0 && (
+                      <div
+                        className="h-full bg-gradient-to-r from-blue-400 to-blue-600 transition-all"
+                        style={{ width: `${(stat.count / maxHourCount) * 100}%` }}
+                      />
+                    )}
+                  </div>
+                  <span className="text-xs font-semibold text-gray-900 w-8 text-right">{stat.count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Booking Link Performance */}
+        {topLinks.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <h2 className="font-semibold text-gray-900">Booking link performance</h2>
+            <div className="space-y-2">
+              {topLinks.map((link, idx) => (
+                <div key={link.linkId} className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-gray-600 w-6">#{idx + 1}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="h-6 bg-gray-100 rounded-lg overflow-hidden">
+                      <div
+                        className="h-full bg-gradient-to-r from-purple-400 to-purple-600 transition-all"
+                        style={{ width: `${(link.count / maxLinkCount) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className="text-xs font-semibold text-gray-900">{link.count}</p>
+                    <p className="text-xs text-gray-500">{link.title}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Day of Week Distribution */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+          <h2 className="font-semibold text-gray-900">Bookings by day of week</h2>
+          <div className="space-y-2">
+            {dayStats.map(stat => (
+              <div key={stat.day} className="flex items-center gap-3">
+                <span className="text-xs font-medium text-gray-600 w-8">{stat.day}</span>
+                <div className="flex-1 h-6 bg-gray-100 rounded-lg overflow-hidden">
+                  {stat.count > 0 && (
+                    <div
+                      className="h-full bg-gradient-to-r from-green-400 to-green-600 transition-all"
+                      style={{ width: `${(stat.count / maxDayCount) * 100}%` }}
+                    />
+                  )}
+                </div>
+                <span className="text-xs font-semibold text-gray-900 w-8 text-right">{stat.count}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Export */}
+        <AnalyticsExportButton bookings={allBookings.filter(b => b.status === 'confirmed')} />
       </div>
     </DashboardLayout>
   )

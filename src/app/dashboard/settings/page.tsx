@@ -11,6 +11,10 @@ import CalendarRow from './CalendarRow'
 import AvailabilityEditor from './AvailabilityEditor'
 import LanguageEditor from './LanguageEditor'
 import TimezoneSelector from './TimezoneSelector'
+import BookingLinksSection from './BookingLinksSection'
+import BillingSection from './BillingSection'
+import ApiKeysSection from './ApiKeysSection'
+import VacationDatesEditor from './VacationDatesEditor'
 
 export default async function SettingsPage({
   searchParams,
@@ -49,8 +53,45 @@ export default async function SettingsPage({
     ...d.data(),
   })) as ConnectedCalendar[]
 
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('ownerId', '==', user.uid)
+    .orderBy('createdAt', 'desc')
+    .get()
+
+  const links = linksSnap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+  })) as any[]
+
+  const apiKeysSnap = await adminDb
+    .collection('hosts')
+    .doc(user.uid)
+    .collection('api_keys')
+    .get()
+
+  const apiKeys = apiKeysSnap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+  })) as any[]
+
+  const blackoutDatesSnap = await adminDb
+    .collection('hosts')
+    .doc(user.uid)
+    .collection('blackout_dates')
+    .orderBy('startDate', 'desc')
+    .get()
+
+  const blackoutDates = blackoutDatesSnap.docs.map(d => ({
+    id: d.id,
+    ...d.data(),
+  })) as any[]
+
   return (
-    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Settings">
+    <DashboardLayout
+      user={{ email: user.email, name: host?.name }}
+      breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Settings' }]}
+    >
       <div className="space-y-4 sm:space-y-6">
 
         {params.success === 'calendar_connected' && (
@@ -88,6 +129,17 @@ export default async function SettingsPage({
             </p>
           </div>
           <AvailabilityEditor savedAvailability={savedAvailability} />
+        </div>
+
+        {/* Vacation & Blackout Dates */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Vacation & blackout dates</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Dates when you&apos;re unavailable. Guests won&apos;t be able to book during these periods.
+            </p>
+          </div>
+          <VacationDatesEditor savedDates={blackoutDates} />
         </div>
 
         {/* Languages */}
@@ -144,6 +196,15 @@ export default async function SettingsPage({
             </div>
           )}
         </div>
+
+        {/* Booking Links */}
+        <BookingLinksSection links={links} />
+
+        {/* Billing */}
+        <BillingSection linkCount={links.length} />
+
+        {/* API Keys */}
+        <ApiKeysSection apiKeys={apiKeys} />
 
       </div>
     </DashboardLayout>

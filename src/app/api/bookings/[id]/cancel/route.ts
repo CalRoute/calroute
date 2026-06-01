@@ -7,6 +7,7 @@ import { deleteCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, parseISO } from 'date-fns'
 import { bookingCancelledGuestEmail, bookingCancelledHostEmail } from '@/lib/email-templates/booking-cancelled'
+import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -106,6 +107,14 @@ export async function POST(
   } catch (e) {
     console.error('[cancel] email failed:', e)
   }
+
+  // Fire webhooks
+  fireWebhooks(booking.hostId, 'booking.cancelled', {
+    booking_id: id,
+    customer_name: booking.customerName,
+    customer_email: booking.customerEmail,
+    cancelled_at: new Date().toISOString(),
+  })
 
   return NextResponse.json({ success: true })
 }

@@ -101,8 +101,9 @@ export function computeAvailableSlots(params: {
   durationMinutes: number
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
-  routingStrategy: 'priority' | 'round_robin'
+  routingStrategy: 'priority' | 'round_robin' | 'smart'
   existingBookings: Array<{ hostId: string; start: Date; end: Date }>
+  guestTimezone?: string
 }): AvailableSlot[] {
   const {
     hosts,
@@ -113,6 +114,7 @@ export function computeAvailableSlots(params: {
     bufferAfterMinutes,
     routingStrategy,
     existingBookings,
+    guestTimezone,
   } = params
 
   // Add existing bookings to each host's busy slots
@@ -162,7 +164,7 @@ export function computeAvailableSlots(params: {
       if (freeHosts.length === 0) continue
 
       // Assign based on routing strategy
-      const assignedHost = selectHost(freeHosts, routingStrategy)
+      const assignedHost = selectHost(freeHosts, routingStrategy, guestTimezone)
 
       slotMap.set(startTimeISO, {
         start: slotStart,
@@ -183,9 +185,23 @@ export function computeAvailableSlots(params: {
  */
 function selectHost(
   freeHosts: HostWithCalendars[],
-  strategy: 'priority' | 'round_robin'
+  strategy: 'priority' | 'round_robin' | 'smart',
+  guestTimezone?: string
 ): HostWithCalendars {
   if (freeHosts.length === 1) return freeHosts[0]
+
+  if (strategy === 'smart' && guestTimezone) {
+    // Smart: prefer same-timezone hosts, then apply priority tiebreak
+    const sameTimezoneHosts = freeHosts.filter(h => h.timezone === guestTimezone)
+    const hostsToUse = sameTimezoneHosts.length > 0 ? sameTimezoneHosts : freeHosts
+
+    return hostsToUse.sort((a, b) => {
+      if (b.priority !== a.priority) return b.priority - a.priority
+      if (!a.lastBookedAt) return -1
+      if (!b.lastBookedAt) return 1
+      return a.lastBookedAt.getTime() - b.lastBookedAt.getTime()
+    })[0]
+  }
 
   if (strategy === 'priority') {
     // Sort by priority descending, then last booked ascending (least recently booked wins tie)

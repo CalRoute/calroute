@@ -7,6 +7,7 @@ import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, addMinutes, parseISO } from 'date-fns'
 import { bookingRescheduledGuestEmail, bookingRescheduledHostEmail } from '@/lib/email-templates/booking-rescheduled'
+import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -152,6 +153,15 @@ export async function POST(
   } catch (e) {
     console.error('[reschedule] email failed:', e)
   }
+
+  // Fire webhooks
+  fireWebhooks(booking.hostId, 'booking.rescheduled', {
+    booking_id: id,
+    customer_name: booking.customerName,
+    customer_email: booking.customerEmail,
+    new_start_time: newStart.toISOString(),
+    previous_start_time: booking.startTime,
+  })
 
   return NextResponse.json({ success: true, newStartTime: newStart.toISOString() })
 }

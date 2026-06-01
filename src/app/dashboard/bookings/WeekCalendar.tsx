@@ -15,9 +15,11 @@ interface Booking {
 
 interface Props {
   allBookings: Booking[]
+  selectedIds?: Set<string>
+  onToggleSelect?: (id: string) => void
 }
 
-export default function WeekCalendar({ allBookings }: Props) {
+export default function WeekCalendar({ allBookings, selectedIds = new Set(), onToggleSelect }: Props) {
   const [weekStart, setWeekStart] = useState(startOfWeek(new Date()))
   const [expandedId, setExpandedId] = useState<string | null>(null)
 
@@ -91,13 +93,30 @@ export default function WeekCalendar({ allBookings }: Props) {
 
               <div className="space-y-1">
                 {bookings.map(booking => (
-                  <button
+                  <div
                     key={booking.id}
-                    onClick={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
-                    className={`w-full text-left p-2 text-xs rounded-lg border font-medium truncate transition-all ${getStatusColor(booking.status)}`}
+                    className={`flex items-center gap-2 p-2 text-xs rounded-lg border font-medium transition-all ${
+                      selectedIds.has(booking.id)
+                        ? 'bg-[#0D7377]/10 border-[#0D7377]'
+                        : getStatusColor(booking.status)
+                    }`}
                   >
-                    {booking.customerName}
-                  </button>
+                    {onToggleSelect && booking.status === 'confirmed' && (
+                      <input
+                        type="checkbox"
+                        checked={selectedIds.has(booking.id)}
+                        onChange={() => onToggleSelect(booking.id)}
+                        className="w-3 h-3 cursor-pointer flex-shrink-0"
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                    <button
+                      onClick={() => setExpandedId(expandedId === booking.id ? null : booking.id)}
+                      className="flex-1 text-left truncate"
+                    >
+                      {booking.customerName}
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

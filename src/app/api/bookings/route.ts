@@ -7,6 +7,7 @@ import { addMinutes, parseISO } from 'date-fns'
 import { Resend } from 'resend'
 import { randomUUID } from 'crypto'
 import { bookingConfirmedEmail, bookingConfirmedHostEmail } from '@/lib/email-templates/booking-confirmed'
+import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -189,6 +190,15 @@ export async function POST(request: NextRequest) {
   } catch (emailError) {
     console.error('Email failed:', emailError)
   }
+
+  // Fire webhooks
+  fireWebhooks(host_id, 'booking.confirmed', {
+    booking_id: bookingRef.id,
+    customer_name,
+    customer_email,
+    start_time: startTime.toISOString(),
+    link_title: link.title,
+  })
 
   return NextResponse.json({ booking_id: bookingRef.id, status: 'confirmed' })
 }

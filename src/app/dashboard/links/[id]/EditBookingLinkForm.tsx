@@ -243,10 +243,11 @@ export default function EditBookingLinkForm({
           <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
             <h2 className="font-semibold text-gray-900">Host routing</h2>
             <p className="text-sm text-gray-500">When multiple hosts are free at the same time, who gets assigned?</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { value: 'priority', label: 'Priority', desc: 'Always assign the highest-priority host first' },
-                { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly — whoever was booked longest ago goes next' },
+                { value: 'priority', label: 'Priority', desc: 'Highest-priority host first' },
+                { value: 'round_robin', label: 'Round robin', desc: 'Whoever was booked longest ago' },
+                { value: 'smart', label: 'Smart', desc: 'Same timezone as guest, then priority' },
               ].map(opt => (
                 <button key={opt.value} type="button"
                   onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}

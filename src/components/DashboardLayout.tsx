@@ -9,6 +9,7 @@ interface Props {
   children: React.ReactNode
   user?: { email: string; name?: string }
   pageTitle?: string
+  breadcrumbs?: { label: string; href?: string }[]
 }
 
 // SVG icon components
@@ -45,7 +46,23 @@ function SettingsIcon({ className = 'w-5 h-5' }: { className?: string }) {
   )
 }
 
-export default function DashboardLayout({ children, user, pageTitle }: Props) {
+function IntegrationsIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  )
+}
+
+function HelpIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  )
+}
+
+export default function DashboardLayout({ children, user, pageTitle, breadcrumbs }: Props) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const pathname = usePathname()
 
@@ -54,6 +71,8 @@ export default function DashboardLayout({ children, user, pageTitle }: Props) {
     { href: '/dashboard/bookings', label: 'Bookings', Icon: BookingsIcon },
     { href: '/dashboard/team', label: 'Team', Icon: TeamIcon },
     { href: '/dashboard/settings', label: 'Settings', Icon: SettingsIcon },
+    { href: '/dashboard/integrations', label: 'Integrations', Icon: IntegrationsIcon },
+    { href: '/dashboard/help', label: 'Help', Icon: HelpIcon },
   ]
 
   const isActive = (href: string) => {
@@ -184,7 +203,24 @@ export default function DashboardLayout({ children, user, pageTitle }: Props) {
         {/* Top bar — desktop only */}
         <div className="hidden md:block bg-white border-b border-gray-200 px-6 lg:px-8 py-4">
           <div className="max-w-7xl">
-            <h1 className="text-lg font-semibold text-gray-900">{pageTitle ?? 'Dashboard'}</h1>
+            {breadcrumbs && breadcrumbs.length > 0 ? (
+              <nav className="flex items-center gap-2 text-sm">
+                {breadcrumbs.map((crumb, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    {crumb.href ? (
+                      <Link href={crumb.href} className="text-[#0D7377] hover:underline">
+                        {crumb.label}
+                      </Link>
+                    ) : (
+                      <span className="text-gray-600">{crumb.label}</span>
+                    )}
+                    {idx < breadcrumbs.length - 1 && <span className="text-gray-400">/</span>}
+                  </div>
+                ))}
+              </nav>
+            ) : (
+              <h1 className="text-lg font-semibold text-gray-900">{pageTitle ?? 'Dashboard'}</h1>
+            )}
           </div>
         </div>
 
