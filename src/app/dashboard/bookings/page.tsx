@@ -42,6 +42,7 @@ export default async function BookingsPage() {
         customerName: data.customerName,
         customerEmail: data.customerEmail,
         customerNotes: data.customerNotes ?? null,
+        customerPhone: data.customerPhone ?? null,
         startTime: data.startTime,
         status: data.status,
         linkTitle: link?.title ?? 'Deleted link',

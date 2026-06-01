@@ -14,7 +14,7 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { slug, start_time, host_id, session_token, customer_name, customer_email, customer_notes, language, timezone } = body
+  const { slug, start_time, host_id, session_token, customer_name, customer_email, customer_notes, customer_phone, language, timezone } = body
 
   if (!slug || !start_time || !host_id || !session_token || !customer_name || !customer_email) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
@@ -86,6 +86,7 @@ export async function POST(request: NextRequest) {
     customerName: customer_name,
     customerEmail: customer_email,
     customerNotes: customer_notes ?? null,
+    customerPhone: customer_phone ?? null,
     startTime: startTime.toISOString(),
     endTime: endTime.toISOString(),
     googleEventId: null,
@@ -131,6 +132,7 @@ export async function POST(request: NextRequest) {
       customerEmail: customer_email,
       customerName: customer_name,
       hostEmail: host.email,
+      createMeet: link.meetingType !== 'phone_call',
     })
 
     if (googleEventId) {
@@ -165,6 +167,7 @@ export async function POST(request: NextRequest) {
           hostName: host.name,
           title: link.title,
           startTime: startTime.toLocaleString(),
+          customerPhone: customer_phone,
           rescheduleUrl,
           cancelUrl,
         })
@@ -177,6 +180,8 @@ export async function POST(request: NextRequest) {
           timezone: timezone ?? 'UTC',
           rescheduleUrl,
           cancelUrl,
+          meetingType: link.meetingType,
+          customerPhone: customer_phone,
         })
 
     // Host email (use custom if exists, else default)
@@ -186,6 +191,7 @@ export async function POST(request: NextRequest) {
           customerEmail: customer_email,
           title: link.title,
           startTime: startTime.toLocaleString(),
+          customerPhone: customer_phone,
         })
       : bookingConfirmedHostEmail({
           title: link.title,
@@ -193,6 +199,8 @@ export async function POST(request: NextRequest) {
           customerEmail: customer_email,
           customerNotes: customer_notes ?? undefined,
           startTime,
+          meetingType: link.meetingType,
+          customerPhone: customer_phone,
         })
 
     await Promise.all([

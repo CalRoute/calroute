@@ -6,6 +6,7 @@ import {
   getDay, addMonths, subMonths, isBefore, isAfter,
   getDaysInMonth, setDate,
 } from 'date-fns'
+import { parsePhoneNumberFromString, isValidPhoneNumber, AsYouType } from 'libphonenumber-js'
 import type { BookingLink } from '@/types/database'
 
 interface Slot { start: string; end: string; assignedHostId: string }
@@ -26,7 +27,8 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null)
   const [sessionToken, setSessionToken] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [form, setForm] = useState({ name: '', email: '', notes: '' })
+  const [form, setForm] = useState({ name: '', email: '', phone: '', notes: '' })
+  const [phoneError, setPhoneError] = useState<string | null>(null)
   const [calendarMonth, setCalendarMonth] = useState(startOfMonth(new Date()))
 
   const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
@@ -69,9 +71,40 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
     setStep('fill-form')
   }
 
+  function handlePhoneChange(val: string) {
+    const formatter = new AsYouType()
+    const formatted = formatter.input(val)
+    setForm(f => ({ ...f, phone: formatted }))
+
+    if (formatted.trim() === '') {
+      setPhoneError(null)
+      return
+    }
+
+    const isValid = isValidPhoneNumber(formatted)
+    if (!isValid) {
+      setPhoneError('Please enter a valid phone number')
+    } else {
+      setPhoneError(null)
+    }
+  }
+
   async function handleBookingSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!selectedSlot || !sessionToken) return
+
+    // Validate phone if required
+    if (link.meetingType === 'phone_call') {
+      if (!form.phone.trim()) {
+        setPhoneError('Phone number is required for phone call bookings')
+        return
+      }
+      if (!isValidPhoneNumber(form.phone)) {
+        setPhoneError('Please enter a valid phone number')
+        return
+      }
+    }
+
     setLoading(true)
     setError(null)
     const res = await fetch('/api/bookings', {
@@ -85,6 +118,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
         customer_name: form.name,
         customer_email: form.email,
         customer_notes: form.notes || undefined,
+        customer_phone: link.meetingType === 'phone_call' ? form.phone : undefined,
         language: selectedLanguage || undefined,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       }),
@@ -377,6 +411,31 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
                     className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]/30 focus:border-[#0D7377] transition-all"
                   />
                 </div>
+                {link.meetingType === 'phone_call' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
+                      Phone number <span className="text-gray-300 font-normal normal-case">*</span>
+                    </label>
+                    <input
+                      type="tel" required value={form.phone}
+                      onChange={e => handlePhoneChange(e.target.value)}
+                      onBlur={() => {
+                        if (form.phone && !isValidPhoneNumber(form.phone)) {
+                          setPhoneError('Please enter a valid phone number')
+                        }
+                      }}
+                      placeholder="+1 (555) 000-0000"
+                      className={`w-full border rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 transition-all ${
+                        phoneError
+                          ? 'border-red-300 focus:ring-red-300/30 focus:border-red-500'
+                          : 'border-gray-200 focus:ring-[#0D7377]/30 focus:border-[#0D7377]'
+                      }`}
+                    />
+                    {phoneError && (
+                      <p className="text-xs text-red-600 mt-1.5">{phoneError}</p>
+                    )}
+                  </div>
+                )}
                 <div>
                   <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">
                     Notes <span className="text-gray-300 font-normal normal-case">(optional)</span>

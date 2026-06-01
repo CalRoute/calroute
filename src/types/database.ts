@@ -38,6 +38,7 @@ export interface BookingLink {
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
   routingStrategy: 'priority' | 'round_robin'
+  meetingType?: 'google_meet' | 'phone_call'
   isActive: boolean
   maxDaysAhead: number
   createdAt: string
@@ -72,6 +73,7 @@ export interface Booking {
   customerName: string
   customerEmail: string
   customerNotes: string | null
+  customerPhone?: string | null
   startTime: string
   endTime: string
   googleEventId: string | null

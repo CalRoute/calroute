@@ -149,12 +149,14 @@ export async function createCalendarEvent(
     customerEmail: string
     customerName: string
     hostEmail: string
+    createMeet?: boolean
   }
 ): Promise<string | null> {
   try {
     const auth = await getAuthenticatedClient(hostCalendar)
     const calendarClient = google.calendar({ version: 'v3', auth })
 
+    const createMeet = booking.createMeet !== false
     const { data } = await calendarClient.events.insert({
       calendarId: hostCalendar.calendarId,
       sendUpdates: 'all',
@@ -167,14 +169,16 @@ export async function createCalendarEvent(
           { email: booking.hostEmail, displayName: 'Host' },
           { email: booking.customerEmail, displayName: booking.customerName },
         ],
-        conferenceData: {
-          createRequest: {
-            requestId: `calroute-${Date.now()}`,
-            conferenceSolutionKey: { type: 'hangoutsMeet' },
+        ...(createMeet && {
+          conferenceData: {
+            createRequest: {
+              requestId: `calroute-${Date.now()}`,
+              conferenceSolutionKey: { type: 'hangoutsMeet' },
+            },
           },
-        },
+        }),
       },
-      conferenceDataVersion: 1,
+      ...(createMeet && { conferenceDataVersion: 1 }),
     })
 
     return data.id ?? null

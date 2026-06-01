@@ -10,6 +10,8 @@ export function bookingConfirmedEmail(data: {
   timezone: string
   rescheduleUrl: string
   cancelUrl: string
+  meetingType?: 'google_meet' | 'phone_call'
+  customerPhone?: string
 }): string {
   const content = `
     <h2>Your meeting is confirmed!</h2>
@@ -19,7 +21,9 @@ export function bookingConfirmedEmail(data: {
       <li><strong>Duration:</strong> ${data.durationMinutes} minutes</li>
       <li><strong>With:</strong> ${data.hostName}</li>
     </ul>
-    <p>A Google Meet link is in your calendar invite.</p>
+    <p>${data.meetingType === 'phone_call'
+      ? `This is a phone call. ${data.hostName} will call you at <strong>${data.customerPhone}</strong>.`
+      : 'A Google Meet link is in your calendar invite.'}</p>
     <hr />
     <p style="font-size: 13px; color: #666;">
       Need to make a change? You can
@@ -36,6 +40,8 @@ export function bookingConfirmedHostEmail(data: {
   customerEmail: string
   customerNotes?: string
   startTime: Date
+  meetingType?: 'google_meet' | 'phone_call'
+  customerPhone?: string
 }): string {
   const content = `
     <h2>New booking received</h2>
@@ -44,8 +50,9 @@ export function bookingConfirmedHostEmail(data: {
       <li><strong>When:</strong> ${data.startTime.toLocaleString()}</li>
       <li><strong>Customer:</strong> ${data.customerName} (${data.customerEmail})</li>
       ${data.customerNotes ? `<li><strong>Notes:</strong> ${data.customerNotes}</li>` : ''}
+      ${data.meetingType === 'phone_call' && data.customerPhone ? `<li><strong>Phone:</strong> ${data.customerPhone}</li>` : ''}
     </ul>
-    <p>Check your calendar for the invite.</p>
+    <p>${data.meetingType === 'phone_call' ? 'Call the customer at the number above.' : 'Check your calendar for the invite.'}</p>
   `
   return emailLayout(content)
 }

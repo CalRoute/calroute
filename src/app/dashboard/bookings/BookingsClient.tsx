@@ -15,6 +15,7 @@ interface Booking {
   customerName: string
   customerEmail: string
   customerNotes: string | null
+  customerPhone?: string | null
   startTime: string
   linkTitle: string
   linkSlug: string
@@ -535,6 +536,9 @@ function BookingCard({
           <div className="min-w-0 flex-1">
             <p className="font-medium text-gray-900 text-sm truncate">{booking.customerName}</p>
             <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
+            {booking.customerPhone && (
+              <p className="text-xs text-gray-500">📞 {booking.customerPhone}</p>
+            )}
             <p className="text-xs text-gray-600 mt-1">{booking.linkTitle}</p>
             {booking.customerNotes && (
               <p className="text-xs text-gray-500 italic mt-1">"{booking.customerNotes}"</p>

@@ -24,7 +24,7 @@ export async function PATCH(
   const {
     title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
-    routingStrategy, maxDaysAhead, isActive, emailTemplates,
+    routingStrategy, maxDaysAhead, isActive, emailTemplates, meetingType,
   } = body
 
   if (!title || !slug) {
@@ -53,6 +53,7 @@ export async function PATCH(
     routingStrategy: routingStrategy ?? 'priority',
     maxDaysAhead: maxDaysAhead ?? 30,
     ...(isActive !== undefined && { isActive }),
+    ...(meetingType && { meetingType }),
     ...(emailTemplates && { emailTemplates }),
     updatedAt: new Date().toISOString(),
   })
