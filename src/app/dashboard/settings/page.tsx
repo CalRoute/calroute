@@ -110,7 +110,19 @@ export default async function SettingsPage({
           </div>
         )}
 
-        {/* Profile */}
+        {/* Intro Card */}
+        <div className="bg-[#0D7377]/5 border border-[#0D7377]/20 rounded-xl p-4 sm:p-5">
+          <p className="text-sm text-[#0D7377]">
+            Manage your profile, availability, integrations, and billing all in one place.
+          </p>
+        </div>
+
+        {/* Core Settings Section */}
+        <div className="space-y-4 sm:space-y-6">
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-3">Core Settings</h3>
+            <div className="space-y-4 sm:space-y-6">
+              {/* Profile */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-6">
           <h2 className="font-semibold text-gray-900">Profile</h2>
           <ProfileEditor savedName={host?.name ?? ''} email={user.email} />
@@ -163,8 +175,16 @@ export default async function SettingsPage({
           </div>
           <NotificationPrefs savedPrefs={savedNotificationPrefs} />
         </div>
+            </div>
+          </div>
+        </div>
 
-        {/* Connected calendars */}
+        {/* Integrations Section */}
+        <div className="space-y-4 sm:space-y-6">
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-3">Integrations</h3>
+            <div className="space-y-4 sm:space-y-6">
+              {/* Connected calendars */}
         <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between">
             <div>
@@ -197,14 +217,26 @@ export default async function SettingsPage({
           )}
         </div>
 
-        {/* Booking Links */}
-        <BookingLinksSection links={links} />
+            </div>
+          </div>
+        </div>
 
-        {/* Billing */}
-        <BillingSection linkCount={links.length} />
+        {/* Advanced Section */}
+        <div className="space-y-4 sm:space-y-6">
+          <div>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-3">Advanced</h3>
+            <div className="space-y-4 sm:space-y-6">
+              {/* Booking Links */}
+              <BookingLinksSection links={links} />
 
-        {/* API Keys */}
-        <ApiKeysSection apiKeys={apiKeys} />
+              {/* Billing */}
+              <BillingSection linkCount={links.length} />
+
+              {/* API Keys */}
+              <ApiKeysSection apiKeys={apiKeys} />
+            </div>
+          </div>
+        </div>
 
       </div>
     </DashboardLayout>

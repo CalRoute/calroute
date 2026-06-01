@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import PublicHeader from '@/components/PublicHeader'
+import PublicFooter from '@/components/PublicFooter'
 
 export const metadata = {
   title: 'Terms of Service — CalRoute',
@@ -6,14 +8,11 @@ export const metadata = {
 
 export default function TermsPage() {
   return (
-    <main className="bg-[#F7F4EF] min-h-screen">
-      <nav className="border-b border-[#1a1a1a]/[0.06] bg-[#F7F4EF] px-6 py-4">
-        <div className="max-w-3xl mx-auto">
-          <Link href="/" className="text-sm font-semibold text-[#1a1a1a]">CalRoute</Link>
-        </div>
-      </nav>
+    <div className="flex flex-col min-h-screen bg-[#F7F4EF]">
+      <PublicHeader />
 
-      <div className="max-w-3xl mx-auto px-6 py-16">
+      <main className="flex-1">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 py-8 sm:py-16">
         <h1 className="text-4xl font-bold tracking-tight mb-2">Terms of Service</h1>
         <p className="text-sm text-[#1a1a1a]/40 mb-12">Last updated: May 31, 2026</p>
 
@@ -91,7 +90,9 @@ export default function TermsPage() {
           </section>
 
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+      <PublicFooter />
+    </div>
   )
 }

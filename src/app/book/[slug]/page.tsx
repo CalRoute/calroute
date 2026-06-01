@@ -4,6 +4,8 @@ import { Suspense } from 'react'
 import { notFound } from 'next/navigation'
 import { adminDb } from '@/lib/firebase/admin'
 import BookingWidget from '@/components/booking/BookingWidget'
+import PublicHeader from '@/components/PublicHeader'
+import PublicFooter from '@/components/PublicFooter'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -73,12 +75,16 @@ export default async function BookPage({ params }: Props) {
   }
 
   return (
-    <main className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-2xl">
-        <Suspense fallback={<div className="text-center py-12">Loading availability…</div>}>
-          <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
-        </Suspense>
-      </div>
-    </main>
+    <div className="flex flex-col min-h-screen bg-[#F7F4EF]">
+      <PublicHeader />
+      <main className="flex-1 flex items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
+        <div className="w-full max-w-2xl">
+          <Suspense fallback={<div className="text-center py-12 text-sm text-gray-600">Loading availability…</div>}>
+            <BookingWidget link={normalisedLink} availableLanguages={availableLanguages} />
+          </Suspense>
+        </div>
+      </main>
+      <PublicFooter />
+    </div>
   )
 }

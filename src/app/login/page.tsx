@@ -2,6 +2,7 @@
 
 import { Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import PublicFooter from '@/components/PublicFooter'
 
 function LoginForm() {
   const searchParams = useSearchParams()
@@ -15,10 +16,10 @@ function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-8">
-      <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-[#1a1a1a]">CalRoute</h1>
-        <p className="text-[#1a1a1a]/40 text-sm mt-1">Smart scheduling for teams</p>
+    <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-6 sm:p-8">
+      <div className="text-center mb-6 sm:mb-8">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1a1a1a]">CalRoute</h1>
+        <p className="text-[#1a1a1a]/40 text-xs sm:text-sm mt-1">Smart scheduling for teams</p>
       </div>
 
       {error && (
@@ -49,17 +50,20 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <main className="min-h-screen bg-[#F7F4EF] flex items-center justify-center p-4">
-      <Suspense fallback={
-        <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-8 text-center">
-          <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">CalRoute</h1>
-          <div className="mt-6 flex justify-center">
-            <div className="w-6 h-6 border-2 border-[#1a1a1a]/10 border-t-[#0D7377] rounded-full animate-spin" />
+    <div className="flex flex-col min-h-screen bg-[#F7F4EF]">
+      <main className="flex-1 flex items-center justify-center px-4 py-6 sm:px-6 sm:py-8">
+        <Suspense fallback={
+          <div className="w-full max-w-sm bg-white rounded-2xl shadow-sm border border-[#1a1a1a]/[0.06] p-6 sm:p-8 text-center">
+            <h1 className="text-2xl font-bold text-[#1a1a1a] mb-2">CalRoute</h1>
+            <div className="mt-6 flex justify-center">
+              <div className="w-6 h-6 border-2 border-[#1a1a1a]/10 border-t-[#0D7377] rounded-full animate-spin" />
+            </div>
           </div>
-        </div>
-      }>
-        <LoginForm />
-      </Suspense>
-    </main>
+        }>
+          <LoginForm />
+        </Suspense>
+      </main>
+      <PublicFooter />
+    </div>
   )
 }

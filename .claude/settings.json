@@ -71,7 +71,8 @@
       "Bash(curl -s http://localhost:3000/login)",
       "Bash(tail -30 /tmp/dev.log)",
       "Read(//private/tmp/**)",
-      "Bash(pkill -f \"npm run dev\")"
+      "Bash(pkill -f \"npm run dev\")",
+      "Bash(npm run dev > /tmp/dev.log 2>&1 & *)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
@@ -79,7 +80,8 @@
       "/Users/jo/GIT/CalRoute/src/app/api/booking-links/[id]/hosts",
       "/Users/jo/GIT/CalRoute/src/app/api/calendars",
       "/Users/jo/GIT/CalRoute/src/app/api/bookings/[id]",
-      "/Users/jo/GIT/CalRoute/src/app/booking/[id]"
+      "/Users/jo/GIT/CalRoute/src/app/booking/[id]",
+      "/private/tmp"
     ]
   }
 }
