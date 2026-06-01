@@ -7,6 +7,7 @@ import { deleteCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, parseISO } from 'date-fns'
 import { bookingCancelledGuestEmail, bookingCancelledHostEmail } from '@/lib/email-templates/booking-cancelled'
+import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -76,19 +77,34 @@ export async function POST(
   const link = linkSnap.data()!
 
   try {
-    const guestHtml = bookingCancelledGuestEmail({
-      title: link.title,
-      startTime: parseISO(booking.startTime),
-      timezone: booking.timezone ?? 'UTC',
-    })
+    const customTemplates = link.emailTemplates ?? {}
+    const startTimeStr = parseISO(booking.startTime).toLocaleString()
 
-    const hostHtml = bookingCancelledHostEmail({
-      title: link.title,
-      customerName: booking.customerName,
-      startTime: parseISO(booking.startTime),
-      timezone: booking.timezone ?? 'UTC',
-      cancelledBy,
-    })
+    const guestHtml = customTemplates.cancelled
+      ? renderCustomTemplate(customTemplates.cancelled, {
+          title: link.title,
+          startTime: startTimeStr,
+        })
+      : bookingCancelledGuestEmail({
+          title: link.title,
+          startTime: parseISO(booking.startTime),
+          timezone: booking.timezone ?? 'UTC',
+        })
+
+    const hostHtml = customTemplates.cancelled
+      ? renderCustomTemplate(customTemplates.cancelled, {
+          title: link.title,
+          customerName: booking.customerName,
+          startTime: startTimeStr,
+          cancelledBy,
+        })
+      : bookingCancelledHostEmail({
+          title: link.title,
+          customerName: booking.customerName,
+          startTime: parseISO(booking.startTime),
+          timezone: booking.timezone ?? 'UTC',
+          cancelledBy,
+        })
 
     await Promise.all([
       resend.emails.send({

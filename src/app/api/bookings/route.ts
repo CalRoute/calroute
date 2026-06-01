@@ -7,6 +7,7 @@ import { addMinutes, parseISO } from 'date-fns'
 import { Resend } from 'resend'
 import { randomUUID } from 'crypto'
 import { bookingConfirmedEmail, bookingConfirmedHostEmail } from '@/lib/email-templates/booking-confirmed'
+import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -154,24 +155,45 @@ export async function POST(request: NextRequest) {
   const rescheduleUrl = `${appUrl}/booking/${bookingRef.id}/reschedule?token=${rescheduleToken}`
 
   try {
-    const guestHtml = bookingConfirmedEmail({
-      title: link.title,
-      customerName: customer_name,
-      hostName: host.name,
-      startTime,
-      durationMinutes: link.durationMinutes,
-      timezone: timezone ?? 'UTC',
-      rescheduleUrl,
-      cancelUrl,
-    })
+    // Check if custom email templates exist
+    const customTemplates = link.emailTemplates ?? {}
 
-    const hostHtml = bookingConfirmedHostEmail({
-      title: link.title,
-      customerName: customer_name,
-      customerEmail: customer_email,
-      customerNotes: customer_notes ?? undefined,
-      startTime,
-    })
+    // Guest email (use custom if exists, else default)
+    const guestHtml = customTemplates.confirmed
+      ? renderCustomTemplate(customTemplates.confirmed, {
+          customerName: customer_name,
+          hostName: host.name,
+          title: link.title,
+          startTime: startTime.toLocaleString(),
+          rescheduleUrl,
+          cancelUrl,
+        })
+      : bookingConfirmedEmail({
+          title: link.title,
+          customerName: customer_name,
+          hostName: host.name,
+          startTime,
+          durationMinutes: link.durationMinutes,
+          timezone: timezone ?? 'UTC',
+          rescheduleUrl,
+          cancelUrl,
+        })
+
+    // Host email (use custom if exists, else default)
+    const hostHtml = customTemplates.confirmed
+      ? renderCustomTemplate(customTemplates.confirmed, {
+          customerName: customer_name,
+          customerEmail: customer_email,
+          title: link.title,
+          startTime: startTime.toLocaleString(),
+        })
+      : bookingConfirmedHostEmail({
+          title: link.title,
+          customerName: customer_name,
+          customerEmail: customer_email,
+          customerNotes: customer_notes ?? undefined,
+          startTime,
+        })
 
     await Promise.all([
       resend.emails.send({

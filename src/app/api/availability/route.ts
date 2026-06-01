@@ -21,6 +21,7 @@ async function handleAvailability(request: NextRequest) {
   const startDateParam = searchParams.get('start')
   const timezone = searchParams.get('timezone') ?? 'UTC'
   const language = searchParams.get('language') ?? null
+  const guestTimezone = searchParams.get('guest_timezone') ?? undefined
 
   if (!slug) {
     return NextResponse.json({ error: 'slug is required' }, { status: 400 })
@@ -129,11 +130,41 @@ async function handleAvailability(request: NextRequest) {
     }
   )
 
+  // 5b. Load blackout dates for each host
+  const blackoutDatesByHost = await Promise.all(
+    filteredHostsData.map(async h => {
+      const bdSnap = await adminDb
+        .collection('hosts')
+        .doc(h.hostId)
+        .collection('blackout_dates')
+        .get()
+      return {
+        hostId: h.hostId,
+        dates: bdSnap.docs.map(d => {
+          const data = d.data()
+          return {
+            start: startOfDay(parseISO(data.startDate)),
+            end: endOfDay(parseISO(data.endDate)),
+          }
+        }),
+      }
+    })
+  )
+
   // 6. Build host structs for engine
   const hosts = filteredHostsData.map(h => {
     const allBusy = h.calendars.flatMap((cal: any) =>
       busyByCalendarId.get(cal.id) ?? []
     )
+
+    // Add blackout dates as all-day busy slots
+    const blackouts = blackoutDatesByHost
+      .find(bd => bd.hostId === h.hostId)
+      ?.dates.map(d => ({
+        start: d.start.toISOString(),
+        end: d.end.toISOString(),
+      })) ?? []
+
     return {
       id: h.hostId,
       timezone: h.host?.timezone ?? 'UTC',
@@ -142,7 +173,7 @@ async function handleAvailability(request: NextRequest) {
         // Support both old format (startTime/endTime) and new (ranges)
         ranges: a.ranges ?? (a.startTime ? [{ startTime: a.startTime, endTime: a.endTime }] : []),
       })),
-      busySlots: allBusy,
+      busySlots: [...allBusy, ...blackouts],
       priority: h.priority,
       lastBookedAt: h.lastBookedAt ? new Date(h.lastBookedAt) : null,
     }
@@ -176,6 +207,7 @@ async function handleAvailability(request: NextRequest) {
     bufferAfterMinutes: link.bufferAfterMinutes ?? 0,
     routingStrategy: link.routingStrategy ?? 'priority',
     existingBookings,
+    guestTimezone,
   })
 
   return NextResponse.json({

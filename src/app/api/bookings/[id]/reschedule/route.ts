@@ -7,6 +7,7 @@ import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
 import { Resend } from 'resend'
 import { isBefore, addHours, addMinutes, parseISO } from 'date-fns'
 import { bookingRescheduledGuestEmail, bookingRescheduledHostEmail } from '@/lib/email-templates/booking-rescheduled'
+import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -117,24 +118,44 @@ export async function POST(
   const rescheduleUrl = `${appUrl}/booking/${id}/reschedule?token=${booking.rescheduleToken}`
 
   try {
-    const guestHtml = bookingRescheduledGuestEmail({
-      title: link.title,
-      hostName: host.name,
-      newStartTime: newStart,
-      durationMinutes: link.durationMinutes,
-      timezone: booking.timezone ?? 'UTC',
-      rescheduleUrl,
-      cancelUrl,
-    })
+    const customTemplates = link.emailTemplates ?? {}
+    const newStartStr = newStart.toLocaleString()
+    const prevStartStr = parseISO(booking.startTime).toLocaleString()
 
-    const hostHtml = bookingRescheduledHostEmail({
-      title: link.title,
-      customerName: booking.customerName,
-      customerEmail: booking.customerEmail,
-      newStartTime: newStart,
-      previousStartTime: parseISO(booking.startTime),
-      timezone: booking.timezone ?? 'UTC',
-    })
+    const guestHtml = customTemplates.rescheduled
+      ? renderCustomTemplate(customTemplates.rescheduled, {
+          title: link.title,
+          hostName: host.name,
+          newStartTime: newStartStr,
+          rescheduleUrl,
+          cancelUrl,
+        })
+      : bookingRescheduledGuestEmail({
+          title: link.title,
+          hostName: host.name,
+          newStartTime: newStart,
+          durationMinutes: link.durationMinutes,
+          timezone: booking.timezone ?? 'UTC',
+          rescheduleUrl,
+          cancelUrl,
+        })
+
+    const hostHtml = customTemplates.rescheduled
+      ? renderCustomTemplate(customTemplates.rescheduled, {
+          title: link.title,
+          customerName: booking.customerName,
+          customerEmail: booking.customerEmail,
+          newStartTime: newStartStr,
+          previousStartTime: prevStartStr,
+        })
+      : bookingRescheduledHostEmail({
+          title: link.title,
+          customerName: booking.customerName,
+          customerEmail: booking.customerEmail,
+          newStartTime: newStart,
+          previousStartTime: parseISO(booking.startTime),
+          timezone: booking.timezone ?? 'UTC',
+        })
 
     await Promise.all([
       resend.emails.send({
