@@ -72,7 +72,9 @@
       "Bash(tail -30 /tmp/dev.log)",
       "Read(//private/tmp/**)",
       "Bash(pkill -f \"npm run dev\")",
-      "Bash(npm run dev > /tmp/dev.log 2>&1 & *)"
+      "Bash(npm run dev > /tmp/dev.log 2>&1 & *)",
+      "Bash(kill 50775)",
+      "Bash(pkill -f \"next dev\")"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
