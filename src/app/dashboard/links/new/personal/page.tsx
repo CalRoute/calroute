@@ -29,11 +29,48 @@ export default function PersonalLinkPage() {
 
   function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const title = e.target.value
-    setForm(f => ({
-      ...f,
-      title,
-      slug: f.slug === slugify(f.title) || f.slug === '' ? slugify(title) : f.slug,
-    }))
+    const newSlug = slugify(title)
+    const shouldAutoFormat = form.slug === slugify(form.title) || form.slug === ''
+
+    if (shouldAutoFormat) {
+      setForm(f => ({ ...f, title, slug: newSlug }))
+
+      // Check availability of auto-formatted slug
+      if (checkTimeout) clearTimeout(checkTimeout)
+      if (!newSlug) {
+        setSlugStatus(null)
+        setSlugAlternatives([])
+        return
+      }
+
+      setSlugStatus('checking')
+      const timeout = setTimeout(() => {
+        fetch(`/api/booking-links/check-slug?slug=${encodeURIComponent(newSlug)}`)
+          .then(r => r.json())
+          .then(data => {
+            if (data.available) {
+              setSlugStatus('available')
+              setSlugAlternatives([])
+            } else {
+              if (data.alternatives && data.alternatives.length > 0) {
+                const autoSlug = data.alternatives[0]
+                setForm(f => ({ ...f, slug: autoSlug }))
+                setSlugStatus('available')
+                setSlugAlternatives([])
+              } else {
+                setSlugStatus('taken')
+                setSlugAlternatives([])
+              }
+            }
+          })
+          .catch(() => {
+            setSlugStatus('taken')
+          })
+      }, 500)
+      setCheckTimeout(timeout)
+    } else {
+      setForm(f => ({ ...f, title }))
+    }
   }
 
   function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
