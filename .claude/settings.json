@@ -65,7 +65,9 @@
       "Bash(mkdir -p '/Users/jo/GIT/CalRoute/src/app/booking/[id]/cancel' '/Users/jo/GIT/CalRoute/src/app/booking/[id]/reschedule')",
       "Bash(firebase deploy *)",
       "Bash(grep -E \"^jose$|^iron|^jsonwebtoken\")",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(node -e \"const pkg = require\\('/Users/jo/GIT/CalRoute/node_modules/@radix-ui/react-toast/package.json'\\); console.log\\(pkg.version, Object.keys\\(pkg.exports || {}\\).slice\\(0,5\\)\\)\")",
+      "Bash(node -e \"const pkg = require\\('/Users/jo/GIT/CalRoute/node_modules/@radix-ui/react-dialog/package.json'\\); console.log\\('dialog:', pkg.version\\); const pkg2 = require\\('/Users/jo/GIT/CalRoute/node_modules/@radix-ui/react-switch/package.json'\\); console.log\\('switch:', pkg2.version\\)\")"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",

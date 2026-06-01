@@ -5,7 +5,9 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import type { ConnectedCalendar } from '@/types/database'
 import DashboardLayout from '@/components/DashboardLayout'
-import DisconnectCalendarButton from './DisconnectCalendarButton'
+import ProfileEditor from './ProfileEditor'
+import NotificationPrefs from './NotificationPrefs'
+import CalendarRow from './CalendarRow'
 import AvailabilityEditor from './AvailabilityEditor'
 import LanguageEditor from './LanguageEditor'
 import TimezoneSelector from './TimezoneSelector'
@@ -30,6 +32,11 @@ export default async function SettingsPage({
 
   const savedAvailability = availSnap.docs.map(d => d.data())
   const savedLanguages: string[] = host?.languages ?? []
+  const savedNotificationPrefs = host?.notificationPrefs ?? {
+    emailOnNewBooking: true,
+    emailOnCancellation: true,
+    emailOnReschedule: true,
+  }
 
   const calsSnap = await adminDb
     .collection('hosts')
@@ -43,7 +50,7 @@ export default async function SettingsPage({
   })) as ConnectedCalendar[]
 
   return (
-    <DashboardLayout user={{ email: user.email }}>
+    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Settings">
       <div className="space-y-4 sm:space-y-6">
 
         {params.success === 'calendar_connected' && (
@@ -63,20 +70,11 @@ export default async function SettingsPage({
         )}
 
         {/* Profile */}
-        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-6">
           <h2 className="font-semibold text-gray-900">Profile</h2>
-          <div className="text-sm text-gray-600 space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Name</span>
-              <span>{host?.name ?? '—'}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="font-medium text-gray-700 w-16 flex-shrink-0">Email</span>
-              <span className="truncate">{user.email}</span>
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">Timezone</label>
+          <ProfileEditor savedName={host?.name ?? ''} email={user.email} />
+          <div className="border-t border-gray-200 pt-6">
+            <label className="block text-sm font-medium text-gray-900 mb-3">Timezone</label>
             <TimezoneSelector savedTimezone={host?.timezone ?? 'UTC'} />
           </div>
         </div>
@@ -101,6 +99,17 @@ export default async function SettingsPage({
             </p>
           </div>
           <LanguageEditor savedLanguages={savedLanguages} />
+        </div>
+
+        {/* Notification Preferences */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+          <div>
+            <h2 className="font-semibold text-gray-900">Notification preferences</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Control which booking events trigger email notifications.
+            </p>
+          </div>
+          <NotificationPrefs savedPrefs={savedNotificationPrefs} />
         </div>
 
         {/* Connected calendars */}
@@ -128,28 +137,9 @@ export default async function SettingsPage({
               </p>
             </div>
           ) : (
-            <div className="space-y-2">
+            <div className="space-y-3">
               {calendars.map(cal => (
-                <div
-                  key={cal.id}
-                  className="flex items-center justify-between gap-3 p-4 border border-gray-200 rounded-xl"
-                >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    <div className="w-8 h-8 bg-[#0D7377]/10 rounded-full flex items-center justify-center text-sm flex-shrink-0">
-                      📅
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{cal.accountEmail}</p>
-                      <p className="text-xs text-gray-500 truncate">{cal.label ?? cal.calendarId}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className={`text-xs px-2 py-0.5 rounded-full hidden sm:inline-flex ${cal.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                      {cal.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                    <DisconnectCalendarButton calendarId={cal.id} />
-                  </div>
-                </div>
+                <CalendarRow key={cal.id} cal={cal} />
               ))}
             </div>
           )}
