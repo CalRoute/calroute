@@ -20,7 +20,7 @@ export async function GET(request: NextRequest) {
   const response = NextResponse.redirect(url.toString())
   response.cookies.set('login_state', state, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     maxAge: 600,
     path: '/',
     sameSite: 'lax',
