@@ -1,195 +1,74 @@
 'use client'
 
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 
-const DURATIONS = [15, 20, 30, 45, 60, 90]
-
-export default function NewBookingLinkPage() {
+export default function LinkTypePage() {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  const [form, setForm] = useState({
-    title: '',
-    teamName: '',
-    description: '',
-    slug: '',
-    durationMinutes: 30,
-    bufferAfterMinutes: 0,
-    routingStrategy: 'priority' as 'priority' | 'round_robin',
-    maxDaysAhead: 30,
-  })
-
-  function slugify(val: string) {
-    return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
-  }
-
-  function handleTitleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const title = e.target.value
-    setForm(f => ({
-      ...f,
-      title,
-      slug: f.slug === slugify(f.title) || f.slug === '' ? slugify(title) : f.slug,
-    }))
-  }
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
-    try {
-      const res = await fetch('/api/booking-links', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, bufferBeforeMinutes: 0 }),
-      })
-      const data = await res.json()
-      if (!res.ok) throw new Error(data.error ?? 'Failed to create link')
-      router.push('/dashboard')
-    } catch (err: any) {
-      setError(err.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   return (
     <main className="min-h-screen bg-[#F7F4EF]">
       <nav className="bg-white border-b border-gray-200 px-4 sm:px-6 py-3 flex items-center gap-3">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
-          ← Dashboard
-        </Link>
+        <button onClick={() => router.back()} className="text-gray-400 hover:text-gray-600 text-sm transition-colors">
+          ← Back
+        </button>
         <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">New booking link</span>
+        <span className="text-sm text-gray-700 font-medium">What type of link?</span>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
-        <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create a booking link</h1>
+          <p className="text-gray-500">Choose how you want to set this up</p>
+        </div>
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Basic info */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Basic info</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
-              <input
-                type="text" value={form.teamName}
-                onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
-                placeholder="e.g. Sales Team, Support Team"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              />
-              <p className="text-xs text-gray-400 mt-1">Shown to team members on their dashboard.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Booking link title *</label>
-              <input
-                type="text" required value={form.title} onChange={handleTitleChange}
-                placeholder="e.g. 30-min intro call"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              />
-              <p className="text-xs text-gray-400 mt-1">Shown to customers on the booking page.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                rows={2} value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                placeholder="What is this meeting about?"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Link slug * <span className="text-gray-400 font-normal ml-1">— your booking URL</span>
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
-                <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
-                <input
-                  type="text" required value={form.slug}
-                  onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
-                  placeholder="intro-call"
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Duration & buffers */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Duration & buffers</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
-              <div className="flex flex-wrap gap-2">
-                {DURATIONS.map(d => (
-                  <button key={d} type="button" onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      form.durationMinutes === d ? 'bg-[#0D7377] text-white border-[#0D7377]' : 'border-gray-300 text-gray-700 hover:border-[#0D7377]'
-                    }`}
-                  >{d} min</button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer between meetings (min)</label>
-              <div className="flex items-center gap-2">
-                <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
-                  onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-                <span className="text-sm text-gray-500">min gap after each meeting</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">How far ahead can customers book?</label>
-              <div className="flex items-center gap-2">
-                <input type="number" min={1} max={90} value={form.maxDaysAhead}
-                  onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-                <span className="text-sm text-gray-500">days ahead</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Routing */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">Host routing</h2>
-            <p className="text-sm text-gray-500">When multiple hosts are free at the same time, who gets assigned?</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { value: 'priority', label: 'Priority', desc: 'Always assign the highest-priority host first' },
-                { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly — whoever was booked longest ago goes next' },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
-                  className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                    form.routingStrategy === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-sm text-gray-900">{opt.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-400 text-center">
-            Set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link> — it applies to all your booking links.
-          </p>
-
-          <button type="submit" disabled={loading || !form.title || !form.slug}
-            className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-medium hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Personal Link */}
+          <button
+            onClick={() => router.push('/dashboard/links/new/personal')}
+            className="text-left p-6 sm:p-7 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#0D7377] hover:bg-[#0D7377]/5 transition-all group"
           >
-            {loading ? 'Creating…' : 'Create booking link'}
+            <div className="w-12 h-12 bg-[#0D7377]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#0D7377]/20 transition-colors">
+              <svg className="w-6 h-6 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Personal link</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              Just you. Quick setup, ready to share immediately.
+            </p>
+            <div className="text-xs text-[#0D7377] font-medium">Get started →</div>
           </button>
-        </form>
+
+          {/* Team Link */}
+          <button
+            onClick={() => router.push('/dashboard/links/new/team')}
+            className="text-left p-6 sm:p-7 bg-white rounded-2xl border-2 border-gray-200 hover:border-[#0D7377] hover:bg-[#0D7377]/5 transition-all group"
+          >
+            <div className="w-12 h-12 bg-[#0D7377]/10 rounded-xl flex items-center justify-center mb-4 group-hover:bg-[#0D7377]/20 transition-colors">
+              <svg className="w-6 h-6 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900 mb-1">Team link</h2>
+            <p className="text-sm text-gray-500 mb-4">
+              With colleagues. Set routing rules, team name, and more.
+            </p>
+            <div className="text-xs text-[#0D7377] font-medium">Create team link →</div>
+          </button>
+        </div>
+
+        <div className="mt-8 pt-8 border-t border-gray-200 text-center">
+          <p className="text-sm text-gray-500">
+            Can't decide?{' '}
+            <button
+              onClick={() => router.push('/dashboard/links/new/personal')}
+              className="text-[#0D7377] hover:underline font-medium"
+            >
+              Start personal and add team members later
+            </button>
+          </p>
+        </div>
       </div>
     </main>
   )
