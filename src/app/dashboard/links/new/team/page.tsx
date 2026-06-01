@@ -63,8 +63,16 @@ export default function TeamLinkPage() {
             setSlugStatus('available')
             setSlugAlternatives([])
           } else {
-            setSlugStatus('taken')
-            setSlugAlternatives(data.alternatives || [])
+            // Auto-use first alternative if slug is taken
+            if (data.alternatives && data.alternatives.length > 0) {
+              const autoSlug = data.alternatives[0]
+              setForm(f => ({ ...f, slug: autoSlug }))
+              setSlugStatus('available')
+              setSlugAlternatives([])
+            } else {
+              setSlugStatus('taken')
+              setSlugAlternatives([])
+            }
           }
         })
         .catch(() => {
