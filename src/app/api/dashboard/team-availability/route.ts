@@ -112,9 +112,16 @@ export async function POST(request: Request) {
             status: isBusy ? 'in-meeting' : 'available',
           }
         } catch (error) {
-          console.error(`[availability] error checking ${member.uid}:`, error instanceof Error ? error.message : String(error))
-          console.error(`[availability] error stack:`, error instanceof Error ? error.stack : 'N/A')
-          return { uid: member.uid, name: member.name, status: 'unknown' }
+          const errorMsg = error instanceof Error ? error.message : String(error)
+          const errorStack = error instanceof Error ? error.stack : 'N/A'
+          console.error(`[availability] error checking ${member.uid}:`, errorMsg)
+          console.error(`[availability] error stack:`, errorStack)
+          return {
+            uid: member.uid,
+            name: member.name,
+            status: 'unknown',
+            error: errorMsg,  // Temporarily include error in response
+          }
         }
       })
     )

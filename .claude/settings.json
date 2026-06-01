@@ -74,7 +74,11 @@
       "Bash(pkill -f \"npm run dev\")",
       "Bash(npm run dev > /tmp/dev.log 2>&1 & *)",
       "Bash(kill 50775)",
-      "Bash(pkill -f \"next dev\")"
+      "Bash(pkill -f \"next dev\")",
+      "Bash(chmod +x /Users/jo/GIT/CalRoute/scripts/debug-calendar.js)",
+      "Bash(node /Users/jo/GIT/CalRoute/scripts/debug-calendar.js)",
+      "Bash(npx ts-node *)",
+      "Bash(node /Users/jo/GIT/CalRoute/scripts/test-api.js)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
