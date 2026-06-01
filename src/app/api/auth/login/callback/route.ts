@@ -10,7 +10,7 @@ const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 function cookieOpts(maxAge: number) {
   return {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: true,
     maxAge,
     path: '/',
     sameSite: 'lax' as const,
