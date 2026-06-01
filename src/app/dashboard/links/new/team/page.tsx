@@ -25,6 +25,7 @@ export default function TeamLinkPage() {
     bufferAfterMinutes: 0,
     routingStrategy: 'priority' as 'priority' | 'round_robin',
     maxDaysAhead: 30,
+    meetingType: 'google_meet' as 'google_meet' | 'phone_call',
   })
 
   function slugify(val: string) {
@@ -245,6 +246,28 @@ export default function TeamLinkPage() {
                 />
                 <span className="text-sm text-gray-500">days ahead</span>
               </div>
+            </div>
+          </div>
+
+          {/* Meeting Type */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-3">
+            <h2 className="font-semibold text-gray-900">Meeting type</h2>
+            <p className="text-sm text-gray-500">How will meetings with customers take place?</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                { value: 'google_meet', label: 'Google Meet', desc: 'Video conference link in calendar' },
+                { value: 'phone_call', label: 'Phone Call', desc: 'Exchange phone numbers' },
+              ].map(opt => (
+                <button key={opt.value} type="button"
+                  onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
+                  className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                    form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <p className="font-medium text-sm text-gray-900">{opt.label}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                </button>
+              ))}
             </div>
           </div>
 

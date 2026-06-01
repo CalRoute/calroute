@@ -20,6 +20,7 @@ export default function PersonalLinkPage() {
     title: '',
     slug: '',
     durationMinutes: 30,
+    meetingType: 'google_meet' as 'google_meet' | 'phone_call',
   })
 
   function slugify(val: string) {
@@ -81,6 +82,7 @@ export default function PersonalLinkPage() {
           title: form.title,
           slug: form.slug,
           durationMinutes: form.durationMinutes,
+          meetingType: form.meetingType,
           teamName: '',
           description: '',
           bufferAfterMinutes: 0,
@@ -154,6 +156,29 @@ export default function PersonalLinkPage() {
                     }`}
                   >
                     {d} min
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Meeting Type */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">How will you meet?</label>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'google_meet', label: 'Google Meet', desc: 'Video conference' },
+                  { value: 'phone_call', label: 'Phone Call', desc: 'Exchange phone numbers' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
+                    className={`text-left p-3 rounded-xl border-2 transition-colors ${
+                      form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <p className="font-medium text-sm text-gray-900">{opt.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
                   </button>
                 ))}
               </div>
