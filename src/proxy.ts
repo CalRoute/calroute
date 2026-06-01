@@ -11,9 +11,14 @@ export async function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('calroute-session')?.value
   const refresh = request.cookies.get('calroute-refresh')?.value
 
+  // Log all cookies to debug
+  const allCookies = request.cookies.getAll()
+  console.log('[proxy] all cookies:', allCookies.map(c => c.name))
+
   console.log('[proxy] checking session for', request.nextUrl.pathname, {
     hasSessionToken: !!sessionToken,
     hasRefreshToken: !!refresh,
+    allCookiesCount: allCookies.length,
   })
 
   // Valid session — proceed
