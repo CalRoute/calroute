@@ -65,6 +65,23 @@ export default async function HelpPage() {
       ],
     },
     {
+      title: 'Personal & Team Links',
+      questions: [
+        {
+          q: 'What\'s the difference between personal and team links?',
+          a: 'Personal links are for solo scheduling (just you). Team links route bookings across multiple team members using your chosen strategy. Both appear on the Team page in separate sections.',
+        },
+        {
+          q: 'How do I create a personal link?',
+          a: 'Go to Dashboard > Links > Create new > Personal. Set your meeting duration and whether you prefer phone calls or video.',
+        },
+        {
+          q: 'Can I convert a personal link to a team link?',
+          a: 'Go to the link settings and add team members. Once you add a second member, it becomes a team link.',
+        },
+      ],
+    },
+    {
       title: 'Team Features',
       questions: [
         {
@@ -72,12 +89,16 @@ export default async function HelpPage() {
           a: 'Go to Dashboard > Team, find the link, and click "Invite". Copy the booking link and share it with colleagues. They\'ll join as team members with their own calendars connected.',
         },
         {
+          q: 'What does the real-time availability section show?',
+          a: 'It shows live status badges for each team member: green = available now, amber = in a meeting soon, gray = setup incomplete. Updates in real-time as you view the page.',
+        },
+        {
           q: 'What does the green/amber status dot mean?',
           a: 'Green = availability is set up and a calendar is connected. Amber = availability or calendar setup is incomplete.',
         },
         {
           q: 'Can I see how many bookings each team member has handled?',
-          a: 'Yes, on the Team page you\'ll see booking count, availability days, and role (Owner/Member) for each team member.',
+          a: 'Yes, on the Team page you\'ll see booking count, availability days, timezone, and role (Owner/Member) for each team member.',
         },
         {
           q: 'Can I set different availability for different team members?',
@@ -86,6 +107,23 @@ export default async function HelpPage() {
         {
           q: 'What timezone is shown for team members?',
           a: 'Each team member\'s timezone (from their Settings) is displayed on the Team page, helping you coordinate across zones.',
+        },
+      ],
+    },
+    {
+      title: 'Meeting Types',
+      questions: [
+        {
+          q: 'Can I offer phone calls instead of video?',
+          a: 'Yes! When creating or editing a booking link, toggle "Meeting type" between Google Meet and Phone Call. For phone calls, customers enter their number and you get it in the confirmation email.',
+        },
+        {
+          q: 'Can I switch between phone calls and video?',
+          a: 'You can change the meeting type anytime in the link settings. Future bookings will use the new type.',
+        },
+        {
+          q: 'Do phone call customers get a Google Meet link?',
+          a: 'No, phone call bookings skip the Google Meet creation. Only video bookings (Google Meet) include a conference link.',
         },
       ],
     },
@@ -111,23 +149,40 @@ export default async function HelpPage() {
       ],
     },
     {
+      title: 'Bookings & Management',
+      questions: [
+        {
+          q: 'Can I bulk cancel or reschedule bookings?',
+          a: 'Yes! Go to Dashboard > Bookings, select multiple bookings using checkboxes, and use the action bar to cancel, reschedule, or export them all at once.',
+        },
+        {
+          q: 'How do I export bookings?',
+          a: 'On the Bookings page, select bookings or use "Export filtered" to download a CSV with all visible bookings.',
+        },
+        {
+          q: 'Can guests reschedule their own bookings?',
+          a: 'Yes! Every confirmation email includes a reschedule link. Guests can self-serve to change their meeting time without contacting you.',
+        },
+      ],
+    },
+    {
       title: 'Integrations & Advanced',
       questions: [
         {
           q: 'Can I receive webhooks when bookings happen?',
-          a: 'Yes, go to Integrations > Webhooks and create a webhook endpoint. You\'ll receive real-time POST requests for booking.confirmed, booking.cancelled, and booking.rescheduled events.',
+          a: 'Yes, go to Integrations > Webhooks and create a webhook endpoint. You\'ll receive real-time POST requests for booking.confirmed, booking.cancelled, and booking.rescheduled events with full booking details.',
         },
         {
           q: 'Do you have an API?',
-          a: 'Yes! Go to Settings > API Keys to generate API keys for programmatic access to CalRoute data.',
+          a: 'Yes! Go to Settings > API Keys to generate API keys for programmatic access to CalRoute data. Full REST API with webhook signing support.',
+        },
+        {
+          q: 'How are webhook payloads secured?',
+          a: 'All webhooks are signed with HMAC-SHA256. Your secret key is in Settings > API Keys — use it to verify webhook authenticity.',
         },
         {
           q: 'Can I integrate with Slack or Zapier?',
-          a: 'You can use webhooks to trigger Zapier automations. Slack integration coming soon.',
-        },
-        {
-          q: 'How do I export my booking data?',
-          a: 'Go to Dashboard > Analytics and click "Export CSV" to download booking data. Bookings page also supports CSV export of filtered data.',
+          a: 'You can use webhooks to trigger Zapier automations for custom workflows. Slack integration coming soon.',
         },
       ],
     },

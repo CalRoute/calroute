@@ -27,7 +27,7 @@ export default function PrivacyPage() {
             <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">2. Information we collect</h2>
             <p className="mb-3"><strong className="text-[#1a1a1a]">Account information:</strong> When you sign in with Google, we receive your name, email address, and profile photo from Google.</p>
             <p className="mb-3"><strong className="text-[#1a1a1a]">Google Calendar data:</strong> With your explicit permission, CalRoute accesses your Google Calendar free/busy information to determine your availability. We do <strong className="text-[#1a1a1a]">not</strong> read, store, or process the titles, descriptions, or attendees of your calendar events — only whether a time slot is free or busy.</p>
-            <p><strong className="text-[#1a1a1a]">Booking information:</strong> When a customer books a meeting through CalRoute, we collect their name, email address, and any optional notes they provide.</p>
+            <p className="mb-3"><strong className="text-[#1a1a1a]">Booking information:</strong> When a customer books a meeting through CalRoute, we collect their name, email address, and any optional notes they provide. For phone call meetings, we also collect their phone number to facilitate the call.</p>
           </section>
 
           <section>

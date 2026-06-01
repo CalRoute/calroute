@@ -80,12 +80,19 @@ export default function TermsPage() {
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">7. Privacy</h2>
+            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">7. Webhooks, APIs, and Custom Content</h2>
+            <p className="mb-3"><strong className="text-[#1a1a1a]">Webhooks:</strong> If you enable webhooks, CalRoute will send booking event data to your specified endpoint. You are responsible for securing your endpoint and handling the data according to your privacy obligations.</p>
+            <p className="mb-3"><strong className="text-[#1a1a1a]">API Keys:</strong> API keys provide programmatic access to your CalRoute data. Keep your keys private. You are liable for any use of your keys.</p>
+            <p><strong className="text-[#1a1a1a]">Custom Email Templates:</strong> You may customize booking confirmation, cancellation, and reschedule emails. You are responsible for ensuring your custom content complies with applicable laws and does not infringe third-party rights.</p>
+          </section>
+
+          <section>
+            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">8. Privacy</h2>
             <p>Your use of CalRoute is also governed by our <Link href="/privacy" className="text-[#0D7377] underline">Privacy Policy</Link>, which explains how we collect, use, and protect your data.</p>
           </section>
 
           <section>
-            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">8. Contact</h2>
+            <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">9. Contact</h2>
             <p>For questions about these Terms, contact us at: <a href="mailto:dolbyjoab@gmail.com" className="text-[#0D7377] underline">dolbyjoab@gmail.com</a></p>
           </section>
 

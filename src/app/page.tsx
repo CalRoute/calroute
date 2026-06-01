@@ -191,8 +191,8 @@ export default function HomePage() {
             {[
               {
                 icon: '👥',
-                title: 'Team booking links',
-                desc: 'One link for your entire team. CalRoute automatically routes each meeting to whoever is actually free.'
+                title: 'Personal & team links',
+                desc: 'Solo scheduling or team routing. One link for your entire team — CalRoute automatically routes each meeting to whoever is actually free.'
               },
               {
                 icon: '📅',
@@ -205,9 +205,9 @@ export default function HomePage() {
                 desc: 'Round-robin, priority-based, or first-available. Set it once and let CalRoute assign automatically.'
               },
               {
-                icon: '🌐',
-                title: 'Language-based selection',
-                desc: 'For global teams, customers pick their language. CalRoute shows only hosts who speak it.'
+                icon: '📍',
+                title: 'Real-time availability',
+                desc: 'Live team status showing who is available right now or already in a meeting. Makes scheduling feel instant.'
               },
               {
                 icon: '⏰',
@@ -215,24 +215,39 @@ export default function HomePage() {
                 desc: 'Customers book in their timezone. Your team sees their own. No more "which timezone?" confusion.'
               },
               {
-                icon: '🔄',
-                title: 'Guest-managed rescheduling',
-                desc: 'Customers can reschedule or cancel their own bookings up to 24h before. Notification sent to your team.'
+                icon: '📞',
+                title: 'Phone call meetings',
+                desc: 'Offer phone calls instead of video. Customers enter their number, team gets it in confirmation emails.'
               },
               {
-                icon: '📱',
-                title: 'Mobile-friendly widget',
-                desc: 'Premium month-calendar view with full-width time slots. Looks great on any device.'
+                icon: '🌐',
+                title: 'Language-based selection',
+                desc: 'For global teams, customers pick their language. CalRoute shows only hosts who speak it.'
+              },
+              {
+                icon: '🔄',
+                title: 'Guest rescheduling & cancellation',
+                desc: 'Customers self-serve to reschedule or cancel up to 24h before. Real-time notifications to your team.'
               },
               {
                 icon: '📧',
-                title: 'Automatic confirmations',
-                desc: 'Customers and hosts both get emails with Google Meet links. Real-time calendar sync.'
+                title: 'Custom email templates',
+                desc: 'Brand your booking confirmations and reminders. Use variables like {{customer_name}} and {{meeting_time}}.'
+              },
+              {
+                icon: '🎣',
+                title: 'Webhooks & API',
+                desc: 'Get real-time booking events via webhooks. Build on top with our full REST API. HMAC-signed for security.'
+              },
+              {
+                icon: '📱',
+                title: 'Mobile-first design',
+                desc: 'Responsive month-calendar with touch-friendly interactions. Works perfectly on any device.'
               },
               {
                 icon: '🔗',
-                title: 'Embeddable anywhere',
-                desc: 'Drop one iframe into your website, Notion, or email. The booking widget appears inline — no redirects.'
+                title: 'Embeddable everywhere',
+                desc: 'Drop one iframe into your website, Notion, or email. The booking widget appears inline — zero redirects.'
               },
             ].map(f => (
               <div key={f.title} className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all duration-300 group">
@@ -289,10 +304,12 @@ export default function HomePage() {
             {[
               { them: 'One calendar per person', us: 'Up to 5 calendars merged per person' },
               { them: 'Manual round-robin setup', us: 'Automatic routing, configured in seconds' },
-              { them: 'Basic availability blocks', us: 'Multiple time blocks with auto-merge' },
+              { them: 'Stale availability info', us: 'Real-time availability status for your team' },
+              { them: 'No phone call support', us: 'Phone calls or video — switch anytime' },
+              { them: 'Static confirmation emails', us: 'Custom branded email templates' },
+              { them: 'No API access', us: 'Full REST API + webhooks for integrations' },
               { them: 'Per-seat pricing', us: 'Flat team pricing — add hosts for free' },
               { them: 'Redirect to external page', us: 'Embed directly on your website' },
-              { them: 'Limited customization', us: 'Premium month-calendar UI' },
             ].map((r, i) => (
               <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 5 ? 'border-b border-[#1a1a1a]/[0.08]' : ''}`}>
                 <div className="px-6 sm:px-8 py-4 sm:py-5 text-[#1a1a1a]/40 flex items-start sm:items-center gap-3 border-r border-[#1a1a1a]/[0.08]">
