@@ -1,9 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { format, parseISO } from 'date-fns'
 import BookingActions from './BookingActions'
 import { useToast } from '@/components/Toast'
+
+const WeekCalendar = dynamic(() => import('./WeekCalendar'), { ssr: false })
 
 interface Booking {
   id: string
@@ -246,7 +249,15 @@ export default function BookingsClient({
         </div>
       )}
 
-      {/* Upcoming */}
+      {/* Week Calendar View */}
+      {viewMode === 'week' && (
+        <WeekCalendar allBookings={[...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]} />
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && (
+        <>
+          {/* Upcoming */}
       {(filterStatus === 'all' || filterStatus === 'upcoming') && (
         <div>
           <h3 className="text-sm font-semibold text-gray-900 mb-3">Upcoming ({filteredUpcoming.length})</h3>
@@ -340,6 +351,8 @@ export default function BookingsClient({
             ))}
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   )
