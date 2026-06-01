@@ -8,12 +8,22 @@ const SESSION_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 
 function cookieOpts(maxAge: number) {
+  // Extract domain from NEXT_PUBLIC_APP_URL
+  let domain: string | undefined
+  try {
+    const url = new URL(process.env.NEXT_PUBLIC_APP_URL || '')
+    domain = url.hostname
+  } catch {
+    // If URL parsing fails, don't set domain (will default to current domain)
+  }
+
   return {
     httpOnly: true,
     secure: true,
     maxAge,
     path: '/',
     sameSite: 'lax' as const,
+    domain,
   }
 }
 
