@@ -41,6 +41,7 @@ export default async function BookingsPage() {
         id: d.id,
         customerName: data.customerName,
         customerEmail: data.customerEmail,
+        customerNotes: data.customerNotes ?? null,
         startTime: data.startTime,
         status: data.status,
         linkTitle: link?.title ?? 'Deleted link',
@@ -64,11 +65,45 @@ export default async function BookingsPage() {
     .filter(b => b.status === 'cancelled')
     .sort((a, b) => b.startTime.localeCompare(a.startTime))
 
+  const rescheduled = allBookings
+    .filter(b => b.status === 'rescheduled')
+    .sort((a, b) => b.startTime.localeCompare(a.startTime))
+
   const linkTitles = [...new Set(allBookings.map(b => b.linkTitle))]
+
+  // Deduplicated team members for filter
+  const teamMembersForFilter: { uid: string; name: string }[] = []
+  const memberMap = new Map<string, string>()
+  allBookings.forEach(b => {
+    b.teamMembers.forEach(m => {
+      if (!memberMap.has(m.uid)) {
+        memberMap.set(m.uid, m.name)
+      }
+    })
+  })
+  memberMap.forEach((name, uid) => {
+    teamMembersForFilter.push({ uid, name })
+  })
+
+  // Metrics
+  const metrics = {
+    total: allBookings.length,
+    confirmed: upcoming.length + past.length,
+    cancelled: cancelled.length,
+    rescheduled: rescheduled.length,
+  }
 
   return (
     <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Bookings">
-      <BookingsClient upcoming={upcoming} past={past} cancelled={cancelled} linkTitles={linkTitles} />
+      <BookingsClient
+        upcoming={upcoming}
+        past={past}
+        cancelled={cancelled}
+        rescheduled={rescheduled}
+        linkTitles={linkTitles}
+        teamMembersForFilter={teamMembersForFilter}
+        metrics={metrics}
+      />
     </DashboardLayout>
   )
 }

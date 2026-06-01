@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { format, parseISO } from 'date-fns'
 import BookingActions from './BookingActions'
+import { useToast } from '@/components/Toast'
 
 interface Booking {
   id: string
   customerName: string
   customerEmail: string
+  customerNotes: string | null
   startTime: string
   linkTitle: string
   linkSlug: string
@@ -20,12 +22,31 @@ interface Props {
   upcoming: Booking[]
   past: Booking[]
   cancelled: Booking[]
+  rescheduled: Booking[]
   linkTitles: string[]
+  teamMembersForFilter: Array<{ uid: string; name: string }>
+  metrics: { total: number; confirmed: number; cancelled: number; rescheduled: number }
 }
 
-export default function BookingsClient({ upcoming, past, cancelled, linkTitles }: Props) {
+export default function BookingsClient({
+  upcoming,
+  past,
+  cancelled,
+  rescheduled,
+  linkTitles,
+  teamMembersForFilter,
+  metrics,
+}: Props) {
+  const { showToast } = useToast()
   const [searchQuery, setSearchQuery] = useState('')
   const [filterLink, setFilterLink] = useState('')
+  const [dateFrom, setDateFrom] = useState('')
+  const [dateTo, setDateTo] = useState('')
+  const [filterMember, setFilterMember] = useState('')
+  const [filterStatus, setFilterStatus] = useState<'all' | 'upcoming' | 'past' | 'cancelled' | 'rescheduled'>('all')
+  const [viewMode, setViewMode] = useState<'list' | 'week'>('list')
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkLoading, setBulkLoading] = useState(false)
 
   const filterBookings = (bookings: Booking[]) => {
     return bookings.filter(b => {
@@ -33,15 +54,27 @@ export default function BookingsClient({ upcoming, past, cancelled, linkTitles }
         b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
 
-      const matchesFilter = !filterLink || b.linkTitle === filterLink
+      const matchesLink = !filterLink || b.linkTitle === filterLink
 
-      return matchesSearch && matchesFilter
+      const matchesDateRange =
+        (!dateFrom || parseISO(b.startTime) >= parseISO(dateFrom + 'T00:00:00')) &&
+        (!dateTo || parseISO(b.startTime) <= parseISO(dateTo + 'T23:59:59'))
+
+      const matchesMember =
+        !filterMember || b.teamMembers.some(m => m.uid === filterMember)
+
+      return matchesSearch && matchesLink && matchesDateRange && matchesMember
     })
   }
 
-  const filteredUpcoming = filterBookings(upcoming)
-  const filteredPast = filterBookings(past)
-  const filteredCancelled = filterBookings(cancelled)
+  const filteredUpcoming = filterStatus === 'all' || filterStatus === 'upcoming' ? filterBookings(upcoming) : []
+  const filteredPast = filterStatus === 'all' || filterStatus === 'past' ? filterBookings(past) : []
+  const filteredCancelled = filterStatus === 'all' || filterStatus === 'cancelled' ? filterBookings(cancelled) : []
+  const filteredRescheduled = filterStatus === 'all' || filterStatus === 'rescheduled' ? filterBookings(rescheduled) : []
+
+  const confirmedPct = metrics.total > 0 ? Math.round((metrics.confirmed / metrics.total) * 100) : 0
+  const cancelledPct = metrics.total > 0 ? Math.round((metrics.cancelled / metrics.total) * 100) : 0
+  const rescheduledPct = metrics.total > 0 ? Math.round((metrics.rescheduled / metrics.total) * 100) : 0
 
   return (
     <div className="space-y-6">
