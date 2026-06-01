@@ -7,11 +7,7 @@ export interface SessionPayload {
 
 function secret() {
   const key = process.env.SESSION_SECRET
-  if (!key) {
-    console.error('[secret] SESSION_SECRET is not configured!')
-    throw new Error('SESSION_SECRET is not configured')
-  }
-  console.log('[secret] SESSION_SECRET is set, length:', key.length)
+  if (!key) throw new Error('SESSION_SECRET is not configured')
   return new TextEncoder().encode(key)
 }
 
@@ -30,16 +26,9 @@ export async function signSession(payload: SessionPayload): Promise<string> {
 export async function verifySession(token: string): Promise<SessionPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret())
-    if (!payload.uid || !payload.email) {
-      console.log('[verifySession] missing uid or email in token')
-      return null
-    }
+    if (!payload.uid || !payload.email) return null
     return { uid: payload.uid as string, email: payload.email as string }
-  } catch (e) {
-    console.log('[verifySession] failed to verify:', {
-      error: e instanceof Error ? e.message : String(e),
-      tokenLength: token.length,
-    })
+  } catch {
     return null
   }
 }

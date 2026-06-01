@@ -89,8 +89,6 @@ export async function GET(request: NextRequest) {
     }
 
     const { idToken, refreshToken } = await firebaseRes.json()
-
-    // Verify the Firebase ID token
     const decoded = await adminAuth.verifyIdToken(idToken)
 
     // Upsert host record
@@ -128,8 +126,6 @@ export async function GET(request: NextRequest) {
       response.cookies.set('calroute-refresh', refreshToken, cookieOpts(REFRESH_MAX_AGE))
     }
     response.cookies.delete('login_state')
-
-    console.log('[login/callback] set cookies, returning redirect page')
     return response
   } catch (e) {
     console.error('[login/callback] error:', e)
