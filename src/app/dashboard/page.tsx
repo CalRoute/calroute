@@ -3,8 +3,10 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
-import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
+import { format, parseISO, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
 import DashboardLayout from '@/components/DashboardLayout'
+import InviteDashboardAction from './InviteDashboardAction'
+import TeamAvailabilityWidget from './TeamAvailabilityWidget'
 
 export default async function DashboardPage() {
   const user = await requireUser('/dashboard')
@@ -116,7 +118,51 @@ export default async function DashboardPage() {
   const upcomingBookings = allBookings
     .filter(b => b.startTime >= now.toISOString())
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
-    .slice(0, 3)
+    .slice(0, 5)
+
+  // Recent activity feed
+  const activityFeed = allBookings
+    .concat(bookingsSnap.docs
+      .filter(d => d.data().status === 'cancelled' || d.data().status === 'rescheduled')
+      .map(d => ({ id: d.id, ...d.data() })))
+    .sort((a, b) => {
+      const aTime = a.cancelledAt || a.createdAt || a.startTime
+      const bTime = b.cancelledAt || b.createdAt || b.startTime
+      return parseISO(bTime).getTime() - parseISO(aTime).getTime()
+    })
+    .slice(0, 8)
+    .map(b => ({
+      id: b.id,
+      customerName: b.customerName,
+      linkTitle: b.linkTitle || 'Deleted link',
+      status: b.status,
+      timestamp: b.cancelledAt || b.createdAt || b.startTime,
+    }))
+
+  // Team members for the availability widget
+  const teamMembers: { uid: string; name: string }[] = []
+  try {
+    const linksSnap2 = await adminDb.collection('booking_links').where('ownerId', '==', user.uid).get()
+    const memberSet = new Map<string, string>()
+    for (const linkDoc of linksSnap2.docs) {
+      const hostsSnap = await adminDb.collection('booking_links').doc(linkDoc.id).collection('hosts').get()
+      for (const hDoc of hostsSnap.docs) {
+        const hData = hDoc.data()
+        if (hData.hostId !== user.uid && !memberSet.has(hData.hostId)) {
+          const profileSnap = await adminDb.collection('hosts').doc(hData.hostId).get()
+          const profile = profileSnap.data()
+          memberSet.set(hData.hostId, profile?.name ?? hData.hostId)
+        }
+      }
+    }
+    memberSet.forEach((name, uid) => {
+      teamMembers.push({ uid, name })
+    })
+  } catch (e) {
+    console.error('[dashboard] failed to load team members:', e)
+  }
+
+  const firstLinkSlug = links.length > 0 ? links[0].slug : null
 
   return (
     <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Dashboard">
@@ -185,26 +231,55 @@ export default async function DashboardPage() {
         )}
 
         {/* Quick Actions */}
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <Link
             href="/dashboard/links/new"
-            className="flex-1 bg-[#0D7377] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors text-center"
+            className="bg-[#0D7377] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors text-center"
           >
             + New link
           </Link>
+          <InviteDashboardAction firstLinkSlug={firstLinkSlug} />
           <Link
             href="/dashboard/bookings"
-            className="flex-1 bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
+            className="bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
           >
             View bookings
           </Link>
           <Link
-            href="/dashboard/settings"
-            className="flex-1 bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
+            href="/dashboard/analytics"
+            className="bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
           >
-            Settings
+            Analytics
           </Link>
         </div>
+
+        {/* Team Availability Widget */}
+        {teamMembers.length > 0 && <TeamAvailabilityWidget teamMembers={teamMembers} />}
+
+        {/* Recent Activity Feed */}
+        {activityFeed.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <h3 className="font-semibold text-gray-900">Recent activity</h3>
+            <div className="space-y-2 max-h-60 overflow-y-auto">
+              {activityFeed.map(activity => {
+                const statusColor = activity.status === 'cancelled' ? 'text-red-600' : activity.status === 'rescheduled' ? 'text-amber-600' : 'text-teal-600'
+                const statusIcon = activity.status === 'cancelled' ? '✕' : activity.status === 'rescheduled' ? '↻' : '+'
+                return (
+                  <div key={activity.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                    <span className={`flex-shrink-0 text-lg font-semibold ${statusColor}`}>{statusIcon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-gray-900 truncate">{activity.customerName}</p>
+                      <p className="text-xs text-gray-500 truncate">{activity.linkTitle}</p>
+                    </div>
+                    <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
+                      {formatDistanceToNow(parseISO(activity.timestamp), { addSuffix: true })}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-bold text-gray-900">Manage your booking links</h2>

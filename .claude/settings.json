@@ -70,7 +70,8 @@
       "Bash(node -e \"const pkg = require\\('/Users/jo/GIT/CalRoute/node_modules/@radix-ui/react-dialog/package.json'\\); console.log\\('dialog:', pkg.version\\); const pkg2 = require\\('/Users/jo/GIT/CalRoute/node_modules/@radix-ui/react-switch/package.json'\\); console.log\\('switch:', pkg2.version\\)\")",
       "Bash(curl -s http://localhost:3000/login)",
       "Bash(tail -30 /tmp/dev.log)",
-      "Read(//private/tmp/**)"
+      "Read(//private/tmp/**)",
+      "Bash(pkill -f \"npm run dev\")"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",
