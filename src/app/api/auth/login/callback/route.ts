@@ -100,30 +100,26 @@ export async function GET(request: NextRequest) {
     // Sign our own session JWT (no external verification needed later)
     const sessionToken = await signSession({ uid: decoded.uid, email: decoded.email ?? '' })
 
-    // Create HTML response with client-side redirect
-    // This ensures cookies are set before redirect happens
-    const html = `
-      <!DOCTYPE html>
-      <html>
-      <head><title>Redirecting...</title></head>
-      <body>
-        <script>
-          window.location.replace('${returnTo}');
-        </script>
-      </body>
-      </html>
-    `
-    const response = new NextResponse(html, {
-      status: 200,
-      headers: { 'Content-Type': 'text/html' }
-    })
+    // Return HTML page with meta refresh delay to ensure cookies are persisted
+    const html = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Redirecting...</title>
+  <meta http-equiv="refresh" content="0; url=${returnTo}">
+</head>
+<body>
+  <p>Redirecting...</p>
+</body>
+</html>`
+
+    const response = new NextResponse(html, { status: 200, headers: { 'Content-Type': 'text/html; charset=utf-8' } })
     response.cookies.set('calroute-session', sessionToken, cookieOpts(SESSION_MAX_AGE))
     if (refreshToken) {
       response.cookies.set('calroute-refresh', refreshToken, cookieOpts(REFRESH_MAX_AGE))
     }
     response.cookies.delete('login_state')
 
-    console.log('[login/callback] cookies set, rendering redirect page')
+    console.log('[login/callback] set cookies, returning redirect page')
     return response
   } catch (e) {
     console.error('[login/callback] error:', e)
