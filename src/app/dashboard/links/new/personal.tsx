@@ -1,15 +1,20 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
 
+type SlugStatus = null | 'checking' | 'available' | 'taken'
+
 export default function PersonalLinkPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [slugStatus, setSlugStatus] = useState<SlugStatus>(null)
+  const [slugAlternatives, setSlugAlternatives] = useState<string[]>([])
+  const [checkTimeout, setCheckTimeout] = useState<NodeJS.Timeout | null>(null)
 
   const [form, setForm] = useState({
     title: '',
@@ -28,6 +33,40 @@ export default function PersonalLinkPage() {
       title,
       slug: f.slug === slugify(f.title) || f.slug === '' ? slugify(title) : f.slug,
     }))
+  }
+
+  function handleSlugChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const newSlug = slugify(e.target.value)
+    setForm(f => ({ ...f, slug: newSlug }))
+
+    if (checkTimeout) clearTimeout(checkTimeout)
+
+    if (!newSlug) {
+      setSlugStatus(null)
+      setSlugAlternatives([])
+      return
+    }
+
+    setSlugStatus('checking')
+
+    const timeout = setTimeout(() => {
+      fetch(`/api/booking-links/check-slug?slug=${encodeURIComponent(newSlug)}`)
+        .then(r => r.json())
+        .then(data => {
+          if (data.available) {
+            setSlugStatus('available')
+            setSlugAlternatives([])
+          } else {
+            setSlugStatus('taken')
+            setSlugAlternatives(data.alternatives || [])
+          }
+        })
+        .catch(() => {
+          setSlugStatus('taken')
+        })
+    }, 500)
+
+    setCheckTimeout(timeout)
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -125,17 +164,66 @@ export default function PersonalLinkPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Your booking URL *
               </label>
-              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
+              <div className={`flex items-center border rounded-xl overflow-hidden focus-within:ring-2 transition-all ${
+                slugStatus === 'available' ? 'border-green-300 focus-within:ring-green-400' :
+                slugStatus === 'taken' ? 'border-red-300 focus-within:ring-red-400' :
+                'border-gray-300 focus-within:ring-[#0D7377]'
+              }`}>
                 <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
                 <input
                   type="text"
                   required
                   value={form.slug}
-                  onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
+                  onChange={handleSlugChange}
                   placeholder="intro-call"
                   className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
                 />
+                {slugStatus === 'checking' && (
+                  <div className="px-3 text-gray-400">
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                    </svg>
+                  </div>
+                )}
+                {slugStatus === 'available' && (
+                  <div className="px-3 text-green-600">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
+                {slugStatus === 'taken' && (
+                  <div className="px-3 text-red-600">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                )}
               </div>
+              {slugStatus === 'available' && (
+                <p className="text-xs text-green-600 mt-1 font-medium">✓ Available!</p>
+              )}
+              {slugStatus === 'taken' && (
+                <div className="mt-2 space-y-2">
+                  <p className="text-xs text-red-600 font-medium">This URL is taken. Try one of these:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {slugAlternatives.map(alt => (
+                      <button
+                        key={alt}
+                        type="button"
+                        onClick={() => {
+                          setForm(f => ({ ...f, slug: alt }))
+                          setSlugStatus('available')
+                          setSlugAlternatives([])
+                        }}
+                        className="text-xs px-3 py-1.5 bg-red-50 text-red-700 hover:bg-red-100 rounded-lg border border-red-200 transition-colors"
+                      >
+                        /book/{alt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
@@ -145,10 +233,10 @@ export default function PersonalLinkPage() {
 
           <button
             type="submit"
-            disabled={loading || !form.title || !form.slug}
+            disabled={loading || !form.title || !form.slug || slugStatus !== 'available'}
             className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-medium hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? 'Creating…' : 'Create personal link'}
+            {loading ? 'Creating…' : slugStatus === 'checking' ? 'Checking URL…' : 'Create personal link'}
           </button>
         </form>
       </div>
