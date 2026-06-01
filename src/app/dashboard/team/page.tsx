@@ -166,7 +166,12 @@ export default async function TeamPage() {
     console.error('[team] collectionGroup query failed:', e)
   }
 
-  const hasLinks = ownedLinks.length > 0
+  // Separate personal links (1 member) from team links (2+ members)
+  const personalLinks = ownedLinks.filter(link => link.members.length === 1)
+  const actualTeamLinks = ownedLinks.filter(link => link.members.length > 1)
+
+  const hasPersonalLinks = personalLinks.length > 0
+  const hasTeamLinks = actualTeamLinks.length > 0
   const hasMemberships = teamLinks.length > 0
 
   return (
@@ -174,7 +179,7 @@ export default async function TeamPage() {
       user={{ email: user.email, name: host?.name }}
       breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Team' }]}
     >
-      {!hasLinks && !hasMemberships ? (
+      {!hasPersonalLinks && !hasTeamLinks && !hasMemberships ? (
         <div className="max-w-3xl mx-auto text-center space-y-4 py-16">
           <div className="w-14 h-14 bg-[#0D7377]/10 rounded-2xl flex items-center justify-center mx-auto">
             <svg className="w-7 h-7 text-[#0D7377]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
@@ -195,11 +200,65 @@ export default async function TeamPage() {
       ) : (
         <div className="space-y-8">
 
+          {/* Personal links I own */}
+          {hasPersonalLinks && (
+            <section className="space-y-3">
+              <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Your personal links</h2>
+              {personalLinks.map((link) => (
+                <div key={link.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                  {/* Link header */}
+                  <div className="px-5 py-4 flex items-center justify-between gap-3 border-b border-gray-100">
+                    <div>
+                      <h3 className="font-semibold text-gray-900">{link.title}</h3>
+                      <p className="text-xs text-gray-400 mt-0.5">{link.durationMinutes} min · {link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/dashboard/links/${link.id}`}
+                        className="text-xs text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+                      >
+                        Edit
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Availability info */}
+                  <div className="px-5 py-3 space-y-3">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Your availability</p>
+                      <div className="flex items-center gap-3 flex-wrap">
+                        <StatusLabel hasAvailability={link.members[0].hasAvailability} hasCalendar={link.members[0].hasCalendar} />
+                        <div className="text-xs text-gray-500">
+                          {link.members[0].bookingCount} booking{link.members[0].bookingCount !== 1 ? 's' : ''}
+                        </div>
+                        <div className="text-xs text-gray-500" title={getDayNames(link.members[0].availabilityDays)}>
+                          {getDayNames(link.members[0].availabilityDays)}
+                        </div>
+                        <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                          {link.members[0].tzAbbr}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="pt-2 border-t border-gray-100">
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
+                        target="_blank" rel="noreferrer"
+                        className="text-xs text-[#0D7377] hover:underline"
+                      >
+                        /book/{link.slug}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </section>
+          )}
+
           {/* Teams I own */}
-          {hasLinks && (
+          {hasTeamLinks && (
             <section className="space-y-3">
               <h2 className="text-xs font-semibold text-gray-400 uppercase tracking-widest">Your teams</h2>
-              {ownedLinks.map((link) => {
+              {actualTeamLinks.map((link) => {
                 const displayName = link.teamName || link.title
                 return (
                   <div key={link.id} className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
