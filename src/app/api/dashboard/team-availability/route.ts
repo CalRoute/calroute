@@ -15,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const now = new Date()
-    const endOfDay = addHours(startOfDay(now), 23)
+    const endOfDay = addHours(startOfDay(now), 24)  // Tomorrow midnight instead of 11 PM today
 
     const statuses = await Promise.all(
       members.map(async member => {
@@ -112,16 +112,8 @@ export async function POST(request: Request) {
             status: isBusy ? 'in-meeting' : 'available',
           }
         } catch (error) {
-          const errorMsg = error instanceof Error ? error.message : String(error)
-          const errorStack = error instanceof Error ? error.stack : 'N/A'
-          console.error(`[availability] error checking ${member.uid}:`, errorMsg)
-          console.error(`[availability] error stack:`, errorStack)
-          return {
-            uid: member.uid,
-            name: member.name,
-            status: 'unknown',
-            error: errorMsg,  // Temporarily include error in response
-          }
+          console.error(`[availability] error checking ${member.uid}:`, error instanceof Error ? error.message : String(error))
+          return { uid: member.uid, name: member.name, status: 'unknown' }
         }
       })
     )

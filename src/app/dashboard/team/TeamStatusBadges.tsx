@@ -25,11 +25,9 @@ export default function TeamStatusBadges({ members }: TeamStatusBadgesProps) {
           body: JSON.stringify({ members }),
         })
         const data = await res.json()
-        console.log('[team-status] API response:', data)
         const statusMap = new Map<string, MemberStatus>(
           data.statuses?.map((s: MemberStatus) => [s.uid, s]) || []
         )
-        console.log('[team-status] status map:', Array.from(statusMap.entries()))
         setStatuses(statusMap)
       } catch (error) {
         console.error('[team-status] fetch failed:', error)
