@@ -6,6 +6,7 @@ import { format, parseISO } from 'date-fns'
 import BookingActions from './BookingActions'
 import { useToast } from '@/components/Toast'
 import RescheduleDialog from './RescheduleDialog'
+import ConfirmDialog from '@/components/ConfirmDialog'
 
 const WeekCalendar = dynamic(() => import('./WeekCalendar'), { ssr: false })
 
@@ -52,6 +53,7 @@ export default function BookingsClient({
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkLoading, setBulkLoading] = useState(false)
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false)
+  const [showConfirmCancel, setShowConfirmCancel] = useState(false)
 
   const filterBookings = (bookings: Booking[]) => {
     return bookings.filter(b => {
@@ -81,11 +83,47 @@ export default function BookingsClient({
   const cancelledPct = metrics.total > 0 ? Math.round((metrics.cancelled / metrics.total) * 100) : 0
   const rescheduledPct = metrics.total > 0 ? Math.round((metrics.rescheduled / metrics.total) * 100) : 0
 
-  const handleBulkCancel = async () => {
-    if (!window.confirm(`Cancel ${selectedIds.size} booking${selectedIds.size !== 1 ? 's' : ''}? Confirmation emails will be sent.`)) {
+  const hasActiveFilters = searchQuery || filterLink || dateFrom || dateTo || filterMember
+
+  const handleExportFiltered = () => {
+    const allFiltered = [...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]
+    if (allFiltered.length === 0) {
+      showToast('No bookings to export', 'error')
       return
     }
 
+    const headers = ['Name', 'Email', 'Date', 'Time', 'Duration (min)', 'Link', 'Status', 'Notes']
+    const rows = allFiltered.map(booking => [
+      booking.customerName,
+      booking.customerEmail,
+      format(parseISO(booking.startTime), 'MMM d yyyy'),
+      format(parseISO(booking.startTime), 'h:mm a'),
+      booking.durationMinutes,
+      booking.linkTitle,
+      booking.status,
+      booking.customerNotes || '',
+    ])
+    const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
+    const blob = new Blob([csv], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+    showToast('CSV exported', 'success')
+  }
+
+  const handleClearFilters = () => {
+    setSearchQuery('')
+    setFilterLink('')
+    setDateFrom('')
+    setDateTo('')
+    setFilterMember('')
+  }
+
+  const confirmBulkCancel = async () => {
+    setShowConfirmCancel(false)
     setBulkLoading(true)
     try {
       const res = await fetch('/api/bookings/bulk/cancel', {
@@ -194,19 +232,35 @@ export default function BookingsClient({
             <option key={member.uid} value={member.uid}>{member.name}</option>
           ))}
         </select>
-        <div className="flex gap-1 border border-gray-200 rounded-lg p-1 bg-white">
+        <div className="flex gap-2 items-center">
+          {hasActiveFilters && (
+            <button
+              onClick={handleClearFilters}
+              className="text-xs text-gray-600 hover:text-gray-900 underline"
+            >
+              Clear filters
+            </button>
+          )}
           <button
-            onClick={() => setViewMode('list')}
-            className={`px-2 py-1 rounded text-sm font-medium ${viewMode === 'list' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
+            onClick={handleExportFiltered}
+            className="px-2 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"
           >
-            ≡ List
+            ⬇ Export filtered
           </button>
-          <button
-            onClick={() => setViewMode('week')}
-            className={`px-2 py-1 rounded text-sm font-medium ${viewMode === 'week' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
-          >
-            ◻ Week
-          </button>
+          <div className="flex gap-1 border border-gray-200 rounded-lg p-1 bg-white">
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-2 py-1 rounded text-sm font-medium ${viewMode === 'list' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
+            >
+              ≡ List
+            </button>
+            <button
+              onClick={() => setViewMode('week')}
+              className={`px-2 py-1 rounded text-sm font-medium ${viewMode === 'week' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
+            >
+              ◻ Week
+            </button>
+          </div>
         </div>
       </div>
 
@@ -259,7 +313,7 @@ export default function BookingsClient({
           <p className="text-sm font-medium text-gray-900">{selectedIds.size} selected</p>
           <div className="flex gap-2">
             <button
-              onClick={handleBulkCancel}
+              onClick={() => setShowConfirmCancel(true)}
               disabled={bulkLoading}
               className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg disabled:opacity-50"
             >
@@ -275,8 +329,9 @@ export default function BookingsClient({
             <button
               onClick={() => {
                 const headers = ['Name', 'Email', 'Date', 'Time', 'Duration (min)', 'Link', 'Status', 'Notes']
+                const allFiltered = [...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]
                 const rows = Array.from(selectedIds).map(id => {
-                  const booking = filteredUpcoming.find(b => b.id === id)
+                  const booking = allFiltered.find(b => b.id === id)
                   if (!booking) return []
                   return [
                     booking.customerName,
@@ -435,6 +490,19 @@ export default function BookingsClient({
           onConfirm={handleBulkReschedule}
           isLoading={bulkLoading}
           count={selectedIds.size}
+        />
+      )}
+
+      {/* Confirm Cancel Dialog */}
+      {showConfirmCancel && (
+        <ConfirmDialog
+          title="Cancel bookings?"
+          message={`Cancel ${selectedIds.size} booking${selectedIds.size !== 1 ? 's' : ''}? Confirmation emails will be sent.`}
+          confirmLabel="Cancel bookings"
+          confirmClassName="bg-red-600 hover:bg-red-700"
+          onConfirm={confirmBulkCancel}
+          onClose={() => setShowConfirmCancel(false)}
+          isLoading={bulkLoading}
         />
       )}
     </div>

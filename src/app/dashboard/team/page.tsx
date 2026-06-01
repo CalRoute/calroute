@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import DashboardLayout from '@/components/DashboardLayout'
 import InvitePanel from './InvitePanel'
+import TeamStatusBadges from './TeamStatusBadges'
 
 function initials(name: string) {
   return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -36,6 +37,14 @@ function StatusLabel({ hasAvailability, hasCalendar }: { hasAvailability: boolea
       Setup required
     </div>
   )
+}
+
+function getDayNames(dayOfWeekIndices: number[]): string {
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  if (dayOfWeekIndices.length === 0) return 'None'
+  if (dayOfWeekIndices.length === 7) return 'All days'
+  const sorted = [...new Set(dayOfWeekIndices)].sort((a, b) => a - b)
+  return sorted.map(i => dayNames[i]).join(', ')
 }
 
 export default async function TeamPage() {
@@ -70,6 +79,13 @@ export default async function TeamPage() {
             const availData = doc.data()
             return availData.ranges && availData.ranges.length > 0
           }).length
+          const availabilityDays = availSnap.docs
+            .filter(doc => {
+              const availData = doc.data()
+              return availData.ranges && availData.ranges.length > 0
+            })
+            .map(doc => parseInt(doc.id, 10))
+            .filter(n => !isNaN(n))
 
           const calSnap = await adminDb
             .collection('hosts').doc(hData.hostId)
@@ -107,6 +123,7 @@ export default async function TeamPage() {
             hasCalendar,
             bookingCount,
             availabilityDayCount,
+            availabilityDays,
             timezone,
             tzAbbr,
             role: hData.hostId === linkData.ownerId ? 'Owner' : 'Member',
@@ -213,28 +230,33 @@ export default async function TeamPage() {
                       {link.members.length === 0 ? (
                         <p className="text-sm text-gray-400 py-1">No members yet — <Link href={`/dashboard/links/${link.id}`} className="text-[#0D7377] hover:underline">add hosts</Link>.</p>
                       ) : (
-                        <div className="divide-y divide-gray-50">
-                          {link.members.map((m: any) => (
-                            <div key={m.uid} className="py-3 first:pt-1 last:pb-1 space-y-2">
-                              <div className="flex items-center gap-3">
-                                <Avatar name={m.name} avatarUrl={m.avatarUrl} />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-0.5">
-                                    <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
-                                    {m.role === 'Owner' && (
-                                      <span className="text-[10px] font-semibold text-white bg-[#0D7377] rounded-md px-1.5 py-0.5">Owner</span>
-                                    )}
+                        <>
+                          <div className="mb-3 pb-3 border-b border-gray-50">
+                            <p className="text-xs font-semibold text-gray-500 mb-2">Real-time availability</p>
+                            <TeamStatusBadges members={link.members.map((m: any) => ({ uid: m.uid, name: m.name }))} />
+                          </div>
+                          <div className="divide-y divide-gray-50">
+                            {link.members.map((m: any) => (
+                              <div key={m.uid} className="py-3 first:pt-1 last:pb-1 space-y-2">
+                                <div className="flex items-center gap-3">
+                                  <Avatar name={m.name} avatarUrl={m.avatarUrl} />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 mb-0.5">
+                                      <p className="text-sm font-medium text-gray-900 truncate">{m.name}</p>
+                                      {m.role === 'Owner' && (
+                                        <span className="text-[10px] font-semibold text-white bg-[#0D7377] rounded-md px-1.5 py-0.5">Owner</span>
+                                      )}
+                                    </div>
+                                    <p className="text-xs text-gray-400 truncate">{m.email}</p>
                                   </div>
-                                  <p className="text-xs text-gray-400 truncate">{m.email}</p>
                                 </div>
-                              </div>
                               <div className="pl-11 flex flex-wrap items-center gap-3">
                                 <StatusLabel hasAvailability={m.hasAvailability} hasCalendar={m.hasCalendar} />
                                 <div className="text-xs text-gray-500">
                                   {m.bookingCount} booking{m.bookingCount !== 1 ? 's' : ''}
                                 </div>
-                                <div className="text-xs text-gray-500">
-                                  {m.availabilityDayCount}/7 days
+                                <div className="text-xs text-gray-500" title={getDayNames(m.availabilityDays)}>
+                                  {getDayNames(m.availabilityDays)}
                                 </div>
                                 <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
                                   {m.tzAbbr}
@@ -245,9 +267,10 @@ export default async function TeamPage() {
                                   </span>
                                 )}
                               </div>
-                            </div>
-                          ))}
-                        </div>
+                              </div>
+                            ))}
+                          </div>
+                        </>
                       )}
                     </div>
                   </div>
