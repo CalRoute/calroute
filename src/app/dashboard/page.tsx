@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
+import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import DashboardLayout from '@/components/DashboardLayout'
 
 export default async function DashboardPage() {
@@ -10,6 +11,44 @@ export default async function DashboardPage() {
 
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
+
+  // Fetch all bookings for stats
+  const bookingsSnap = await adminDb
+    .collection('bookings')
+    .where('hostId', '==', user.uid)
+    .get()
+
+  const allBookings = bookingsSnap.docs
+    .filter(d => d.data().status === 'confirmed')
+    .map(d => ({ id: d.id, ...d.data() })) as any[]
+
+  // Stats
+  const now = new Date()
+  const monthStart = startOfMonth(now)
+  const monthEnd = endOfMonth(now)
+  const thisMonthCount = allBookings.filter(b => {
+    const d = parseISO(b.startTime)
+    return d >= monthStart && d <= monthEnd
+  }).length
+
+  const upcomingCount = allBookings.filter(b => b.startTime >= now.toISOString()).length
+
+  let teamSize = 0
+  try {
+    const linksSnap = await adminDb.collection('booking_links').where('ownerId', '==', user.uid).get()
+    const teamMemberSet = new Set<string>()
+    for (const linkDoc of linksSnap.docs) {
+      const hostsSnap = await adminDb.collection('booking_links').doc(linkDoc.id).collection('hosts').get()
+      hostsSnap.docs.forEach(h => {
+        if (h.data().hostId !== user.uid) {
+          teamMemberSet.add(h.data().hostId)
+        }
+      })
+    }
+    teamSize = teamMemberSet.size
+  } catch (e) {
+    console.error('[dashboard] failed to calculate team size:', e)
+  }
 
   // Links I own — with team member count
   const linksSnap = await adminDb
@@ -74,9 +113,99 @@ export default async function DashboardPage() {
     return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  const upcomingBookings = allBookings
+    .filter(b => b.startTime >= now.toISOString())
+    .sort((a, b) => a.startTime.localeCompare(b.startTime))
+    .slice(0, 3)
+
   return (
-    <DashboardLayout user={{ email: user.email }}>
+    <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Dashboard">
       <div className="space-y-8">
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-gray-500 uppercase">This month</p>
+              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{thisMonthCount}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-gray-500 uppercase">Upcoming</p>
+              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{upcomingCount}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-gray-500 uppercase">Team size</p>
+              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
+                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+                </svg>
+              </div>
+            </div>
+            <p className="text-3xl font-bold text-gray-900">{teamSize}</p>
+          </div>
+        </div>
+
+        {/* Upcoming Meetings Widget */}
+        {upcomingBookings.length > 0 && (
+          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
+            <h3 className="font-semibold text-gray-900">Next bookings</h3>
+            <div className="space-y-2">
+              {upcomingBookings.map(booking => (
+                <div key={booking.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
+                  <div className="flex-shrink-0 text-sm font-medium text-gray-400 min-w-fit">
+                    {format(parseISO(booking.startTime), 'MMM d, h:mm a')}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-gray-900 truncate">{booking.customerName}</p>
+                    <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <Link href="/dashboard/bookings" className="text-xs text-[#0D7377] hover:underline font-medium">
+              View all bookings →
+            </Link>
+          </div>
+        )}
+
+        {/* Quick Actions */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Link
+            href="/dashboard/links/new"
+            className="flex-1 bg-[#0D7377] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors text-center"
+          >
+            + New link
+          </Link>
+          <Link
+            href="/dashboard/bookings"
+            className="flex-1 bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
+          >
+            View bookings
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            className="flex-1 bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
+          >
+            Settings
+          </Link>
+        </div>
+
         <div className="flex items-center justify-between gap-3">
           <h2 className="text-2xl font-bold text-gray-900">Manage your booking links</h2>
           <Link
