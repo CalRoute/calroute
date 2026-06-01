@@ -11,10 +11,19 @@ export async function proxy(request: NextRequest) {
   const sessionToken = request.cookies.get('calroute-session')?.value
   const refresh = request.cookies.get('calroute-refresh')?.value
 
+  console.log('[proxy] checking session for', request.nextUrl.pathname, {
+    hasSessionToken: !!sessionToken,
+    hasRefreshToken: !!refresh,
+  })
+
   // Valid session — proceed
   if (sessionToken) {
     const payload = await verifySession(sessionToken)
-    if (payload) return NextResponse.next()
+    if (payload) {
+      console.log('[proxy] valid session, proceeding')
+      return NextResponse.next()
+    }
+    console.log('[proxy] session token invalid')
   }
 
   // No valid session but has refresh token — get a new Firebase token and sign our own

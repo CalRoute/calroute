@@ -6,13 +6,18 @@ export async function getServerUser() {
   const cookieStore = await cookies()
   const token = cookieStore.get('calroute-session')?.value
   if (!token) {
-    console.log('[session] calroute-session cookie missing')
+    console.log('[session] calroute-session cookie missing', {
+      allCookies: cookieStore.getAll().map(c => c.name),
+    })
     return null
   }
 
   const payload = await verifySession(token)
   if (!payload) {
-    console.log('[session] session token invalid or expired')
+    console.log('[session] session token invalid or expired', {
+      tokenLength: token.length,
+      tokenPrefix: token.substring(0, 20),
+    })
     return null
   }
 
