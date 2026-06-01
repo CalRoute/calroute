@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import * as Dialog from '@radix-ui/react-dialog'
+import { useToast } from '@/components/Toast'
 import {
   format, parseISO, startOfDay, addDays, startOfMonth,
   getDay, addMonths, subMonths, isBefore, isAfter,
@@ -10,6 +12,8 @@ import {
 
 type TeamMember = { uid: string; name: string }
 type Slot = { start: string; end: string; assignedHostId: string }
+type ConfirmAction = { type: 'cancel'; email: string } | { type: 'transfer'; name: string; uid: string } | null
+
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
 interface Props {
@@ -23,11 +27,13 @@ interface Props {
 export default function BookingActions({ bookingId, customerEmail, linkSlug, durationMinutes, teamMembers }: Props) {
   const [mode, setMode] = useState<'idle' | 'reschedule' | 'transfer'>('idle')
   const [cancelling, setCancelling] = useState(false)
+  const [confirmAction, setConfirmAction] = useState<ConfirmAction>(null)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { showToast } = useToast()
 
-  async function handleCancel() {
-    if (!confirm(`Cancel this booking with ${customerEmail}?`)) return
+  async function handleConfirmCancel() {
+    if (confirmAction?.type !== 'cancel') return
     setCancelling(true)
     setError(null)
     try {
@@ -38,6 +44,29 @@ export default function BookingActions({ bookingId, customerEmail, linkSlug, dur
       })
       const data = await res.json()
       if (!res.ok) { setError(data.error ?? 'Failed to cancel'); setCancelling(false); return }
+      showToast('Booking cancelled', 'success')
+      setConfirmAction(null)
+      router.refresh()
+    } catch {
+      setError('Something went wrong.')
+      setCancelling(false)
+    }
+  }
+
+  async function handleConfirmTransfer() {
+    if (confirmAction?.type !== 'transfer') return
+    setCancelling(true)
+    setError(null)
+    try {
+      const res = await fetch(`/api/bookings/${bookingId}/transfer`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newHostId: confirmAction.uid }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Failed to transfer'); setCancelling(false); return }
+      showToast('Booking transferred', 'success')
+      setConfirmAction(null)
       router.refresh()
     } catch {
       setError('Something went wrong.')
@@ -73,7 +102,7 @@ export default function BookingActions({ bookingId, customerEmail, linkSlug, dur
           </button>
         )}
         <button
-          onClick={handleCancel}
+          onClick={() => setConfirmAction({ type: 'cancel', email: customerEmail })}
           disabled={cancelling}
           className="text-xs text-red-500 hover:text-red-700 border border-red-200 hover:border-red-300 rounded-lg px-3 py-1.5 transition-colors disabled:opacity-50"
         >
@@ -86,58 +115,71 @@ export default function BookingActions({ bookingId, customerEmail, linkSlug, dur
           bookingId={bookingId}
           linkSlug={linkSlug}
           durationMinutes={durationMinutes}
-          onDone={() => { setMode('idle'); router.refresh() }}
+          onDone={() => { setMode('idle'); showToast('Booking rescheduled', 'success'); router.refresh() }}
           onError={setError}
         />
       )}
 
       {mode === 'transfer' && (
         <TransferPanel
-          bookingId={bookingId}
           teamMembers={teamMembers}
-          onDone={() => { setMode('idle'); router.refresh() }}
-          onError={setError}
+          onConfirm={(uid, name) => setConfirmAction({ type: 'transfer', uid, name })}
         />
       )}
+
+      {/* Confirmation Dialog */}
+      <Dialog.Root open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null) }}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl p-6 max-w-sm z-50">
+            <Dialog.Title className="text-lg font-semibold text-gray-900 mb-2">
+              {confirmAction?.type === 'cancel' ? 'Cancel booking?' : 'Transfer booking?'}
+            </Dialog.Title>
+            <p className="text-sm text-gray-600 mb-6">
+              {confirmAction?.type === 'cancel'
+                ? `Cancel this booking with ${confirmAction.email}?`
+                : `Transfer this booking to ${confirmAction?.name}?`}
+            </p>
+            <div className="flex gap-3">
+              <Dialog.Close asChild>
+                <button className="flex-1 px-4 py-2 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                  Dismiss
+                </button>
+              </Dialog.Close>
+              <button
+                onClick={() => {
+                  if (confirmAction?.type === 'cancel') handleConfirmCancel()
+                  else handleConfirmTransfer()
+                }}
+                disabled={cancelling}
+                className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors disabled:opacity-50 ${
+                  confirmAction?.type === 'cancel'
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-[#0D7377] hover:bg-[#0a5f63]'
+                }`}
+              >
+                {cancelling ? 'Processing…' : confirmAction?.type === 'cancel' ? 'Cancel booking' : 'Transfer'}
+              </button>
+            </div>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </div>
   )
 }
 
-function TransferPanel({ bookingId, teamMembers, onDone, onError }: {
-  bookingId: string
+function TransferPanel({ teamMembers, onConfirm }: {
   teamMembers: TeamMember[]
-  onDone: () => void
-  onError: (e: string) => void
+  onConfirm: (uid: string, name: string) => void
 }) {
-  const [loading, setLoading] = useState(false)
-
-  async function handleTransfer(newHostId: string, name: string) {
-    if (!confirm(`Transfer this booking to ${name}?`)) return
-    setLoading(true)
-    try {
-      const res = await fetch(`/api/bookings/${bookingId}/transfer`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newHostId }),
-      })
-      const data = await res.json()
-      if (!res.ok) { onError(data.error ?? 'Failed to transfer'); setLoading(false); return }
-      onDone()
-    } catch {
-      onError('Something went wrong.')
-      setLoading(false)
-    }
-  }
-
   return (
     <div className="bg-gray-50 rounded-xl p-3 space-y-2">
       <p className="text-xs font-medium text-gray-600">Transfer to:</p>
       {teamMembers.map(m => (
         <button
           key={m.uid}
-          onClick={() => handleTransfer(m.uid, m.name)}
-          disabled={loading}
-          className="w-full text-left text-sm text-gray-700 hover:text-[#0D7377] hover:bg-white border border-transparent hover:border-gray-200 rounded-lg px-3 py-2 transition-all disabled:opacity-50"
+          onClick={() => onConfirm(m.uid, m.name)}
+          className="w-full text-left text-sm text-gray-700 hover:text-[#0D7377] hover:bg-white border border-transparent hover:border-gray-200 rounded-lg px-3 py-2 transition-all"
         >
           {m.name}
         </button>
