@@ -131,7 +131,7 @@ export default function BookingActions({ bookingId, customerEmail, linkSlug, dur
       <Dialog.Root open={!!confirmAction} onOpenChange={(open) => { if (!open) setConfirmAction(null) }}>
         <Dialog.Portal>
           <Dialog.Overlay className="fixed inset-0 bg-black/40 z-40" />
-          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl p-6 max-w-sm z-50">
+          <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-xl p-4 sm:p-6 max-w-sm w-[calc(100%-2rem)] z-50">
             <Dialog.Title className="text-lg font-semibold text-gray-900 mb-2">
               {confirmAction?.type === 'cancel' ? 'Cancel booking?' : 'Transfer booking?'}
             </Dialog.Title>
