@@ -62,12 +62,16 @@ export default async function AdminPage() {
   // Active users (users with at least one booking in last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
-  const recentBookingsSnap = await adminDb
-    .collection('bookings')
-    .where('startTime', '>=', thirtyDaysAgo.toISOString())
-    .get()
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString()
 
-  const activeUserIds = new Set(recentBookingsSnap.docs.map(d => d.data().hostId))
+  // Fetch all bookings and filter in-memory to avoid index requirement
+  const allBookingsSnap = await adminDb.collection('bookings').get()
+  const recentBookings = allBookingsSnap.docs.filter(d => {
+    const booking = d.data()
+    return booking.startTime >= thirtyDaysAgoStr && booking.status === 'confirmed'
+  })
+
+  const activeUserIds = new Set(recentBookings.map(d => d.data().hostId))
   const activeUsers = activeUserIds.size
 
   // New signups
