@@ -8,6 +8,12 @@ import AdminMetrics from './AdminMetrics'
 import UserSearch from './UserSearch'
 import SystemHealth from './SystemHealth'
 import UserDebugView from './UserDebugView'
+import BookingAnalytics from './BookingAnalytics'
+import ErrorTracking from './ErrorTracking'
+import FeedbackTracker from './FeedbackTracker'
+import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
+import { getErrorStats } from '@/lib/error-logger'
+import { getDeliveryStats } from '@/lib/delivery-tracker'
 
 // Admin UIDs - add your UID here
 const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
@@ -112,6 +118,34 @@ export default async function AdminPage() {
     totalErrors,
   }
 
+  // Fetch booking analytics
+  const durationStats = await getBookingDurationStats()
+  const popularLinks = await getMostPopularLinks(10)
+  const geoDistribution = await getGeographicDistribution()
+  const bookingTrends = await getBookingTrends(30)
+
+  const bookingAnalytics = {
+    avgDuration: durationStats.avgDuration,
+    minDuration: durationStats.minDuration,
+    maxDuration: durationStats.maxDuration,
+    totalBookings: durationStats.totalBookings,
+    popularLinks,
+    trends: bookingTrends,
+    geoDistribution,
+  }
+
+  // Fetch error and delivery stats
+  const errorStats = await getErrorStats()
+  const deliveryStats = await getDeliveryStats(24)
+
+  const errorTracking = {
+    totalErrors: errorStats.totalErrors,
+    criticalCount: errorStats.criticalCount,
+    byType: errorStats.byType,
+    bySeverity: errorStats.bySeverity,
+    ...deliveryStats,
+  }
+
   const metrics = {
     totalUsers,
     activeUsers,
@@ -149,9 +183,15 @@ export default async function AdminPage() {
 
         <SystemHealth metrics={healthMetrics} />
 
+        <ErrorTracking stats={errorTracking} />
+
+        <BookingAnalytics stats={bookingAnalytics} />
+
         <UserSearch />
 
         <UserDebugView />
+
+        <FeedbackTracker feedbackStats={{ total: 0, byType: {} }} />
       </div>
     </DashboardLayout>
   )
