@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
+import { verifySchedulingAccess } from '@/lib/billing/verify-scheduling-access'
 import { addMinutes, parseISO } from 'date-fns'
 import crypto from 'crypto'
 
@@ -12,6 +13,29 @@ export async function POST(request: NextRequest) {
 
   if (!booking_link_id || !host_id || !start_time || !duration_minutes) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
+  }
+
+  // Load booking link to get owner
+  const linkSnap = await adminDb.collection('booking_links').doc(booking_link_id).get()
+  if (!linkSnap.exists) {
+    return NextResponse.json({ error: 'Booking link not found' }, { status: 404 })
+  }
+
+  const link = linkSnap.data() as any
+
+  // Verify billing access
+  const linkHostsCountSnap = await adminDb
+    .collection('booking_links')
+    .doc(booking_link_id)
+    .collection('hosts')
+    .limit(2)
+    .get()
+
+  const isTeam = linkHostsCountSnap.size > 1
+  const access = await verifySchedulingAccess(link.ownerId, isTeam)
+
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.code }, { status: 402 })
   }
 
   const sessionToken = crypto.randomBytes(32).toString('hex')

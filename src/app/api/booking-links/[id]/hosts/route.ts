@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
+import { syncTeamSeats } from '@/lib/billing/sync-team-seats'
 
 async function getAuthedOwner(linkId: string) {
   const user = await getServerUser()
@@ -77,12 +78,46 @@ export async function POST(
     return NextResponse.json({ error: 'This person is already on this link.' }, { status: 409 })
   }
 
+  // Domain abuse prevention: max 2 external domains per team
+  const adminDomain = user.email.split('@')[1]
+  const inviteeDomain = email.split('@')[1]
+
+  if (inviteeDomain !== adminDomain) {
+    // Count distinct external domains on this link
+    const hostsSnap = await adminDb
+      .collection('booking_links').doc(id).collection('hosts').get()
+
+    const externalDomains = new Set<string>()
+    for (const hostDoc of hostsSnap.docs) {
+      const hostId = hostDoc.data().hostId
+      const hostProfileSnap = await adminDb.collection('hosts').doc(hostId).get()
+      const hostEmail = hostProfileSnap.data()?.email
+      if (hostEmail) {
+        const domain = hostEmail.split('@')[1]
+        if (domain !== adminDomain) {
+          externalDomains.add(domain)
+        }
+      }
+    }
+
+    // Check if adding this new external domain would exceed limit
+    if (!externalDomains.has(inviteeDomain) && externalDomains.size >= 2) {
+      return NextResponse.json(
+        { error: 'EXTERNAL_DOMAIN_LIMIT', message: 'Maximum of 2 external domains per team reached' },
+        { status: 403 }
+      )
+    }
+  }
+
   await adminDb
     .collection('booking_links').doc(id).collection('hosts').doc(targetUid).set({
       hostId: targetUid,
       priority: Math.max(1, Math.min(10, Number(priority))),
       lastBookedAt: null,
     })
+
+  // Sync team seats if this is a multi-host link
+  await syncTeamSeats(user.uid)
 
   const profile = hostQuery.docs[0].data()
   return NextResponse.json({

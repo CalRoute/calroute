@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { queryFreeBusy } from '@/lib/google/calendar'
 import { computeAvailableSlots } from '@/lib/scheduling/engine'
+import { verifySchedulingAccess } from '@/lib/billing/verify-scheduling-access'
 import { addDays, startOfDay, endOfDay, parseISO } from 'date-fns'
 
 export async function GET(request: NextRequest) {
@@ -41,6 +42,21 @@ async function handleAvailability(request: NextRequest) {
 
   const linkDoc = linksSnap.docs[0]
   const link = { id: linkDoc.id, ...linkDoc.data() } as any
+
+  // 1b. Verify billing access for this link
+  const linkHostsCountSnap = await adminDb
+    .collection('booking_links')
+    .doc(linkDoc.id)
+    .collection('hosts')
+    .limit(2)
+    .get()
+
+  const isTeam = linkHostsCountSnap.size > 1
+  const access = await verifySchedulingAccess(link.ownerId, isTeam)
+
+  if (!access.allowed) {
+    return NextResponse.json({ error: access.code }, { status: 402 })
+  }
 
   // 2. Determine date range
   const startDate = startDateParam
