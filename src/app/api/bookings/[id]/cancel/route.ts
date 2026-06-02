@@ -65,6 +65,13 @@ export async function POST(
     if (!calsSnap.empty) {
       const calData = calsSnap.docs[0].data()
       await deleteCalendarEvent({ id: calsSnap.docs[0].id, ...calData } as any, booking.googleEventId)
+
+      // Update lastSyncedAt to track real-time sync
+      await adminDb
+        .collection('hosts').doc(booking.hostId)
+        .collection('connected_calendars')
+        .doc(calsSnap.docs[0].id)
+        .update({ lastSyncedAt: new Date().toISOString() })
     }
   }
 

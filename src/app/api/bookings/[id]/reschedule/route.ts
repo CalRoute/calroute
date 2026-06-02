@@ -101,6 +101,13 @@ export async function POST(
       customerName: booking.customerName,
       hostEmail: host.email,
     })
+
+    // Update lastSyncedAt to track real-time sync
+    await adminDb
+      .collection('hosts').doc(booking.hostId)
+      .collection('connected_calendars')
+      .doc(calsSnap.docs[0].id)
+      .update({ lastSyncedAt: new Date().toISOString() })
   }
 
   // Update booking

@@ -57,6 +57,13 @@ export async function POST(
       .where('isActive', '==', true).limit(1).get()
     if (!oldCalSnap.empty) {
       await deleteCalendarEvent({ id: oldCalSnap.docs[0].id, ...oldCalSnap.docs[0].data() } as any, booking.googleEventId)
+
+      // Update lastSyncedAt for old host to track real-time sync
+      await adminDb
+        .collection('hosts').doc(booking.hostId)
+        .collection('connected_calendars')
+        .doc(oldCalSnap.docs[0].id)
+        .update({ lastSyncedAt: new Date().toISOString() })
     }
   }
 
@@ -81,6 +88,13 @@ export async function POST(
         hostEmail: newHost.email,
       }
     )
+
+    // Update lastSyncedAt for new host to track real-time sync
+    await adminDb
+      .collection('hosts').doc(newHostId)
+      .collection('connected_calendars')
+      .doc(newCalSnap.docs[0].id)
+      .update({ lastSyncedAt: new Date().toISOString() })
   }
 
   // Update booking
