@@ -95,6 +95,22 @@ async function handleAvailability(request: NextRequest) {
     return NextResponse.json({ slots: [] })
   }
 
+  // 4c. Check for outdated calendar syncs
+  const outdatedCalendars: string[] = []
+  const OUTDATED_THRESHOLD_MS = 24 * 60 * 60 * 1000 // 24 hours
+  const now = Date.now()
+
+  for (const h of filteredHostsData) {
+    for (const cal of h.calendars as any[]) {
+      const lastSyncTime = cal.lastSyncedAt ? new Date(cal.lastSyncedAt).getTime() : 0
+      const timeSinceSync = now - lastSyncTime
+
+      if (timeSinceSync > OUTDATED_THRESHOLD_MS) {
+        outdatedCalendars.push(`${h.host?.name || h.hostId} (${cal.accountEmail})`)
+      }
+    }
+  }
+
   // 5. Fetch freeBusy for all calendars
   const allCalendars = filteredHostsData.flatMap(h =>
     h.calendars.map((c: any) => ({
@@ -110,25 +126,36 @@ async function handleAvailability(request: NextRequest) {
     }))
   )
 
-  const busyByCalendarId = await queryFreeBusy(
-    allCalendars,
-    startDate,
-    endDate,
-    async (calendarDocId, token, expiresAt) => {
-      for (const h of filteredHostsData) {
-        const cal = h.calendars.find((c: any) => c.id === calendarDocId)
-        if (cal) {
-          await adminDb
-            .collection('hosts')
-            .doc(h.hostId)
-            .collection('connected_calendars')
-            .doc(calendarDocId)
-            .update({ accessToken: token, expiresAt: expiresAt.toISOString() })
-          break
+  // 5a. Query Google Calendar for busy times (with error handling)
+  let busyByCalendarId: Map<string, any[]>
+  let googleCalendarWarning: string | null = null
+
+  try {
+    busyByCalendarId = await queryFreeBusy(
+      allCalendars,
+      startDate,
+      endDate,
+      async (calendarDocId, token, expiresAt) => {
+        for (const h of filteredHostsData) {
+          const cal = h.calendars.find((c: any) => c.id === calendarDocId)
+          if (cal) {
+            await adminDb
+              .collection('hosts')
+              .doc(h.hostId)
+              .collection('connected_calendars')
+              .doc(calendarDocId)
+              .update({ accessToken: token, expiresAt: expiresAt.toISOString() })
+            break
+          }
         }
       }
-    }
-  )
+    )
+  } catch (error) {
+    // If Google Calendar query fails, fall back to CalRoute bookings only
+    console.error('[availability] Google Calendar query failed, using CalRoute bookings only:', error)
+    busyByCalendarId = new Map()
+    googleCalendarWarning = 'Using CalRoute bookings. Google Calendar may be out of sync.'
+  }
 
   // 5b. Load blackout dates for each host
   const blackoutDatesByHost = await Promise.all(
@@ -210,6 +237,13 @@ async function handleAvailability(request: NextRequest) {
     guestTimezone,
   })
 
+  // Build warning message
+  const warnings: string[] = []
+  if (googleCalendarWarning) warnings.push(googleCalendarWarning)
+  if (outdatedCalendars.length > 0) {
+    warnings.push(`Calendar sync outdated for: ${outdatedCalendars.join(', ')}`)
+  }
+
   return NextResponse.json({
     link: {
       title: link.title,
@@ -221,5 +255,6 @@ async function handleAvailability(request: NextRequest) {
       end: s.end.toISOString(),
       assignedHostId: s.assignedHostId,
     })),
+    ...(warnings.length > 0 && { warnings }),
   })
 }

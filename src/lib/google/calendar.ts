@@ -80,6 +80,9 @@ export interface FreeBusyResult {
 /**
  * Query Google Calendar freeBusy API for multiple calendars at once.
  * Returns a map of calendarId → busy slots.
+ *
+ * If the query fails (expired token, disconnected calendar, API error),
+ * returns empty Map so availability falls back to CalRoute bookings only.
  */
 export async function queryFreeBusy(
   calendars: ConnectedCalendar[],
@@ -88,13 +91,6 @@ export async function queryFreeBusy(
   onTokenRefresh?: (calendarId: string, token: string, expiresAt: Date) => Promise<void>
 ): Promise<Map<string, BusySlot[]>> {
   if (calendars.length === 0) return new Map()
-
-  // Group calendars by account to minimize OAuth clients
-  const calendarsByAccount = new Map<string, ConnectedCalendar[]>()
-  for (const cal of calendars) {
-    const existing = calendarsByAccount.get(cal.accessToken) ?? []
-    calendarsByAccount.set(cal.accessToken, [...existing, cal])
-  }
 
   const result = new Map<string, BusySlot[]>()
 
@@ -105,31 +101,48 @@ export async function queryFreeBusy(
   )
 
   for (const accountCal of uniqueAccounts) {
-    const auth = await getAuthenticatedClient(
-      accountCal,
-      onTokenRefresh
-        ? (token, exp) => onTokenRefresh(accountCal.id, token, exp)
-        : undefined
-    )
+    try {
+      const auth = await getAuthenticatedClient(
+        accountCal,
+        onTokenRefresh
+          ? (token, exp) => onTokenRefresh(accountCal.id, token, exp)
+          : undefined
+      )
 
-    const calendarClient = google.calendar({ version: 'v3', auth })
+      const calendarClient = google.calendar({ version: 'v3', auth })
 
-    // Get all calendars belonging to this account
-    const accountCalendars = calendars.filter(
-      c => c.accountEmail === accountCal.accountEmail
-    )
+      // Get all calendars belonging to this account
+      const accountCalendars = calendars.filter(
+        c => c.accountEmail === accountCal.accountEmail
+      )
 
-    const { data } = await calendarClient.freebusy.query({
-      requestBody: {
-        timeMin: timeMin.toISOString(),
-        timeMax: timeMax.toISOString(),
-        items: accountCalendars.map(c => ({ id: c.calendarId })),
-      },
-    })
+      const { data } = await calendarClient.freebusy.query({
+        requestBody: {
+          timeMin: timeMin.toISOString(),
+          timeMax: timeMax.toISOString(),
+          items: accountCalendars.map(c => ({ id: c.calendarId })),
+        },
+      })
 
-    for (const cal of accountCalendars) {
-      const calData = data.calendars?.[cal.calendarId]
-      result.set(cal.id, (calData?.busy ?? []) as BusySlot[])
+      for (const cal of accountCalendars) {
+        const calData = data.calendars?.[cal.calendarId]
+        result.set(cal.id, (calData?.busy ?? []) as BusySlot[])
+      }
+    } catch (error) {
+      // Log the error but don't fail the entire availability request
+      // Fall back to CalRoute bookings only
+      console.error(
+        `[calendar] freeBusy query failed for ${accountCal.accountEmail}:`,
+        error instanceof Error ? error.message : error
+      )
+
+      // Still add calendars to result with empty busy slots (safe fallback)
+      const accountCalendars = calendars.filter(
+        c => c.accountEmail === accountCal.accountEmail
+      )
+      for (const cal of accountCalendars) {
+        result.set(cal.id, [])
+      }
     }
   }
 
