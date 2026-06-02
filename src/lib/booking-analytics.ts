@@ -99,14 +99,17 @@ export async function getGeographicDistribution() {
 export async function getBookingTrends(days = 30) {
   const startDate = new Date()
   startDate.setDate(startDate.getDate() - days)
+  const startDateStr = startDate.toISOString()
 
+  // Fetch all confirmed bookings and filter by date in-memory to avoid composite index
   const bookingsSnap = await adminDb
     .collection('bookings')
     .where('status', '==', 'confirmed')
-    .where('startTime', '>=', startDate.toISOString())
     .get()
 
-  const bookings = bookingsSnap.docs.map(d => d.data())
+  const bookings = bookingsSnap.docs
+    .map(d => d.data())
+    .filter(b => b.startTime >= startDateStr)
 
   // Group by date
   const dailyData = {} as Record<string, number>
