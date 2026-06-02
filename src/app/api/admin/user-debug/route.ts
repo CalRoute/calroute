@@ -10,13 +10,30 @@ export async function POST(request: Request) {
     return Response.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const { uid } = await request.json() as { uid: string }
+  const { uid: input } = await request.json() as { uid: string }
 
-  if (!uid) {
-    return Response.json({ error: 'UID required' }, { status: 400 })
+  if (!input) {
+    return Response.json({ error: 'UID or email required' }, { status: 400 })
   }
 
   try {
+    let uid = input
+
+    // If input looks like an email, try to find the user by email
+    if (input.includes('@')) {
+      const hostsSnap = await adminDb
+        .collection('hosts')
+        .where('email', '==', input)
+        .limit(1)
+        .get()
+
+      if (hostsSnap.empty) {
+        return Response.json({ error: 'User not found' }, { status: 404 })
+      }
+
+      uid = hostsSnap.docs[0].id
+    }
+
     // Get host details
     const hostSnap = await adminDb.collection('hosts').doc(uid).get()
     if (!hostSnap.exists) {

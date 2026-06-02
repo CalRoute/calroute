@@ -77,8 +77,8 @@ export default function UserDebugView() {
           type="text"
           value={uid}
           onChange={(e) => setUid(e.target.value)}
-          placeholder="Paste user UID to debug..."
-          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm font-mono text-xs"
+          placeholder="Email (dolbyjoab@gmail.com) or UID..."
+          className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
         />
         <button
           type="submit"
