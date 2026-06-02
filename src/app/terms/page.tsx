@@ -93,7 +93,7 @@ export default function TermsPage() {
 
           <section>
             <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">9. Contact</h2>
-            <p>For questions about these Terms, contact us at: <a href="mailto:dolbyjoab@gmail.com" className="text-[#0D7377] underline">dolbyjoab@gmail.com</a></p>
+            <p>For questions about these Terms, contact us at: <a href="mailto:info@calroute.me" className="text-[#0D7377] underline">info@calroute.me</a></p>
           </section>
 
         </div>

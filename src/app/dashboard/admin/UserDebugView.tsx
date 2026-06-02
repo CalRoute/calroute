@@ -77,7 +77,7 @@ export default function UserDebugView() {
           type="text"
           value={uid}
           onChange={(e) => setUid(e.target.value)}
-          placeholder="Email (dolbyjoab@gmail.com) or UID..."
+          placeholder="Email (info@calroute.me) or UID..."
           className="flex-1 px-4 py-2.5 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
         />
         <button
