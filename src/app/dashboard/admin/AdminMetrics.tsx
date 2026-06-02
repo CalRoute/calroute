@@ -3,7 +3,13 @@
 interface Metrics {
   totalUsers: number
   activeUsers: number
+  retentionRate: string | number
   totalLinks: number
+  personalLinks: number
+  teamLinks: number
+  newSignupsToday: number
+  newSignupsWeek: number
+  newSignupsMonth: number
   totalBookings: number
   confirmedBookings: number
   cancelledBookings: number
@@ -21,28 +27,28 @@ export default function AdminMetrics({ metrics }: { metrics: Metrics }) {
     {
       label: 'Total Users',
       value: metrics.totalUsers,
-      change: '+0',
+      subtitle: `+${metrics.newSignupsToday} today, +${metrics.newSignupsWeek} this week`,
       color: 'bg-blue-50',
       icon: '👥',
     },
     {
       label: 'Active Users (30d)',
       value: metrics.activeUsers,
-      percentage: metrics.totalUsers > 0 ? ((metrics.activeUsers / metrics.totalUsers) * 100).toFixed(0) : '0',
+      percentage: `${metrics.retentionRate}% retention`,
       color: 'bg-green-50',
       icon: '✨',
     },
     {
       label: 'Booking Links',
       value: metrics.totalLinks,
-      change: '+0',
+      subtitle: `${metrics.personalLinks} personal, ${metrics.teamLinks} team`,
       color: 'bg-purple-50',
       icon: '🔗',
     },
     {
       label: 'Total Bookings',
       value: metrics.totalBookings,
-      change: '+0',
+      subtitle: `${metrics.confirmedBookings} confirmed`,
       color: 'bg-orange-50',
       icon: '📅',
     },
@@ -70,14 +76,14 @@ export default function AdminMetrics({ metrics }: { metrics: Metrics }) {
     {
       label: 'Webhooks Created',
       value: metrics.totalWebhooks,
-      subtitle: `${metrics.usersWithWebhooks} users`,
+      subtitle: `${metrics.usersWithWebhooks} users adopted`,
       color: 'bg-yellow-50',
       icon: '🪝',
     },
     {
       label: 'API Keys Generated',
       value: metrics.totalApiKeys,
-      subtitle: `${metrics.usersWithApiKeys} users`,
+      subtitle: `${metrics.usersWithApiKeys} users generated`,
       color: 'bg-pink-50',
       icon: '🔑',
     },
@@ -99,9 +105,6 @@ export default function AdminMetrics({ metrics }: { metrics: Metrics }) {
           )}
           {card.subtitle && (
             <p className="text-xs text-gray-600">{card.subtitle}</p>
-          )}
-          {card.change && (
-            <p className="text-xs text-green-600 mt-2">{card.change} this month</p>
           )}
         </div>
       ))}

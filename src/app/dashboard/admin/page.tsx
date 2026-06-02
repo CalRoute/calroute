@@ -6,6 +6,8 @@ import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
 import AdminMetrics from './AdminMetrics'
 import UserSearch from './UserSearch'
+import SystemHealth from './SystemHealth'
+import UserDebugView from './UserDebugView'
 
 // Admin UIDs - add your UID here
 const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
@@ -34,6 +36,20 @@ export default async function AdminPage() {
   const linksSnap = await adminDb.collection('booking_links').get()
   const totalLinks = linksSnap.size
 
+  // Personal vs team links
+  const linksByMemberCount = await Promise.all(
+    linksSnap.docs.map(async (linkDoc) => {
+      const hostsSnap = await adminDb
+        .collection('booking_links')
+        .doc(linkDoc.id)
+        .collection('hosts')
+        .get()
+      return hostsSnap.size
+    })
+  )
+  const personalLinks = linksByMemberCount.filter(c => c === 1).length
+  const teamLinks = linksByMemberCount.filter(c => c > 1).length
+
   // Active users (users with at least one booking in last 30 days)
   const thirtyDaysAgo = new Date()
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
@@ -45,9 +61,28 @@ export default async function AdminPage() {
   const activeUserIds = new Set(recentBookingsSnap.docs.map(d => d.data().hostId))
   const activeUsers = activeUserIds.size
 
+  // New signups
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStart = today.toISOString()
+
+  const thisWeekStart = new Date(today)
+  thisWeekStart.setDate(thisWeekStart.getDate() - 7)
+  const thisWeekStartStr = thisWeekStart.toISOString()
+
+  const thisMonthStart = new Date(today)
+  thisMonthStart.setDate(1)
+  const thisMonthStartStr = thisMonthStart.toISOString()
+
+  const newSignupsToday = hostsSnap.docs.filter(d => d.data().createdAt >= todayStart).length
+  const newSignupsWeek = hostsSnap.docs.filter(d => d.data().createdAt >= thisWeekStartStr).length
+  const newSignupsMonth = hostsSnap.docs.filter(d => d.data().createdAt >= thisMonthStartStr).length
+
+  // Retention rate (users with bookings as % of total)
+  const retentionRate = totalUsers > 0 ? ((activeUserIds.size / totalUsers) * 100).toFixed(1) : '0'
+
   // Phone vs video bookings
   const phoneCallBookings = bookingsSnap.docs.filter(d => {
-    // Check if booking has customerPhone (indicates phone call meeting)
     return d.data().customerPhone !== null && d.data().customerPhone !== undefined
   }).length
 
@@ -61,10 +96,32 @@ export default async function AdminPage() {
   const totalApiKeys = apiKeysSnap.size
   const usersWithApiKeys = new Set(apiKeysSnap.docs.map(d => d.ref.parent.parent?.id)).size
 
+  // System health - webhook failures (simplified - in production you'd log actual failures)
+  const failedWebhooks = 0 // Would be tracked in a separate collection
+  const failureRate = totalWebhooks > 0 ? ((failedWebhooks / totalWebhooks) * 100).toFixed(1) : '0.0'
+
+  // System health - API errors (would be logged separately)
+  const totalErrors = 0 // Would be from error logs
+  const errorRate = totalBookings > 0 ? (( totalErrors / (totalBookings * 0.1)) * 100).toFixed(2) : '0.00'
+
+  const healthMetrics = {
+    totalWebhooks,
+    failedWebhooks,
+    failureRate,
+    errorRate: errorRate as string,
+    totalErrors,
+  }
+
   const metrics = {
     totalUsers,
     activeUsers,
+    retentionRate,
     totalLinks,
+    personalLinks,
+    teamLinks,
+    newSignupsToday,
+    newSignupsWeek,
+    newSignupsMonth,
     totalBookings,
     confirmedBookings,
     cancelledBookings,
@@ -90,7 +147,11 @@ export default async function AdminPage() {
 
         <AdminMetrics metrics={metrics} />
 
+        <SystemHealth metrics={healthMetrics} />
+
         <UserSearch />
+
+        <UserDebugView />
       </div>
     </DashboardLayout>
   )
