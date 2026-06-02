@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import AdminMetrics from './AdminMetrics'
 import SystemHealth from './SystemHealth'
 import ErrorTracking from './ErrorTracking'
@@ -196,55 +196,89 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
         {activeTab === 'system' && (
           <div className="space-y-6">
             <ApiMetricsTracker />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Cache Hit Rate</span>
-                    <span className="font-semibold text-green-600">87%</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Avg Response Time</span>
-                    <span className="font-semibold text-gray-900">142ms</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">DB Query Time</span>
-                    <span className="font-semibold text-gray-900">45ms</span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-gray-600">Uptime</span>
-                    <span className="font-semibold text-green-600">99.9%</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl border border-gray-200 p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Capacity</h3>
-                <div className="space-y-3">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">Database Size</span>
-                      <span className="text-sm font-semibold">45%</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full w-5/12 bg-blue-500" />
-                    </div>
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">API Rate Limit</span>
-                      <span className="text-sm font-semibold">23%</span>
-                    </div>
-                    <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div className="h-full w-1/4 bg-green-500" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <SystemPerformanceMetrics />
           </div>
         )}
+      </div>
+    </div>
+  )
+}
+
+function SystemPerformanceMetrics() {
+  const [stats, setStats] = useState<any>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadStats()
+  }, [])
+
+  const loadStats = async () => {
+    try {
+      const res = await fetch('/api/admin/system-health-stats')
+      if (!res.ok) throw new Error('Failed to load system health stats')
+      const data = await res.json()
+      setStats(data)
+    } catch (err) {
+      console.error('Failed to load stats:', err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="text-center py-8 text-gray-500">Loading performance metrics...</div>
+  }
+
+  if (!stats) {
+    return null
+  }
+
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Performance</h3>
+        <div className="space-y-3">
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Cache Hit Rate</span>
+            <span className="font-semibold text-green-600">{stats.performance?.cacheHitRate || 0}%</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Avg Response Time</span>
+            <span className="font-semibold text-gray-900">{stats.performance?.avgResponseTime || 0}ms</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">DB Query Time</span>
+            <span className="font-semibold text-gray-900">{stats.performance?.dbQueryTime || 0}ms</span>
+          </div>
+          <div className="flex justify-between items-center">
+            <span className="text-gray-600">Uptime</span>
+            <span className="font-semibold text-green-600">{stats.performance?.uptime || 0}%</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl border border-gray-200 p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Capacity</h3>
+        <div className="space-y-3">
+          <div>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-600">Database Size</span>
+              <span className="text-sm font-semibold">{stats.capacity?.databaseSize || 0}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-blue-500" style={{ width: `${Math.min(stats.capacity?.databaseSize || 0, 100)}%` }} />
+            </div>
+          </div>
+          <div>
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-600">API Rate Limit</span>
+              <span className="text-sm font-semibold">{stats.capacity?.apiRateLimit || 0}%</span>
+            </div>
+            <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+              <div className="h-full bg-green-500" style={{ width: `${Math.min(stats.capacity?.apiRateLimit || 0, 100)}%` }} />
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

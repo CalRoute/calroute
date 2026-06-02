@@ -11,7 +11,11 @@ interface EmailMetric {
 
 export default function EmailTemplateAnalytics() {
   const [metrics, setMetrics] = useState<EmailMetric[]>([])
+  const [averageOpenRate, setAverageOpenRate] = useState('0')
+  const [averageClickRate, setAverageClickRate] = useState('0')
+  const [totalSent, setTotalSent] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadMetrics()
@@ -19,17 +23,16 @@ export default function EmailTemplateAnalytics() {
 
   const loadMetrics = async () => {
     try {
-      // Mock data for demonstration
-      const mockMetrics: EmailMetric[] = [
-        { templateName: 'Booking Confirmation', sent: 1245, openRate: 38.5, clickRate: 12.3 },
-        { templateName: 'Booking Reminder', sent: 956, openRate: 45.2, clickRate: 18.7 },
-        { templateName: 'Cancellation Notice', sent: 124, openRate: 28.3, clickRate: 5.2 },
-        { templateName: 'Reschedule Confirmation', sent: 342, openRate: 41.8, clickRate: 14.5 },
-        { templateName: 'Welcome Email', sent: 89, openRate: 52.1, clickRate: 22.3 },
-      ]
-      setMetrics(mockMetrics)
+      const res = await fetch('/api/admin/email-template-stats')
+      if (!res.ok) throw new Error('Failed to load email template stats')
+      const data = await res.json()
+      setMetrics(data.metrics)
+      setAverageOpenRate(data.averageOpenRate)
+      setAverageClickRate(data.averageClickRate)
+      setTotalSent(data.totalSent)
     } catch (err) {
       console.error('Failed to load metrics:', err)
+      setError('Failed to load email template stats')
     } finally {
       setLoading(false)
     }
@@ -39,15 +42,15 @@ export default function EmailTemplateAnalytics() {
     return <div className="text-center py-8 text-gray-500">Loading email metrics...</div>
   }
 
-  const averageOpenRate = (metrics.reduce((a, b) => a + b.openRate, 0) / metrics.length).toFixed(1)
-  const averageClickRate = (metrics.reduce((a, b) => a + b.clickRate, 0) / metrics.length).toFixed(1)
-  const totalSent = metrics.reduce((a, b) => a + b.sent, 0)
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>
+  }
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">Email Template Performance</h2>
-        <p className="text-sm text-gray-600 mt-1">Email engagement metrics across all templates</p>
+        <p className="text-sm text-gray-600 mt-1">Email engagement metrics across all templates (last 30 days)</p>
       </div>
 
       <div className="grid grid-cols-3 gap-4">
@@ -76,34 +79,42 @@ export default function EmailTemplateAnalytics() {
             </tr>
           </thead>
           <tbody>
-            {metrics.map((metric, i) => (
-              <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4 font-medium text-gray-900">{metric.templateName}</td>
-                <td className="text-right py-3 px-4 text-gray-600">{metric.sent}</td>
-                <td className="text-right py-3 px-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-green-500"
-                        style={{ width: `${Math.min(metric.openRate, 100)}%` }}
-                      />
+            {metrics.length > 0 ? (
+              metrics.map((metric, i) => (
+                <tr key={i} className="border-b border-gray-100 hover:bg-gray-50">
+                  <td className="py-3 px-4 font-medium text-gray-900">{metric.templateName}</td>
+                  <td className="text-right py-3 px-4 text-gray-600">{metric.sent}</td>
+                  <td className="text-right py-3 px-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${Math.min(metric.openRate, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-700 w-12 text-right">{metric.openRate}%</span>
                     </div>
-                    <span className="text-sm text-gray-700 w-12 text-right">{metric.openRate}%</span>
-                  </div>
-                </td>
-                <td className="text-right py-3 px-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${Math.min(metric.clickRate, 100)}%` }}
-                      />
+                  </td>
+                  <td className="text-right py-3 px-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-blue-500"
+                          style={{ width: `${Math.min(metric.clickRate, 100)}%` }}
+                        />
+                      </div>
+                      <span className="text-sm text-gray-700 w-12 text-right">{metric.clickRate}%</span>
                     </div>
-                    <span className="text-sm text-gray-700 w-12 text-right">{metric.clickRate}%</span>
-                  </div>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={4} className="py-8 text-center text-gray-500">
+                  No email data available
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

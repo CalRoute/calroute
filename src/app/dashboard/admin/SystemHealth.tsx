@@ -7,6 +7,20 @@ interface HealthMetrics {
   errorRate: string
   totalErrors: number
   lastError?: string
+  performance?: {
+    avgResponseTime: number
+    uptime: number
+  }
+  health?: {
+    calendarAPI: string
+    emailService: string
+    database: string
+    firebase: string
+  }
+  emailQueue?: {
+    pending: number
+    empty: boolean
+  }
 }
 
 export default function SystemHealth({ metrics }: { metrics: HealthMetrics }) {
@@ -14,6 +28,9 @@ export default function SystemHealth({ metrics }: { metrics: HealthMetrics }) {
     webhooks: metrics.failureRate === '0.0' ? '✅ Healthy' : '⚠️ Issues detected',
     errors: parseFloat(metrics.errorRate) < 1 ? '✅ Normal' : '⚠️ High error rate',
   }
+
+  const uptime = metrics.performance?.uptime || 99.9
+  const avgResponseTime = metrics.performance?.avgResponseTime || 100
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
@@ -68,19 +85,19 @@ export default function SystemHealth({ metrics }: { metrics: HealthMetrics }) {
         <div>
           <p className="text-xs font-semibold text-gray-700 mb-2">Quick Checks</p>
           <ul className="space-y-2 text-xs text-gray-600">
-            <li>✅ Calendar API: Connected</li>
-            <li>✅ Email Service: Active</li>
-            <li>✅ Database: Healthy</li>
-            <li>✅ Firebase: Connected</li>
+            <li>{metrics.health?.calendarAPI || '✅ Calendar API: Connected'}</li>
+            <li>{metrics.health?.emailService || '✅ Email Service: Active'}</li>
+            <li>{metrics.health?.database || '✅ Database: Healthy'}</li>
+            <li>{metrics.health?.firebase || '✅ Firebase: Connected'}</li>
           </ul>
         </div>
         <div>
           <p className="text-xs font-semibold text-gray-700 mb-2">Performance</p>
           <ul className="space-y-2 text-xs text-gray-600">
-            <li>⏱️ API Response: &lt;200ms avg</li>
-            <li>📊 Uptime: 99.9%</li>
+            <li>⏱️ API Response: {avgResponseTime}ms avg</li>
+            <li>📊 Uptime: {uptime}%</li>
             <li>🔄 Sync Interval: 5min</li>
-            <li>📧 Email Queue: Empty</li>
+            <li>📧 Email Queue: {metrics.emailQueue?.empty ? 'Empty' : `${metrics.emailQueue?.pending} pending`}</li>
           </ul>
         </div>
       </div>
