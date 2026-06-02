@@ -4,25 +4,8 @@ import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
-import AdminMetrics from './AdminMetrics'
-import UserSearch from './UserSearch'
-import SystemHealth from './SystemHealth'
-import UserDebugView from './UserDebugView'
-import BookingAnalytics from './BookingAnalytics'
-import ErrorTracking from './ErrorTracking'
-import FeedbackTracker from './FeedbackTracker'
-import UserRolesManager from './UserRolesManager'
-import ApiMetricsTracker from './ApiMetricsTracker'
-import SupportQueue from './SupportQueue'
-import AccountManagement from './AccountManagement'
-import EngagementMetrics from './EngagementMetrics'
-import BrandingManager from './BrandingManager'
-import SlackIntegrationManager from './SlackIntegrationManager'
-import FeatureUsageHeatmap from './FeatureUsageHeatmap'
-import EmailDeliveryMonitoring from './EmailDeliveryMonitoring'
-import RevenueAnalytics from './RevenueAnalytics'
-import EmailTemplateAnalytics from './EmailTemplateAnalytics'
-import OnboardingStats from './OnboardingStats'
+import AdminDashboardTabs from './AdminDashboardTabs'
+import AdminFeatureChecklist from './AdminFeatureChecklist'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
@@ -195,43 +178,9 @@ export default async function AdminPage() {
           <p className="text-gray-600 mt-2">System overview and user management</p>
         </div>
 
-        <AdminMetrics metrics={metrics} />
+        <AdminFeatureChecklist />
 
-        <SystemHealth metrics={healthMetrics} />
-
-        <ErrorTracking stats={errorTracking} />
-
-        <BookingAnalytics stats={bookingAnalytics} />
-
-        <UserSearch />
-
-        <UserDebugView />
-
-        <FeedbackTracker feedbackStats={{ total: 0, byType: {} }} />
-
-        <UserRolesManager />
-
-        <ApiMetricsTracker />
-
-        <SupportQueue />
-
-        <AccountManagement />
-
-        <EngagementMetrics />
-
-        <FeatureUsageHeatmap />
-
-        <EmailDeliveryMonitoring />
-
-        <BrandingManager />
-
-        <SlackIntegrationManager />
-
-        <RevenueAnalytics />
-
-        <EmailTemplateAnalytics />
-
-        <OnboardingStats />
+        <AdminDashboardTabs metrics={metrics} />
       </div>
     </DashboardLayout>
   )
