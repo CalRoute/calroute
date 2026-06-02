@@ -21,17 +21,19 @@ export async function POST(request: Request) {
 
     // If input looks like an email, try to find the user by email
     if (input.includes('@')) {
-      const hostsSnap = await adminDb
-        .collection('hosts')
-        .where('email', '==', input)
-        .limit(1)
-        .get()
+      const lowerEmail = input.toLowerCase()
 
-      if (hostsSnap.empty) {
-        return Response.json({ error: 'User not found' }, { status: 404 })
+      // Fetch all hosts and search in-memory (more reliable than where clause which needs index)
+      const hostsSnap = await adminDb.collection('hosts').get()
+      const matchingHost = hostsSnap.docs.find(doc =>
+        (doc.data().email || '').toLowerCase() === lowerEmail
+      )
+
+      if (!matchingHost) {
+        return Response.json({ error: 'User with this email not found' }, { status: 404 })
       }
 
-      uid = hostsSnap.docs[0].id
+      uid = matchingHost.id
     }
 
     // Get host details
