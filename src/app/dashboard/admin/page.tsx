@@ -20,6 +20,9 @@ import BrandingManager from './BrandingManager'
 import SlackIntegrationManager from './SlackIntegrationManager'
 import FeatureUsageHeatmap from './FeatureUsageHeatmap'
 import EmailDeliveryMonitoring from './EmailDeliveryMonitoring'
+import RevenueAnalytics from './RevenueAnalytics'
+import EmailTemplateAnalytics from './EmailTemplateAnalytics'
+import OnboardingStats from './OnboardingStats'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
@@ -223,6 +226,12 @@ export default async function AdminPage() {
         <BrandingManager />
 
         <SlackIntegrationManager />
+
+        <RevenueAnalytics />
+
+        <EmailTemplateAnalytics />
+
+        <OnboardingStats />
       </div>
     </DashboardLayout>
   )
