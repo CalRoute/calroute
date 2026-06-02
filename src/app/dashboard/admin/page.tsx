@@ -11,6 +11,9 @@ import UserDebugView from './UserDebugView'
 import BookingAnalytics from './BookingAnalytics'
 import ErrorTracking from './ErrorTracking'
 import FeedbackTracker from './FeedbackTracker'
+import UserRolesManager from './UserRolesManager'
+import ApiMetricsTracker from './ApiMetricsTracker'
+import SupportQueue from './SupportQueue'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
@@ -192,6 +195,12 @@ export default async function AdminPage() {
         <UserDebugView />
 
         <FeedbackTracker feedbackStats={{ total: 0, byType: {} }} />
+
+        <UserRolesManager />
+
+        <ApiMetricsTracker />
+
+        <SupportQueue />
       </div>
     </DashboardLayout>
   )
