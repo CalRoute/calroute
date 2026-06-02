@@ -5,7 +5,6 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import DashboardLayout from '@/components/DashboardLayout'
 import InvitePanel from './InvitePanel'
-import TeamStatusBadges from './TeamStatusBadges'
 
 function initials(name: string) {
   return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
@@ -289,12 +288,7 @@ export default async function TeamPage() {
                       {link.members.length === 0 ? (
                         <p className="text-sm text-gray-400 py-1">No members yet — <Link href={`/dashboard/links/${link.id}`} className="text-[#0D7377] hover:underline">add hosts</Link>.</p>
                       ) : (
-                        <>
-                          <div className="mb-3 pb-3 border-b border-gray-50">
-                            <p className="text-xs font-semibold text-gray-500 mb-2">Real-time availability</p>
-                            <TeamStatusBadges members={link.members.map((m: any) => ({ uid: m.uid, name: m.name }))} />
-                          </div>
-                          <div className="divide-y divide-gray-50">
+                        <div className="divide-y divide-gray-50">
                             {link.members.map((m: any) => (
                               <div key={m.uid} className="py-3 first:pt-1 last:pb-1 space-y-2">
                                 <div className="flex items-center gap-3">
@@ -328,8 +322,7 @@ export default async function TeamPage() {
                               </div>
                               </div>
                             ))}
-                          </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
