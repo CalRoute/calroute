@@ -14,6 +14,12 @@ import FeedbackTracker from './FeedbackTracker'
 import UserRolesManager from './UserRolesManager'
 import ApiMetricsTracker from './ApiMetricsTracker'
 import SupportQueue from './SupportQueue'
+import AccountManagement from './AccountManagement'
+import EngagementMetrics from './EngagementMetrics'
+import BrandingManager from './BrandingManager'
+import SlackIntegrationManager from './SlackIntegrationManager'
+import FeatureUsageHeatmap from './FeatureUsageHeatmap'
+import EmailDeliveryMonitoring from './EmailDeliveryMonitoring'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
@@ -205,6 +211,18 @@ export default async function AdminPage() {
         <ApiMetricsTracker />
 
         <SupportQueue />
+
+        <AccountManagement />
+
+        <EngagementMetrics />
+
+        <FeatureUsageHeatmap />
+
+        <EmailDeliveryMonitoring />
+
+        <BrandingManager />
+
+        <SlackIntegrationManager />
       </div>
     </DashboardLayout>
   )
