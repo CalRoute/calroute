@@ -309,7 +309,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="font-medium text-gray-900 truncate">{link.title}</h3>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {link.durationMinutes} min · {link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing
+                        {link.durationMinutes} min · {link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing · {link.meetingType === 'phone_call' ? '📞' : '💻'}
                       </p>
                       <a
                         href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
@@ -370,7 +370,7 @@ export default async function DashboardPage() {
                     <div className="min-w-0 flex-1">
                       <h3 className="font-medium text-gray-900 truncate">{link.title}</h3>
                       <p className="text-sm text-gray-500 mt-0.5">
-                        {link.durationMinutes} min · managed by {link.ownerName}
+                        {link.durationMinutes} min · managed by {link.ownerName} · {link.meetingType === 'phone_call' ? '📞' : '💻'}
                       </p>
                       <a
                         href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
