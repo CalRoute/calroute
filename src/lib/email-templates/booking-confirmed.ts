@@ -40,6 +40,7 @@ export function bookingConfirmedHostEmail(data: {
   customerEmail: string
   customerNotes?: string
   startTime: Date
+  timezone?: string
   meetingType?: 'google_meet' | 'phone_call'
   customerPhone?: string
 }): string {
@@ -47,7 +48,7 @@ export function bookingConfirmedHostEmail(data: {
     <h2>New booking received</h2>
     <ul>
       <li><strong>Meeting:</strong> ${data.title}</li>
-      <li><strong>When:</strong> ${data.startTime.toLocaleString()}</li>
+      <li><strong>When:</strong> ${formatTimeInTimezone(data.startTime, data.timezone ?? 'UTC')}</li>
       <li><strong>Customer:</strong> ${data.customerName} (${data.customerEmail})</li>
       ${data.customerNotes ? `<li><strong>Notes:</strong> ${data.customerNotes}</li>` : ''}
       ${data.meetingType === 'phone_call' && data.customerPhone ? `<li><strong>Phone:</strong> ${data.customerPhone}</li>` : ''}
