@@ -9,11 +9,14 @@ interface RevenueData {
   monthlyRecurringRevenue: number
   userCount: number
   bookingsPerUser: string
+  totalUsers: number
+  retentionRate: string
 }
 
 export default function RevenueAnalytics() {
   const [revenue, setRevenue] = useState<RevenueData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadRevenue()
@@ -21,17 +24,13 @@ export default function RevenueAnalytics() {
 
   const loadRevenue = async () => {
     try {
-      // For now, calculate basic revenue metrics
-      setRevenue({
-        totalBookings: Math.floor(Math.random() * 5000) + 1000,
-        totalEstimatedValue: Math.floor(Math.random() * 250000) + 50000,
-        averagePerDay: (Math.random() * 200 + 50).toFixed(2),
-        monthlyRecurringRevenue: Math.floor(Math.random() * 10000) + 2000,
-        userCount: Math.floor(Math.random() * 500) + 100,
-        bookingsPerUser: (Math.random() * 50 + 5).toFixed(2),
-      })
+      const res = await fetch('/api/admin/revenue-stats')
+      if (!res.ok) throw new Error('Failed to load revenue stats')
+      const data = await res.json()
+      setRevenue(data)
     } catch (err) {
       console.error('Failed to load revenue data:', err)
+      setError('Failed to load revenue data')
     } finally {
       setLoading(false)
     }
@@ -41,9 +40,19 @@ export default function RevenueAnalytics() {
     return <div className="text-center py-8 text-gray-500">Loading revenue data...</div>
   }
 
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>
+  }
+
   if (!revenue) {
     return <div className="text-center py-8 text-gray-500">No revenue data available</div>
   }
+
+  const projectedARR = (revenue.monthlyRecurringRevenue * 12).toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  })
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
@@ -84,11 +93,15 @@ export default function RevenueAnalytics() {
         </div>
       </div>
 
-      <div className="border-t border-gray-200 pt-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Revenue Projection</h3>
-        <p className="text-sm text-gray-600">
-          Based on current growth rate, projected ARR: ${(revenue.monthlyRecurringRevenue * 12 * 1.1).toLocaleString()}
-        </p>
+      <div className="grid grid-cols-2 gap-4 border-t border-gray-200 pt-4">
+        <div>
+          <p className="text-sm text-gray-600">Retention Rate</p>
+          <p className="text-2xl font-bold text-gray-900">{revenue.retentionRate}%</p>
+        </div>
+        <div>
+          <p className="text-sm text-gray-600">Projected ARR</p>
+          <p className="text-lg font-bold text-gray-900">{projectedARR}</p>
+        </div>
       </div>
     </div>
   )

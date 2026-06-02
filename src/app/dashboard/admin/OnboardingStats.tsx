@@ -5,14 +5,20 @@ import { useState, useEffect } from 'react'
 interface OnboardingData {
   totalStarted: number
   completed: number
+  inProgress: number
   skipped: number
   completionRate: string
   averageTimeToComplete: string
+  profileSetupRate: string
+  calendarConnectedRate: string
+  bookingLinkCreatedRate: string
+  firstBookingRate: string
 }
 
 export default function OnboardingStats() {
   const [stats, setStats] = useState<OnboardingData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     loadStats()
@@ -20,17 +26,13 @@ export default function OnboardingStats() {
 
   const loadStats = async () => {
     try {
-      // Mock data
-      const mockStats: OnboardingData = {
-        totalStarted: 542,
-        completed: 389,
-        skipped: 153,
-        completionRate: '71.8',
-        averageTimeToComplete: '12m 34s',
-      }
-      setStats(mockStats)
+      const res = await fetch('/api/admin/onboarding-stats')
+      if (!res.ok) throw new Error('Failed to load onboarding stats')
+      const data = await res.json()
+      setStats(data)
     } catch (err) {
       console.error('Failed to load stats:', err)
+      setError('Failed to load onboarding stats')
     } finally {
       setLoading(false)
     }
@@ -40,9 +42,11 @@ export default function OnboardingStats() {
     return <div className="text-center py-8 text-gray-500">Loading onboarding stats...</div>
   }
 
-  if (!stats) return null
+  if (error) {
+    return <div className="text-center py-8 text-red-500">{error}</div>
+  }
 
-  const inProgress = stats.totalStarted - stats.completed - stats.skipped
+  if (!stats) return null
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
@@ -62,7 +66,7 @@ export default function OnboardingStats() {
         </div>
         <div className="bg-orange-50 rounded-lg p-4 border border-orange-200">
           <p className="text-sm text-orange-700">In Progress</p>
-          <p className="text-2xl font-bold text-orange-900">{inProgress}</p>
+          <p className="text-2xl font-bold text-orange-900">{stats.inProgress}</p>
         </div>
         <div className="bg-red-50 rounded-lg p-4 border border-red-200">
           <p className="text-sm text-red-700">Skipped</p>
@@ -76,40 +80,40 @@ export default function OnboardingStats() {
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">1. Profile Setup</span>
-            <span className="text-sm text-gray-600">95%</span>
+            <span className="text-sm text-gray-600">{stats.profileSetupRate}%</span>
           </div>
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0D7377]" style={{ width: '95%' }} />
+            <div className="h-full bg-[#0D7377]" style={{ width: `${stats.profileSetupRate}%` }} />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">2. Calendar Connected</span>
-            <span className="text-sm text-gray-600">87%</span>
+            <span className="text-sm text-gray-600">{stats.calendarConnectedRate}%</span>
           </div>
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0D7377]" style={{ width: '87%' }} />
+            <div className="h-full bg-[#0D7377]" style={{ width: `${stats.calendarConnectedRate}%` }} />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">3. Booking Link Created</span>
-            <span className="text-sm text-gray-600">76%</span>
+            <span className="text-sm text-gray-600">{stats.bookingLinkCreatedRate}%</span>
           </div>
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0D7377]" style={{ width: '76%' }} />
+            <div className="h-full bg-[#0D7377]" style={{ width: `${stats.bookingLinkCreatedRate}%` }} />
           </div>
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-700">4. First Booking</span>
-            <span className="text-sm text-gray-600">72%</span>
+            <span className="text-sm text-gray-600">{stats.firstBookingRate}%</span>
           </div>
           <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div className="h-full bg-[#0D7377]" style={{ width: '72%' }} />
+            <div className="h-full bg-[#0D7377]" style={{ width: `${stats.firstBookingRate}%` }} />
           </div>
         </div>
       </div>
