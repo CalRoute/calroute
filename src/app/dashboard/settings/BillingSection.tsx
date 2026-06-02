@@ -18,6 +18,7 @@ export default function BillingSection({ linkCount }: Props) {
   const [billing, setBilling] = useState<BillingStatus | null>(null)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [coupon, setCoupon] = useState('')
 
   useEffect(() => {
     const fetchBilling = async () => {
@@ -43,7 +44,7 @@ export default function BillingSection({ linkCount }: Props) {
       const res = await fetch('/api/billing/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan }),
+        body: JSON.stringify({ plan, ...(coupon && { coupon }) }),
       })
 
       if (!res.ok) {
@@ -129,7 +130,7 @@ export default function BillingSection({ linkCount }: Props) {
                 <p className="text-xs text-red-600 font-medium mt-1">⚠️ Payment past due</p>
               )}
             </div>
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 w-full max-w-xs">
               {isSubscribed ? (
                 <button
                   onClick={handlePortal}
@@ -140,6 +141,14 @@ export default function BillingSection({ linkCount }: Props) {
                 </button>
               ) : (
                 <>
+                  <input
+                    type="text"
+                    value={coupon}
+                    onChange={(e) => setCoupon(e.target.value.toUpperCase())}
+                    placeholder="Coupon code (optional)"
+                    disabled={checkoutLoading}
+                    className="px-3 py-2 text-xs border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] focus:ring-offset-0 disabled:bg-gray-50 disabled:text-gray-400"
+                  />
                   <button
                     onClick={() => handleCheckout('solo')}
                     disabled={checkoutLoading}

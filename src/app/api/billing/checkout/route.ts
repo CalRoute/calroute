@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { plan } = await request.json() as { plan: 'solo' | 'team' }
+    const { plan, coupon } = await request.json() as { plan: 'solo' | 'team'; coupon?: string }
 
     if (!plan || !['solo', 'team'].includes(plan)) {
       return NextResponse.json({ error: 'plan must be "solo" or "team"' }, { status: 400 })
@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
 
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    const session = await stripe.checkout.sessions.create({
+    const checkoutParams: any = {
       customer: customerId,
       mode: 'subscription',
       line_items: lineItems,
@@ -95,7 +95,14 @@ export async function POST(request: NextRequest) {
       cancel_url: `${appUrl}/dashboard/settings?billing=cancel`,
       client_reference_id: user.uid,
       metadata: { plan, uid: user.uid },
-    })
+    }
+
+    // Add coupon if provided
+    if (coupon) {
+      checkoutParams.discounts = [{ coupon }]
+    }
+
+    const session = await stripe.checkout.sessions.create(checkoutParams)
 
     return NextResponse.json({ url: session.url })
   } catch (error) {
