@@ -5,7 +5,6 @@ import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
 import AdminDashboardTabs from './AdminDashboardTabs'
-import AdminFeatureChecklist from './AdminFeatureChecklist'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
@@ -178,9 +177,12 @@ export default async function AdminPage() {
           <p className="text-gray-600 mt-2">System overview and user management</p>
         </div>
 
-        <AdminFeatureChecklist />
-
-        <AdminDashboardTabs metrics={metrics} />
+        <AdminDashboardTabs
+          metrics={metrics}
+          healthMetrics={healthMetrics}
+          errorTracking={errorTracking}
+          bookingAnalytics={bookingAnalytics}
+        />
       </div>
     </DashboardLayout>
   )

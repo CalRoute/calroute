@@ -34,7 +34,7 @@ const TABS = [
   { id: 'system', label: 'System', icon: '⚙️' },
 ] as const
 
-export default function AdminDashboardTabs({ metrics }: any) {
+export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracking, bookingAnalytics }: any) {
   const [activeTab, setActiveTab] = useState<TabType>('overview')
 
   return (
@@ -73,8 +73,8 @@ export default function AdminDashboardTabs({ metrics }: any) {
         {/* Monitoring Tab */}
         {activeTab === 'monitoring' && (
           <div className="space-y-6">
-            <SystemHealth metrics={metrics} />
-            <ErrorTracking stats={metrics} />
+            <SystemHealth metrics={healthMetrics} />
+            <ErrorTracking stats={errorTracking} />
             <ApiMetricsTracker />
             <SupportQueue />
           </div>
@@ -83,7 +83,7 @@ export default function AdminDashboardTabs({ metrics }: any) {
         {/* Analytics Tab */}
         {activeTab === 'analytics' && (
           <div className="space-y-6">
-            <BookingAnalytics stats={metrics} />
+            <BookingAnalytics stats={bookingAnalytics} />
             <EngagementMetrics />
             <FeatureUsageHeatmap />
           </div>
