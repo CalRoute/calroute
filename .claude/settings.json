@@ -85,7 +85,8 @@
       "Read(//Users/jo/.next/logs/**)",
       "Bash(curl -s -H \"Cookie: __Secure-next-auth.session-token=dummy\" http://localhost:3000/api/admin/users)",
       "Bash(curl -v http://localhost:3000/dashboard/admin)",
-      "Bash(wait)"
+      "Bash(wait)",
+      "Bash(grep -n \"price\\\\|Price\\\\|\\\\$10\\\\|\\\\$5\\\\|\\\\$20\\\\|per month\\\\|/mo\\\\|/month\" /Users/jo/GIT/CalRoute/src/app/dashboard/settings/BillingSection.tsx /Users/jo/GIT/CalRoute/src/app/api/billing/checkout/route.ts /Users/jo/GIT/CalRoute/src/app/api/webhooks/stripe/route.ts)"
     ],
     "additionalDirectories": [
       "/Users/jo/GIT/CalRoute/src/app/dashboard/links",

@@ -38,6 +38,7 @@ export default function HomePage() {
           <div className="flex items-center gap-8">
             <a href="#features" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Features</a>
             <a href="#how" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">How it works</a>
+            <a href="#pricing" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Pricing</a>
             <Link href="/login" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors">Sign in</Link>
             <Link
               href="/login"
@@ -308,7 +309,7 @@ export default function HomePage() {
               { them: 'No phone call support', us: 'Phone calls or video — switch anytime' },
               { them: 'Static confirmation emails', us: 'Custom branded email templates' },
               { them: 'No API access', us: 'Full REST API + webhooks for integrations' },
-              { them: 'Per-seat pricing', us: 'Flat team pricing — add hosts for free' },
+              { them: 'Per-seat pricing', us: 'From $10/mo — not $10 per person' },
               { them: 'Redirect to external page', us: 'Embed directly on your website' },
             ].map((r, i) => (
               <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 5 ? 'border-b border-[#1a1a1a]/[0.08]' : ''}`}>
@@ -326,6 +327,140 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Pricing */}
+      <section id="pricing" className="py-20 sm:py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
+        <div className="max-w-4xl mx-auto">
+          <div className="text-center mb-16">
+            <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Pricing</p>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-6">Simple pricing that scales.</h2>
+            <p className="text-lg text-[#1a1a1a]/40">Start free. Upgrade only when you're ready.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+            {/* Free Card */}
+            <div className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all">
+              <p className="font-semibold text-gray-900 mb-1">Free</p>
+              <p className="text-sm text-gray-500 mb-4">Get started, no card needed</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[#1a1a1a]">$0</span>
+                <span className="text-gray-500 text-sm ml-2">/ month</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>1 booking link</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Unlimited bookings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Phone + video meetings</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Google Calendar sync</span>
+                </li>
+              </ul>
+              <Link
+                href="/login"
+                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
+              >
+                Start for free →
+              </Link>
+            </div>
+
+            {/* Solo Card (Most Popular) */}
+            <div className="bg-white rounded-3xl p-8 border border-[#0D7377]/40 shadow-lg shadow-[#0D7377]/[0.08] relative">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="inline-flex items-center gap-2 border border-[#0D7377]/20 bg-[#0D7377]/8 text-[#0D7377] text-xs font-medium px-3 py-1.5 rounded-full">
+                  <span className="w-1.5 h-1.5 bg-[#0D7377] rounded-full" />
+                  Most popular
+                </div>
+              </div>
+              <p className="font-semibold text-gray-900 mb-1">Solo</p>
+              <p className="text-sm text-gray-500 mb-4">Everything you need, one flat rate</p>
+              <div className="mb-6">
+                <span className="text-4xl font-bold text-[#1a1a1a]">$10</span>
+                <span className="text-gray-500 text-sm ml-2">/ month</span>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Unlimited booking links</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Custom email templates</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Full analytics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Webhooks & REST API</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Phone & email support</span>
+                </li>
+              </ul>
+              <Link
+                href="/login"
+                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
+              >
+                Get Solo →
+              </Link>
+            </div>
+
+            {/* Team Card */}
+            <div className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all">
+              <p className="font-semibold text-gray-900 mb-1">Team</p>
+              <p className="text-sm text-gray-500 mb-4">Built for routing pools and shared calendars</p>
+              <div className="mb-6">
+                <div>
+                  <span className="text-3xl font-bold text-[#1a1a1a]">$10</span>
+                  <span className="text-gray-500 text-sm ml-2">/ month base</span>
+                </div>
+                <div className="mt-1 text-sm text-gray-500">+ $2 per seat</div>
+              </div>
+              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Everything in Solo</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Multi-host booking links</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Round-robin & priority routing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>Real-time team availability</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                  <span>50% off Solo for team members</span>
+                </li>
+              </ul>
+              <Link
+                href="/login"
+                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
+              >
+                Get Team →
+              </Link>
+            </div>
+          </div>
+
+          <p className="text-center text-sm text-[#1a1a1a]/40">All plans include a 14-day free trial. No credit card required to start.</p>
+        </div>
+      </section>
+
       {/* CTA */}
       <section className="py-20 sm:py-32 px-6 bg-gradient-to-b from-[#0D7377] to-[#0a5f63] text-white text-center relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
@@ -335,14 +470,14 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto relative z-10">
           <h2 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6 leading-tight">Ready to get your team synced?</h2>
           <p className="text-white/70 text-xl mb-3">Stop email ping-pong. Start working.</p>
-          <p className="text-white/50 text-lg mb-12">Free forever for teams. No credit card required.</p>
+          <p className="text-white/50 text-lg mb-12">14-day free trial. No credit card required.</p>
           <Link
             href="/login"
             className="inline-flex items-center gap-2 bg-white text-[#0D7377] font-bold text-lg px-12 py-4 rounded-xl hover:bg-[#F7F4EF] transition-all shadow-2xl shadow-black/20 hover:shadow-2xl hover:shadow-white/30"
           >
             Create your booking link →
           </Link>
-          <p className="text-white/40 text-sm mt-8">Takes under 2 minutes. No credit card needed.</p>
+          <p className="text-white/40 text-sm mt-8">Takes under 2 minutes. Free trial included.</p>
         </div>
       </section>
 
@@ -354,6 +489,7 @@ export default function HomePage() {
           <div className="flex gap-6 text-xs text-[#1a1a1a]/30">
             <a href="#features" className="hover:text-[#0D7377] transition-colors">Features</a>
             <a href="#how" className="hover:text-[#0D7377] transition-colors">How it works</a>
+            <a href="#pricing" className="hover:text-[#0D7377] transition-colors">Pricing</a>
             <Link href="/privacy" className="hover:text-[#0D7377] transition-colors">Privacy</Link>
             <Link href="/login" className="hover:text-[#0D7377] transition-colors">Sign in</Link>
           </div>
