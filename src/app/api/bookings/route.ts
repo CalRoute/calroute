@@ -137,6 +137,13 @@ export async function POST(request: NextRequest) {
 
     if (googleEventId) {
       await bookingRef.update({ googleEventId })
+      // Update lastSyncedAt timestamp to track when calendar was last synced
+      await adminDb
+        .collection('hosts')
+        .doc(host_id)
+        .collection('connected_calendars')
+        .doc(calsSnap.docs[0].id)
+        .update({ lastSyncedAt: new Date().toISOString() })
     }
   }
 

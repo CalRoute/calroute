@@ -48,14 +48,35 @@ export async function getCalendarSyncStatus() {
 
     const syncStatus = await Promise.all(
       hostsSnap.docs.map(async (hostDoc) => {
-        const calendarsSnap = await hostDoc.ref.collection('calendars').get()
+        // Correct collection name is 'connected_calendars', not 'calendars'
+        const calendarsSnap = await hostDoc.ref.collection('connected_calendars').get()
         const calendars = calendarsSnap.docs.map(d => ({
           id: d.id,
           ...(d.data() as any),
         }))
 
-        const lastSyncTimes = calendars.map(c => new Date(c.lastSyncedAt || 0).getTime())
-        const mostRecentSync = lastSyncTimes.length > 0 ? Math.max(...lastSyncTimes) : 0
+        // If no calendars connected, return default status
+        if (calendars.length === 0) {
+          return {
+            hostId: hostDoc.id,
+            email: hostDoc.data().email,
+            totalCalendars: 0,
+            syncedCalendars: 0,
+            lastSyncMinutesAgo: 0,
+            syncStatus: 'not_connected',
+          }
+        }
+
+        // Get the most recent sync time from all connected calendars
+        const lastSyncTimes = calendars
+          .filter(c => c.lastSyncedAt)
+          .map(c => new Date(c.lastSyncedAt).getTime())
+
+        // If no syncs recorded, use calendar creation time as fallback
+        const mostRecentSync = lastSyncTimes.length > 0
+          ? Math.max(...lastSyncTimes)
+          : Math.min(...calendars.map(c => new Date(c.createdAt || 0).getTime()))
+
         const minutesSinceSync = Math.round((Date.now() - mostRecentSync) / 60000)
 
         return {

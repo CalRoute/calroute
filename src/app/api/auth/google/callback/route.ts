@@ -56,6 +56,7 @@ export async function GET(request: NextRequest) {
       expiresAt: new Date(tokens.expiry_date!).toISOString(),
       isActive: true,
       createdAt: new Date().toISOString(),
+      lastSyncedAt: new Date().toISOString(),
     })
 
     const response = NextResponse.redirect(
