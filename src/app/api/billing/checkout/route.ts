@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
       customer: customerId,
       mode: 'subscription',
       line_items: lineItems,
-      success_url: `${appUrl}/dashboard/settings?billing=success`,
+      success_url: `${appUrl}/dashboard/billing/success`,
       cancel_url: `${appUrl}/dashboard/settings?billing=cancel`,
       client_reference_id: user.uid,
       metadata: { plan, uid: user.uid },
