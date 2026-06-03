@@ -6,6 +6,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import { syncTeamSeats } from '@/lib/billing/sync-team-seats'
 import { Resend } from 'resend'
 import { billingPaymentFailedEmail } from '@/lib/email-templates/billing-payment-failed'
+import { billingSubscriptionConfirmedEmail } from '@/lib/email-templates/billing-subscription-confirmed'
 import type { UserBillingDoc, TeamBillingDoc } from '@/types/billing'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -77,6 +78,29 @@ async function activateSubscription(session: any) {
 
     // Sync the team's current seat count
     await syncTeamSeats(uid)
+  }
+
+  // Send confirmation email
+  try {
+    const planName = plan === 'team' ? 'Team' : 'Solo'
+    const dashboardUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://calroute.me'}/dashboard`
+    const hostName = host?.name || 'there'
+    const hostEmail = host?.email
+
+    if (hostEmail) {
+      await resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL!,
+        to: hostEmail,
+        subject: `You're all set — welcome to CalRoute ${planName}!`,
+        html: billingSubscriptionConfirmedEmail({
+          name: hostName,
+          planName,
+          dashboardUrl,
+        }),
+      })
+    }
+  } catch (error) {
+    console.error('[webhook] Failed to send subscription confirmed email:', error)
   }
 }
 
