@@ -214,7 +214,11 @@ export async function POST(
       author_id: user.uid,
     })
 
-    return NextResponse.json({ success: true, occurrence })
+    return NextResponse.json({
+      success: true,
+      occurrence,
+      trelloCardsCreated: updatedActionItems.filter(item => item.trelloCardId).length
+    })
   } catch (error) {
     console.error('[team-meetings-notes-post] error:', error)
     return NextResponse.json(
