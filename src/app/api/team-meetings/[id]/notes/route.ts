@@ -84,6 +84,51 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
+    // Create Trello cards for action items if Trello is connected
+    let updatedActionItems = actionItems
+    try {
+      const trelloSnap = await adminDb
+        .collection('teams')
+        .doc(meeting.teamId)
+        .collection('integrations')
+        .doc('trello')
+        .get()
+
+      if (trelloSnap.exists) {
+        const trello = trelloSnap.data() as any
+        updatedActionItems = await Promise.all(
+          actionItems.map(async (item) => {
+            if (item.trelloCardId) return item
+
+            try {
+              const cardRes = await fetch(
+                `https://api.trello.com/1/cards?idList=${trello.listId}&key=${trello.apiKey}&token=${trello.token}`,
+                {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    name: item.text,
+                    desc: `From: ${meeting.title}\nDate: ${occurrence}`,
+                    ...(item.assigneeId ? { idMembers: [item.assigneeId] } : {}),
+                  }),
+                }
+              )
+
+              if (cardRes.ok) {
+                const card = await cardRes.json()
+                return { ...item, trelloCardId: card.id }
+              }
+            } catch (err) {
+              console.error('[trello-card-create] error:', err)
+            }
+            return item
+          })
+        )
+      }
+    } catch (err) {
+      console.error('[trello-integration] error:', err)
+    }
+
     // Save notes
     await adminDb
       .collection('team_meetings')
@@ -95,7 +140,7 @@ export async function POST(
           occurrence,
           authorId: user.uid,
           content,
-          actionItems,
+          actionItems: updatedActionItems,
           emailSentAt: new Date().toISOString(),
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString(),
@@ -114,13 +159,13 @@ export async function POST(
 
     // Send email to all attendees
     try {
-      const actionItemsForEmail = actionItems.map(async item => {
+      const actionItemsForEmail = updatedActionItems.map(async item => {
         let assigneeName = null
         if (item.assigneeId) {
           const assigneeSnap = await adminDb.collection('hosts').doc(item.assigneeId).get()
           assigneeName = (assigneeSnap.data() as any)?.name || null
         }
-        return { text: item.text, assigneeName, done: item.done }
+        return { text: item.text, assigneeName, done: item.done, trelloCardId: item.trelloCardId }
       })
 
       const resolvedActionItems = await Promise.all(actionItemsForEmail)

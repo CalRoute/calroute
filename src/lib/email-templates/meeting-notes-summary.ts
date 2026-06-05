@@ -4,6 +4,7 @@ interface ActionItem {
   text: string
   assigneeName: string | null
   done?: boolean
+  trelloCardId?: string
 }
 
 interface MeetingNotesSummaryData {
@@ -33,6 +34,7 @@ export function meetingNotesSummaryEmail(data: MeetingNotesSummaryData): string 
             <strong>${item.text}</strong>
             ${item.assigneeName ? ` — assigned to ${item.assigneeName}` : ' — unassigned'}
             ${item.done ? ' <span style="color: #0D7377;">(done)</span>' : ''}
+            ${item.trelloCardId ? ` <a href="https://trello.com/c/${item.trelloCardId}" style="color: #0D7377; font-size: 0.9em;">[view in Trello]</a>` : ''}
           </li>
         `).join('')}
       </ul>
