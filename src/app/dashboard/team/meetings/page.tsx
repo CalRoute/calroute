@@ -14,13 +14,15 @@ export default async function TeamMeetingsPage() {
     .collection('team_meetings')
     .where('teamId', '==', user.uid)
     .where('status', '==', 'active')
-    .orderBy('startTime', 'desc')
     .get()
 
   const meetings = meetingsSnap.docs.map(doc => ({
     id: doc.id,
     ...doc.data(),
   })) as Array<TeamMeeting & { id: string }>
+
+  // Sort by startTime descending
+  meetings.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
 
   // Fetch all hosts for attendee names
   const allHostIds = new Set<string>()
