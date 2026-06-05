@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import { adminDb } from '@/lib/firebase/admin'
+import { fireWebhooks } from '@/lib/webhooks'
 import { syncTeamSeats } from '@/lib/billing/sync-team-seats'
 import { Resend } from 'resend'
 import { billingPaymentFailedEmail } from '@/lib/email-templates/billing-payment-failed'
@@ -102,6 +103,13 @@ async function activateSubscription(session: any) {
   } catch (error) {
     console.error('[webhook] Failed to send subscription confirmed email:', error)
   }
+
+  // Fire webhook for subscription confirmed
+  const planName = plan === 'team' ? 'Team' : 'Solo'
+  await fireWebhooks(uid, 'subscription.confirmed', {
+    plan: plan,
+    subscription_id: session.subscription,
+  })
 }
 
 export async function POST(request: NextRequest) {
@@ -269,6 +277,12 @@ export async function POST(request: NextRequest) {
         } catch (emailErr) {
           console.error('[webhook] Email sending failed:', emailErr)
         }
+
+        // Fire webhook for payment failed
+        await fireWebhooks(uid, 'subscription.payment_failed', {
+          customer_id: customerId,
+          invoice_id: invoice.id,
+        })
 
         break
       }

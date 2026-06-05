@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 import { stripe } from '@/lib/stripe'
+import { fireWebhooks } from '@/lib/webhooks'
 import { syncTeamSeats } from '@/lib/billing/sync-team-seats'
 import { Resend } from 'resend'
 import { billingCouponRevokedEmail } from '@/lib/email-templates/billing-coupon-revoked'
@@ -77,6 +78,12 @@ export async function DELETE(
       }
     }
   }
+
+  // Fire webhook for team owner
+  await fireWebhooks(user.uid, 'team.host_removed', {
+    link_id: id,
+    host_id: uid,
+  })
 
   // Sync team seats for the owner
   await syncTeamSeats(user.uid)

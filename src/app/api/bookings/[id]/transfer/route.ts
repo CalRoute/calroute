@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
+import { fireWebhooks } from '@/lib/webhooks'
 import { Resend } from 'resend'
 import { parseISO, addMinutes } from 'date-fns'
 import { bookingTransferredNewHostEmail, bookingTransferredGuestEmail } from '@/lib/email-templates/booking-transferred'
@@ -140,6 +141,18 @@ export async function POST(
   } catch (e) {
     console.error('[transfer] email failed:', e)
   }
+
+  // Fire webhook for new host
+  await fireWebhooks(newHostId, 'booking.transferred', {
+    booking_id: id,
+    customer_name: booking.customerName,
+    customer_email: booking.customerEmail,
+    start_time: booking.startTime,
+    end_time: booking.endTime,
+    link_id: booking.bookingLinkId,
+    host_id: newHostId,
+    transferred_from: booking.hostId,
+  })
 
   return NextResponse.json({ success: true })
 }

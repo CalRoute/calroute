@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
+import { fireWebhooks } from '@/lib/webhooks'
 import { syncTeamSeats } from '@/lib/billing/sync-team-seats'
 import { Resend } from 'resend'
 import { teamMemberAddedEmail } from '@/lib/email-templates/team-member-added'
@@ -118,6 +119,9 @@ export async function POST(
       lastBookedAt: null,
     })
 
+  // Get invitee profile for email and webhook
+  const inviteeProfile = hostQuery.docs[0].data()
+
   // Send team member added email
   try {
     const linkSnap = await adminDb.collection('booking_links').doc(id).get()
@@ -128,7 +132,6 @@ export async function POST(
     const ownerData = ownerSnap.data() as any
     const ownerName = ownerData?.name || 'Your team'
 
-    const inviteeProfile = hostQuery.docs[0].data()
     const inviteeName = inviteeProfile?.name || email
     const settingsUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://calroute.me'}/dashboard/settings`
 
@@ -147,6 +150,14 @@ export async function POST(
   } catch (error) {
     console.error('[hosts] Failed to send team member added email:', error)
   }
+
+  // Fire webhook for team owner
+  await fireWebhooks(user.uid, 'team.host_added', {
+    link_id: id,
+    host_id: targetUid,
+    host_email: inviteeProfile?.email || email,
+    host_name: inviteeProfile?.name || email,
+  })
 
   // Sync team seats if this is a multi-host link
   await syncTeamSeats(user.uid)

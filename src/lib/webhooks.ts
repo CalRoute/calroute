@@ -7,7 +7,7 @@ function signPayload(secret: string, payload: string): string {
 
 export async function fireWebhooks(
   hostId: string,
-  event: 'booking.confirmed' | 'booking.cancelled' | 'booking.rescheduled',
+  event: 'booking.confirmed' | 'booking.cancelled' | 'booking.rescheduled' | 'booking.transferred' | 'team.host_added' | 'team.host_removed' | 'subscription.confirmed' | 'subscription.payment_failed',
   payload: Record<string, any>
 ): Promise<void> {
   try {

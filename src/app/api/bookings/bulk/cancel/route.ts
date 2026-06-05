@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent } from '@/lib/google/calendar'
+import { fireWebhooks } from '@/lib/webhooks'
 import { Resend } from 'resend'
 import { parseISO } from 'date-fns'
 import { bookingCancelledGuestEmail, bookingCancelledHostEmail } from '@/lib/email-templates/booking-cancelled'
@@ -102,6 +103,14 @@ export async function POST(request: NextRequest) {
         } catch (e) {
           console.error('[bulk-cancel] email failed:', e)
         }
+
+        // Fire webhook
+        await fireWebhooks(booking.hostId, 'booking.cancelled', {
+          booking_id: id,
+          customer_name: booking.customerName,
+          customer_email: booking.customerEmail,
+          cancelled_at: new Date().toISOString(),
+        })
 
         return { id, success: true }
       } catch (error) {

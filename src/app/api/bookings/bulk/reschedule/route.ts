@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 import { deleteCalendarEvent, createCalendarEvent } from '@/lib/google/calendar'
+import { fireWebhooks } from '@/lib/webhooks'
 import { Resend } from 'resend'
 import { addMinutes, parseISO } from 'date-fns'
 import { bookingRescheduledGuestEmail, bookingRescheduledHostEmail } from '@/lib/email-templates/booking-rescheduled'
@@ -151,6 +152,15 @@ export async function POST(request: NextRequest) {
         } catch (e) {
           console.error('[bulk-reschedule] email failed:', e)
         }
+
+        // Fire webhook
+        await fireWebhooks(booking.hostId, 'booking.rescheduled', {
+          booking_id: id,
+          customer_name: booking.customerName,
+          customer_email: booking.customerEmail,
+          new_start_time: newStart.toISOString(),
+          previous_start_time: booking.startTime,
+        })
 
         return { id, success: true }
       } catch (error) {

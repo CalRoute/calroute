@@ -4,6 +4,17 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 
+const ALLOWED_EVENTS = [
+  'booking.confirmed',
+  'booking.cancelled',
+  'booking.rescheduled',
+  'booking.transferred',
+  'team.host_added',
+  'team.host_removed',
+  'subscription.confirmed',
+  'subscription.payment_failed',
+] as const
+
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -15,7 +26,7 @@ export async function PATCH(
 
   try {
     const { id } = await params
-    const { isActive } = await request.json() as { isActive?: boolean }
+    const { isActive, url, events } = await request.json() as { isActive?: boolean; url?: string; events?: string[] }
 
     const webhookDoc = await adminDb
       .collection('hosts')
@@ -28,8 +39,39 @@ export async function PATCH(
       return NextResponse.json({ error: 'Webhook not found' }, { status: 404 })
     }
 
-    if (isActive !== undefined) {
-      await webhookDoc.ref.update({ isActive })
+    // Validate URL if provided
+    if (url !== undefined) {
+      try {
+        const urlObj = new URL(url)
+        if (urlObj.protocol !== 'https:') {
+          return NextResponse.json({ error: 'URL must use HTTPS' }, { status: 400 })
+        }
+      } catch (e) {
+        return NextResponse.json({ error: 'Invalid URL' }, { status: 400 })
+      }
+    }
+
+    // Validate events if provided
+    if (events !== undefined) {
+      if (!Array.isArray(events) || events.length === 0) {
+        return NextResponse.json({ error: 'Events must be a non-empty array' }, { status: 400 })
+      }
+      const invalidEvents = events.filter(e => !ALLOWED_EVENTS.includes(e as any))
+      if (invalidEvents.length > 0) {
+        return NextResponse.json(
+          { error: `Invalid events: ${invalidEvents.join(', ')}` },
+          { status: 400 }
+        )
+      }
+    }
+
+    const updates: Record<string, any> = {}
+    if (isActive !== undefined) updates.isActive = isActive
+    if (url !== undefined) updates.url = url
+    if (events !== undefined) updates.events = events
+
+    if (Object.keys(updates).length > 0) {
+      await webhookDoc.ref.update(updates)
     }
 
     return NextResponse.json({ success: true })
