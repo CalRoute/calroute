@@ -5,14 +5,28 @@ import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import type { TrelloIntegration } from '@/types/database'
 
-async function validateTrelloCredentials(apiKey: string, token: string): Promise<boolean> {
+async function validateTrelloCredentials(apiKey: string, token: string): Promise<{ valid: boolean; error?: string }> {
   try {
     const response = await fetch(
-      `https://api.trello.com/1/members/me?key=${apiKey}&token=${token}`
+      `https://api.trello.com/1/members/me?key=${apiKey}&token=${token}`,
+      { headers: { 'Accept': 'application/json' } }
     )
-    return response.ok
-  } catch {
-    return false
+
+    if (!response.ok) {
+      const text = await response.text()
+      console.error('[trello-validate] Response status:', response.status, text)
+      return { valid: false, error: `Trello API returned ${response.status}` }
+    }
+
+    const data = await response.json()
+    if (!data.id) {
+      return { valid: false, error: 'Invalid Trello response' }
+    }
+
+    return { valid: true }
+  } catch (err) {
+    console.error('[trello-validate] Error:', err)
+    return { valid: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
 
@@ -66,9 +80,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate credentials
-    const isValid = await validateTrelloCredentials(apiKey, token)
-    if (!isValid) {
-      return NextResponse.json({ error: 'Invalid Trello credentials' }, { status: 401 })
+    const validation = await validateTrelloCredentials(apiKey, token)
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error || 'Invalid Trello credentials' }, { status: 401 })
     }
 
     // Save integration
