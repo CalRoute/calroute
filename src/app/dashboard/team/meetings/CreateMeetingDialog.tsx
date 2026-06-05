@@ -51,8 +51,12 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
   const [customRrule, setCustomRrule] = useState('')
   const [timezoneSearch, setTimezoneSearch] = useState('')
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
+  const [attendeeSearch, setAttendeeSearch] = useState('')
+  const [showAttendeeDropdown, setShowAttendeeDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const hostIds = Object.keys(hostMap)
 
   const filteredTimezones = useMemo(() => {
     if (!timezoneSearch.trim()) return TIMEZONES
@@ -62,7 +66,19 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
     )
   }, [timezoneSearch])
 
-  const hostIds = Object.keys(hostMap)
+  const filteredAttendees = useMemo(() => {
+    if (!attendeeSearch.trim()) return hostIds
+    const search = attendeeSearch.toLowerCase()
+    return hostIds.filter(hostId => {
+      const host = hostMap[hostId]
+      if (!host) return false
+      return (
+        host.name?.toLowerCase().includes(search) ||
+        host.email?.toLowerCase().includes(search) ||
+        hostId.toLowerCase().includes(search)
+      )
+    })
+  }, [attendeeSearch, hostIds, hostMap])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -157,30 +173,81 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-900 mb-3">
-              Attendees
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-900 mb-2">
+              Attendees ({selectedAttendees.length} selected)
             </label>
-            <div className="space-y-2 max-h-40 overflow-y-auto">
-              {hostIds.map(hostId => (
-                <label key={hostId} className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={selectedAttendees.includes(hostId)}
-                    onChange={e => {
-                      if (e.target.checked) {
-                        setSelectedAttendees([...selectedAttendees, hostId])
-                      } else {
-                        setSelectedAttendees(selectedAttendees.filter(id => id !== hostId))
-                      }
-                    }}
-                    disabled={loading}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700">{hostMap[hostId]?.name || hostId}</span>
-                </label>
-              ))}
-            </div>
+            <input
+              type="text"
+              value={attendeeSearch}
+              onChange={e => setAttendeeSearch(e.target.value)}
+              onFocus={() => setShowAttendeeDropdown(true)}
+              placeholder="Search by name, email, or username..."
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+              disabled={loading}
+            />
+
+            {selectedAttendees.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {selectedAttendees.map(hostId => (
+                  <div
+                    key={hostId}
+                    className="flex items-center gap-2 bg-[#0D7377]/10 text-[#0D7377] px-3 py-1 rounded-full text-sm"
+                  >
+                    <span>{hostMap[hostId]?.name || hostId}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedAttendees(selectedAttendees.filter(id => id !== hostId))}
+                      className="hover:text-[#0a5f63] font-bold"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {showAttendeeDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                {filteredAttendees.length > 0 ? (
+                  filteredAttendees.map(hostId => (
+                    <button
+                      key={hostId}
+                      type="button"
+                      onClick={() => {
+                        if (selectedAttendees.includes(hostId)) {
+                          setSelectedAttendees(selectedAttendees.filter(id => id !== hostId))
+                        } else {
+                          setSelectedAttendees([...selectedAttendees, hostId])
+                        }
+                      }}
+                      className={`w-full text-left px-4 py-3 border-b border-gray-100 last:border-b-0 text-sm transition-colors ${
+                        selectedAttendees.includes(hostId)
+                          ? 'bg-[#0D7377]/10 hover:bg-[#0D7377]/20'
+                          : 'hover:bg-gray-100'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={selectedAttendees.includes(hostId)}
+                          onChange={() => {}}
+                          className="w-4 h-4 pointer-events-none"
+                        />
+                        <div>
+                          <div className="font-medium text-gray-900">{hostMap[hostId]?.name || hostId}</div>
+                          <div className="text-xs text-gray-500">{hostMap[hostId]?.email || hostId}</div>
+                        </div>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                    No attendees found
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
