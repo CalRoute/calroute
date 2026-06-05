@@ -86,6 +86,7 @@ export async function POST(
 
     // Create Trello cards for action items if Trello is connected
     let updatedActionItems = actionItems
+    console.log('[trello] Starting Trello integration check for team:', meeting.teamId)
     try {
       const trelloSnap = await adminDb
         .collection('teams')
@@ -94,6 +95,7 @@ export async function POST(
         .doc('trello')
         .get()
 
+      console.log('[trello] Trello integration exists:', trelloSnap.exists)
       if (trelloSnap.exists) {
         const trello = trelloSnap.data() as any
         updatedActionItems = await Promise.all(
