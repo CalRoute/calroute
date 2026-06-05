@@ -86,7 +86,7 @@ export async function POST(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    // Create Trello cards for action items if Trello is connected
+    // Handle Trello integration: create new cards, update existing, and delete removed ones
     let updatedActionItems = actionItems
     console.log('[trello] Starting Trello integration check for team:', meeting.teamId)
     try {
@@ -100,6 +100,36 @@ export async function POST(
       console.log('[trello] Trello integration exists:', trelloSnap.exists)
       if (trelloSnap.exists) {
         const trello = trelloSnap.data() as any
+
+        // Get previous notes to find deleted action items
+        const previousNotesSnap = await adminDb
+          .collection('team_meetings')
+          .doc(id)
+          .collection('notes')
+          .doc(occurrence)
+          .get()
+
+        const previousActionItems = (previousNotesSnap.data() as any)?.actionItems || []
+        const previousCardIds = new Set(
+          previousActionItems.filter((item: any) => item.trelloCardId).map((item: any) => item.trelloCardId)
+        )
+        const currentCardIds = new Set(actionItems.filter(item => item.trelloCardId).map(item => item.trelloCardId))
+
+        // Delete cards that were removed from action items
+        const deletedCardIds = Array.from(previousCardIds).filter(id => !currentCardIds.has(id))
+        for (const cardId of deletedCardIds) {
+          try {
+            await fetch(
+              `https://api.trello.com/1/cards/${cardId}?key=${trello.apiKey}&token=${trello.token}`,
+              { method: 'DELETE' }
+            )
+            console.log('[trello-card-delete] deleted card:', cardId)
+          } catch (err) {
+            console.error('[trello-card-delete] error:', err)
+          }
+        }
+
+        // Create or update cards for current action items
         updatedActionItems = await Promise.all(
           actionItems.map(async (item) => {
             if (item.trelloCardId) return item
