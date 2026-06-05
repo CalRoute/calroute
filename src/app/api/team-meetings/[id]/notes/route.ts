@@ -101,22 +101,32 @@ export async function POST(
             if (item.trelloCardId) return item
 
             try {
+              const assigneeName = item.assigneeId
+                ? (await adminDb.collection('hosts').doc(item.assigneeId).get()).data()?.name
+                : null
+
               const cardRes = await fetch(
-                `https://api.trello.com/1/cards?idList=${trello.listId}&key=${trello.apiKey}&token=${trello.token}`,
+                `https://api.trello.com/1/cards?key=${trello.apiKey}&token=${trello.token}`,
                 {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
                   body: JSON.stringify({
+                    idList: trello.listId,
                     name: item.text,
-                    desc: `From: ${meeting.title}\nDate: ${occurrence}`,
-                    ...(item.assigneeId ? { idMembers: [item.assigneeId] } : {}),
+                    desc: `From: ${meeting.title}\nDate: ${occurrence}${
+                      assigneeName ? `\nAssigned to: ${assigneeName}` : ''
+                    }`,
                   }),
                 }
               )
 
               if (cardRes.ok) {
                 const card = await cardRes.json()
+                console.log('[trello-card-create] created card:', card.id, 'for item:', item.text)
                 return { ...item, trelloCardId: card.id }
+              } else {
+                const errData = await cardRes.text()
+                console.error('[trello-card-create] failed:', cardRes.status, errData)
               }
             } catch (err) {
               console.error('[trello-card-create] error:', err)
