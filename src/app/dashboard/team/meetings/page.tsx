@@ -24,8 +24,25 @@ export default async function TeamMeetingsPage() {
   // Sort by startTime descending
   meetings.sort((a, b) => new Date(b.startTime).getTime() - new Date(a.startTime).getTime())
 
-  // Fetch all hosts for attendee names
+  // Fetch all team members from team booking links
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('ownerId', '==', user.uid)
+    .get()
+
   const allHostIds = new Set<string>()
+  allHostIds.add(user.uid) // Add owner
+
+  for (const linkDoc of linksSnap.docs) {
+    const hostsSnap = await adminDb
+      .collection('booking_links')
+      .doc(linkDoc.id)
+      .collection('hosts')
+      .get()
+    hostsSnap.docs.forEach(doc => allHostIds.add((doc.data() as any).hostId))
+  }
+
+  // Also add attendees from existing meetings
   meetings.forEach(m => m.attendeeHostIds.forEach(id => allHostIds.add(id)))
 
   const hostDocs = await Promise.all(
