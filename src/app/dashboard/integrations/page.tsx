@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
 import WebhooksManager from './WebhooksManager'
+import TrelloConnector from './TrelloConnector'
 
 export default async function IntegrationsPage() {
   const user = await requireUser('/dashboard/integrations')
@@ -35,6 +36,9 @@ export default async function IntegrationsPage() {
 
         {/* Webhooks */}
         <WebhooksManager webhooks={webhooks} />
+
+        {/* Trello Integration */}
+        <TrelloConnector />
 
         {/* Available via Webhooks */}
         <div>
