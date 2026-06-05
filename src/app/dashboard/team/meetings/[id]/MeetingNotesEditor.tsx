@@ -20,9 +20,11 @@ export default function MeetingNotesEditor({
   const [selectedOccurrence, setSelectedOccurrence] = useState<string | null>(null)
   const [content, setContent] = useState('')
   const [actionItems, setActionItems] = useState<
-    Array<{ id: string; text: string; assigneeId: string | null; done: boolean }>
+    Array<{ id: string; text: string; description?: string; dueDate?: string; assigneeId: string | null; done: boolean }>
   >([])
   const [newActionItem, setNewActionItem] = useState('')
+  const [newActionDescription, setNewActionDescription] = useState('')
+  const [newActionDueDate, setNewActionDueDate] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState(false)
@@ -56,11 +58,15 @@ export default function MeetingNotesEditor({
       {
         id: `action-${Date.now()}`,
         text: newActionItem,
+        description: newActionDescription || undefined,
+        dueDate: newActionDueDate || undefined,
         assigneeId: null,
         done: false,
       },
     ])
     setNewActionItem('')
+    setNewActionDescription('')
+    setNewActionDueDate('')
   }
 
   const handleRemoveActionItem = (id: string) => {
@@ -229,15 +235,25 @@ export default function MeetingNotesEditor({
                       />
 
                       <div className="flex-1">
-                        <p className={`text-sm ${item.done ? 'line-through text-gray-400' : 'text-gray-700'}`}>
+                        <p className={`text-sm font-medium ${item.done ? 'line-through text-gray-400' : 'text-gray-900'}`}>
                           {item.text}
                         </p>
-                        {item.assigneeId && (
-                          <p className="text-xs text-gray-500 mt-1">
-                            Assigned to:{' '}
-                            {attendees.find(a => a.uid === item.assigneeId)?.name || 'Unknown'}
-                          </p>
+                        {item.description && (
+                          <p className="text-xs text-gray-600 mt-1">{item.description}</p>
                         )}
+                        <div className="flex gap-4 mt-2 text-xs text-gray-500">
+                          {item.assigneeId && (
+                            <span>
+                              Assigned to:{' '}
+                              {attendees.find(a => a.uid === item.assigneeId)?.name || 'Unknown'}
+                            </span>
+                          )}
+                          {item.dueDate && (
+                            <span>
+                              Due: {new Date(item.dueDate).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       <div className="flex items-center gap-2">
@@ -269,26 +285,42 @@ export default function MeetingNotesEditor({
                   ))}
                 </div>
 
-                <div className="flex gap-2">
-                  <input
-                    type="text"
-                    value={newActionItem}
-                    onChange={e => setNewActionItem(e.target.value)}
-                    placeholder="Add a new action item..."
-                    onKeyPress={e => {
-                      if (e.key === 'Enter') {
-                        handleAddActionItem()
-                      }
-                    }}
-                    className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                    disabled={saving}
-                  />
+                <div className="space-y-3 p-4 bg-gray-50 rounded-lg border border-gray-200">
+                  <div>
+                    <input
+                      type="text"
+                      value={newActionItem}
+                      onChange={e => setNewActionItem(e.target.value)}
+                      placeholder="Action item title..."
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                      disabled={saving}
+                    />
+                  </div>
+                  <div>
+                    <textarea
+                      value={newActionDescription}
+                      onChange={e => setNewActionDescription(e.target.value)}
+                      placeholder="Description (optional)"
+                      rows={2}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                      disabled={saving}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="date"
+                      value={newActionDueDate}
+                      onChange={e => setNewActionDueDate(e.target.value)}
+                      className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                      disabled={saving}
+                    />
+                  </div>
                   <button
                     onClick={handleAddActionItem}
-                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 text-sm font-medium disabled:opacity-50"
+                    className="w-full px-4 py-2 bg-[#0D7377] text-white rounded-lg hover:bg-[#0a5f63] text-sm font-medium disabled:opacity-50"
                     disabled={saving || !newActionItem.trim()}
                   >
-                    Add
+                    Add Action Item
                   </button>
                 </div>
               </div>

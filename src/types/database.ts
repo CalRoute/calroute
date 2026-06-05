@@ -107,6 +107,8 @@ export interface MeetingNote {
   actionItems: {
     id: string
     text: string
+    description?: string
+    dueDate?: string
     assigneeId: string | null
     trelloCardId?: string
     done: boolean

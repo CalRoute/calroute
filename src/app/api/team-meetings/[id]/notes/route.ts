@@ -63,6 +63,8 @@ export async function POST(
       actionItems: Array<{
         id: string
         text: string
+        description?: string
+        dueDate?: string
         assigneeId: string | null
         trelloCardId?: string
         done: boolean
@@ -107,6 +109,7 @@ export async function POST(
                 ? (await adminDb.collection('hosts').doc(item.assigneeId).get()).data()?.name
                 : null
 
+              const due = item.dueDate ? new Date(item.dueDate).toISOString() : null
               const cardRes = await fetch(
                 `https://api.trello.com/1/cards?key=${trello.apiKey}&token=${trello.token}`,
                 {
@@ -116,8 +119,11 @@ export async function POST(
                     idList: trello.listId,
                     name: item.text,
                     desc: `From: ${meeting.title}\nDate: ${occurrence}${
+                      item.description ? `\n\nDescription: ${item.description}` : ''
+                    }${
                       assigneeName ? `\nAssigned to: ${assigneeName}` : ''
                     }`,
+                    ...(due ? { due } : {}),
                   }),
                 }
               )
