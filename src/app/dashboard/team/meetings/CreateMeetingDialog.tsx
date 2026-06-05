@@ -255,40 +255,52 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-900 mb-2">
+            <label className="block text-sm font-medium text-gray-900 mb-3">
               Recurrence
             </label>
-            <select
-              value={customRrule ? 'custom' : rrule}
-              onChange={e => {
-                if (e.target.value === 'custom') {
-                  setCustomRrule('')
-                } else {
-                  setRrule(e.target.value)
-                  setCustomRrule('')
-                }
-              }}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              disabled={loading}
-            >
+            <div className="space-y-2">
               {RRULE_TEMPLATES.map(t => (
-                <option key={t.value} value={t.value}>
-                  {t.label}
-                </option>
+                <label key={t.value} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                  <input
+                    type="radio"
+                    name="recurrence"
+                    value={t.value}
+                    checked={rrule === t.value && !customRrule}
+                    onChange={() => {
+                      setRrule(t.value)
+                      setCustomRrule('')
+                    }}
+                    disabled={loading}
+                    className="w-4 h-4"
+                  />
+                  <span className="text-sm text-gray-700">{t.label}</span>
+                </label>
               ))}
-              <option value="custom">Custom RRULE</option>
-            </select>
 
-            {customRrule !== '' && (
-              <input
-                type="text"
-                value={customRrule}
-                onChange={e => setCustomRrule(e.target.value)}
-                placeholder="e.g. RRULE:FREQ=DAILY"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] mt-2"
-                disabled={loading}
-              />
-            )}
+              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                <input
+                  type="radio"
+                  name="recurrence"
+                  checked={customRrule !== ''}
+                  onChange={() => setCustomRrule('')}
+                  disabled={loading}
+                  className="w-4 h-4"
+                />
+                <span className="text-sm text-gray-700">Custom RRULE</span>
+              </label>
+
+              {customRrule !== '' && (
+                <input
+                  type="text"
+                  value={customRrule}
+                  onChange={e => setCustomRrule(e.target.value)}
+                  placeholder="e.g. RRULE:FREQ=DAILY"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] mt-2 ml-7"
+                  disabled={loading}
+                  autoFocus
+                />
+              )}
+            </div>
           </div>
 
           <div className="flex gap-3 pt-4">
