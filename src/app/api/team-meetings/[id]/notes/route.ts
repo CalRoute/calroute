@@ -129,10 +129,28 @@ export async function POST(
           }
         }
 
-        // Create or update cards for current action items
+        // Update or create cards for current action items
         updatedActionItems = await Promise.all(
           actionItems.map(async (item) => {
-            if (item.trelloCardId) return item
+            // Update existing card if status changed
+            if (item.trelloCardId) {
+              try {
+                // Update card name to show done status
+                const cardName = item.done ? `✓ ${item.text}` : item.text.replace(/^✓\s+/, '')
+
+                await fetch(
+                  `https://api.trello.com/1/cards/${item.trelloCardId}?key=${trello.apiKey}&token=${trello.token}`,
+                  {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: cardName, closed: item.done }),
+                  }
+                )
+              } catch (err) {
+                console.error('[trello-card-update] error:', err)
+              }
+              return item
+            }
 
             try {
               const assigneeDoc = item.assigneeId
