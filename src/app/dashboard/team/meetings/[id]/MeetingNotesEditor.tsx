@@ -25,6 +25,7 @@ export default function MeetingNotesEditor({
   const [newActionItem, setNewActionItem] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState(false)
 
   // Generate past occurrences (last 12 weeks)
   const now = new Date()
@@ -90,6 +91,7 @@ export default function MeetingNotesEditor({
 
     setSaving(true)
     setError(null)
+    setSuccess(false)
 
     try {
       const response = await fetch(`/api/team-meetings/${meetingId}/notes`, {
@@ -135,6 +137,9 @@ export default function MeetingNotesEditor({
           },
         ])
       }
+
+      setSuccess(true)
+      setTimeout(() => setSuccess(false), 3000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save notes')
     } finally {
@@ -179,6 +184,13 @@ export default function MeetingNotesEditor({
             {error && (
               <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {error}
+              </div>
+            )}
+
+            {success && (
+              <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+                <span>✓</span>
+                <span>Notes saved and email sent to all attendees!</span>
               </div>
             )}
 
