@@ -1,38 +1,69 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import type { TeamMeeting } from '@/types/database'
 
 const TIMEZONES = [
-  { value: 'America/New_York', label: 'Eastern (New York)' },
-  { value: 'America/Chicago', label: 'Central (Chicago)' },
-  { value: 'America/Denver', label: 'Mountain (Denver)' },
-  { value: 'America/Los_Angeles', label: 'Pacific (Los Angeles)' },
-  { value: 'America/Anchorage', label: 'Alaska (Anchorage)' },
-  { value: 'Pacific/Honolulu', label: 'Hawaii (Honolulu)' },
-  { value: 'Europe/London', label: 'UK (London)' },
-  { value: 'Europe/Paris', label: 'Central Europe (Paris)' },
-  { value: 'Europe/Berlin', label: 'Central Europe (Berlin)' },
-  { value: 'Europe/Amsterdam', label: 'Central Europe (Amsterdam)' },
-  { value: 'Europe/Istanbul', label: 'Turkey (Istanbul)' },
-  { value: 'Asia/Dubai', label: 'Gulf (Dubai)' },
-  { value: 'Asia/Kolkata', label: 'India (Mumbai)' },
-  { value: 'Asia/Bangkok', label: 'Thailand (Bangkok)' },
-  { value: 'Asia/Hong_Kong', label: 'Hong Kong' },
-  { value: 'Asia/Shanghai', label: 'China (Shanghai)' },
-  { value: 'Asia/Tokyo', label: 'Japan (Tokyo)' },
-  { value: 'Australia/Sydney', label: 'Australia (Sydney)' },
-  { value: 'Pacific/Auckland', label: 'New Zealand (Auckland)' },
-  { value: 'UTC', label: 'UTC' },
+  'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+  'America/Toronto', 'America/Vancouver', 'America/Montreal', 'America/Sao_Paulo',
+  'America/Mexico_City', 'America/Bogota', 'America/Lima', 'America/Santiago',
+  'America/Buenos_Aires', 'Europe/London', 'Europe/Paris', 'Europe/Berlin',
+  'Europe/Madrid', 'Europe/Rome', 'Europe/Amsterdam', 'Europe/Brussels',
+  'Europe/Zurich', 'Europe/Stockholm', 'Europe/Oslo', 'Europe/Helsinki',
+  'Europe/Warsaw', 'Europe/Prague', 'Europe/Vienna', 'Europe/Lisbon',
+  'Europe/Athens', 'Europe/Istanbul', 'Europe/Moscow', 'Africa/Cairo',
+  'Africa/Lagos', 'Africa/Johannesburg', 'Africa/Nairobi', 'Asia/Dubai',
+  'Asia/Riyadh', 'Asia/Karachi', 'Asia/Kolkata', 'Asia/Dhaka', 'Asia/Bangkok',
+  'Asia/Jakarta', 'Asia/Singapore', 'Asia/Kuala_Lumpur', 'Asia/Hong_Kong',
+  'Asia/Shanghai', 'Asia/Taipei', 'Asia/Seoul', 'Asia/Tokyo',
+  'Australia/Sydney', 'Australia/Melbourne', 'Australia/Brisbane', 'Australia/Perth',
+  'Pacific/Auckland', 'Pacific/Honolulu', 'UTC',
 ]
 
+function getOffset(tz: string): string {
+  try {
+    const parts = new Intl.DateTimeFormat('en', {
+      timeZone: tz, timeZoneName: 'shortOffset',
+    }).formatToParts(new Date())
+    return parts.find(p => p.type === 'timeZoneName')?.value ?? 'UTC'
+  } catch { return 'UTC' }
+}
+
+function formatLabel(tz: string): string {
+  return tz.replace(/_/g, ' ').replace('/', ' / ')
+}
+
 const RRULE_TEMPLATES = [
+  { label: 'Daily', value: 'RRULE:FREQ=DAILY' },
   { label: 'Weekly on Monday', value: 'RRULE:FREQ=WEEKLY;BYDAY=MO' },
   { label: 'Weekly on Monday, Wednesday, Friday', value: 'RRULE:FREQ=WEEKLY;BYDAY=MO,WE,FR' },
   { label: 'Every weekday (Mon-Fri)', value: 'RRULE:FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR' },
-  { label: 'Every other week', value: 'RRULE:FREQ=WEEKLY;INTERVAL=2' },
-  { label: 'Every month on the 1st', value: 'RRULE:FREQ=MONTHLY;BYMONTHDAY=1' },
+  { label: 'Monthly', value: 'RRULE:FREQ=MONTHLY' },
 ]
+
+const WEEKDAYS = [
+  { abbr: 'Mo', label: 'Monday', rrule: 'MO' },
+  { abbr: 'Tu', label: 'Tuesday', rrule: 'TU' },
+  { abbr: 'We', label: 'Wednesday', rrule: 'WE' },
+  { abbr: 'Th', label: 'Thursday', rrule: 'TH' },
+  { abbr: 'Fr', label: 'Friday', rrule: 'FR' },
+  { abbr: 'Sa', label: 'Saturday', rrule: 'SA' },
+  { abbr: 'Su', label: 'Sunday', rrule: 'SU' },
+]
+
+function buildRruleFromCustom(frequency: string, interval: number, weekdays?: string[], monthDay?: number): string {
+  if (frequency === 'WEEKLY' && weekdays && weekdays.length > 0) {
+    const byDay = weekdays.join(',')
+    const intervalPart = interval > 1 ? `;INTERVAL=${interval}` : ''
+    return `RRULE:FREQ=WEEKLY;BYDAY=${byDay}${intervalPart}`
+  }
+  if (frequency === 'MONTHLY' && monthDay) {
+    const intervalPart = interval > 1 ? `;INTERVAL=${interval}` : ''
+    return `RRULE:FREQ=MONTHLY;BYMONTHDAY=${monthDay}${intervalPart}`
+  }
+  const intervalPart = interval > 1 ? `;INTERVAL=${interval}` : ''
+  return `RRULE:FREQ=${frequency}${intervalPart}`
+}
 
 interface Props {
   onClose: () => void
@@ -47,14 +78,21 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
   const [startTime, setStartTime] = useState('09:00')
   const [durationMinutes, setDurationMinutes] = useState(30)
   const [timezone, setTimezone] = useState('UTC')
-  const [rrule, setRrule] = useState(RRULE_TEMPLATES[0].value)
-  const [customRrule, setCustomRrule] = useState('')
+  const [recurrenceMode, setRecurrenceMode] = useState<'preset' | 'custom'>('preset')
+  const [selectedPreset, setSelectedPreset] = useState(RRULE_TEMPLATES[0].value)
+  const [customFrequency, setCustomFrequency] = useState('WEEKLY')
+  const [customInterval, setCustomInterval] = useState(1)
+  const [customWeekdays, setCustomWeekdays] = useState<string[]>(['MO'])
+  const [customMonthDay, setCustomMonthDay] = useState(1)
   const [timezoneSearch, setTimezoneSearch] = useState('')
   const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
   const [attendeeSearch, setAttendeeSearch] = useState('')
   const [showAttendeeDropdown, setShowAttendeeDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const timezoneContainerRef = useRef<HTMLDivElement>(null)
+  const timezoneInputRef = useRef<HTMLInputElement>(null)
+  const attendeeContainerRef = useRef<HTMLDivElement>(null)
 
   const hostIds = Object.keys(hostMap)
 
@@ -62,7 +100,8 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
     if (!timezoneSearch.trim()) return TIMEZONES
     const search = timezoneSearch.toLowerCase()
     return TIMEZONES.filter(tz =>
-      tz.label.toLowerCase().includes(search) || tz.value.toLowerCase().includes(search)
+      tz.toLowerCase().includes(search) ||
+      formatLabel(tz).toLowerCase().includes(search)
     )
   }, [timezoneSearch])
 
@@ -80,6 +119,31 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
     })
   }, [attendeeSearch, hostIds, hostMap])
 
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (timezoneContainerRef.current && !timezoneContainerRef.current.contains(e.target as Node)) {
+        setShowTimezoneDropdown(false)
+        setTimezoneSearch('')
+      }
+      if (attendeeContainerRef.current && !attendeeContainerRef.current.contains(e.target as Node)) {
+        setShowAttendeeDropdown(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    if (showTimezoneDropdown) setTimeout(() => timezoneInputRef.current?.focus(), 10)
+  }, [showTimezoneDropdown])
+
+  const getSelectedRrule = (): string => {
+    if (recurrenceMode === 'preset') {
+      return selectedPreset
+    }
+    return buildRruleFromCustom(customFrequency, customInterval, customWeekdays, customMonthDay)
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!title || selectedAttendees.length === 0) {
@@ -91,7 +155,6 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
     setError(null)
 
     try {
-      const finalRrule = customRrule || rrule
       const now = new Date()
       const [hours, minutes] = startTime.split(':').map(Number)
       const meetingStart = new Date(now)
@@ -107,7 +170,7 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
           startTime: meetingStart.toISOString(),
           durationMinutes: Number(durationMinutes),
           timezone,
-          rrule: finalRrule,
+          rrule: getSelectedRrule(),
         }),
       })
 
@@ -173,7 +236,7 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
             />
           </div>
 
-          <div className="relative">
+          <div ref={attendeeContainerRef} className="relative">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Attendees ({selectedAttendees.length} selected)
             </label>
@@ -281,42 +344,60 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
             </div>
           </div>
 
-          <div className="relative">
+          <div ref={timezoneContainerRef} className="relative">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Timezone
             </label>
-            <input
-              type="text"
-              value={timezoneSearch || timezone}
-              onChange={e => setTimezoneSearch(e.target.value)}
-              onFocus={() => setShowTimezoneDropdown(true)}
-              placeholder="Search timezone..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+            <button
+              type="button"
+              onClick={() => setShowTimezoneDropdown(o => !o)}
               disabled={loading}
-            />
+              className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border text-sm transition-all bg-white text-left ${
+                showTimezoneDropdown ? 'border-[#0D7377] ring-2 ring-[#0D7377]/15' : 'border-gray-200 hover:border-gray-300'
+              }`}
+            >
+              <div>
+                <div className="font-medium text-gray-900">{formatLabel(timezone)}</div>
+                <div className="text-xs text-gray-500">{getOffset(timezone)}</div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+              </svg>
+            </button>
+
             {showTimezoneDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
-                {filteredTimezones.length > 0 ? (
-                  filteredTimezones.map(tz => (
-                    <button
-                      key={tz.value}
-                      type="button"
-                      onClick={() => {
-                        setTimezone(tz.value)
-                        setTimezoneSearch('')
-                        setShowTimezoneDropdown(false)
-                      }}
-                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0 text-sm"
-                    >
-                      <div className="font-medium text-gray-900">{tz.label}</div>
-                      <div className="text-xs text-gray-500">{tz.value}</div>
-                    </button>
-                  ))
-                ) : (
-                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
-                    No timezones found
-                  </div>
-                )}
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10">
+                <input
+                  ref={timezoneInputRef}
+                  type="text"
+                  value={timezoneSearch}
+                  onChange={e => setTimezoneSearch(e.target.value)}
+                  placeholder="Search timezone..."
+                  className="w-full px-4 py-2 border-b border-gray-200 focus:outline-none focus:ring-2 focus:ring-[#0D7377] focus:ring-inset rounded-t-lg"
+                />
+                <div className="max-h-48 overflow-y-auto">
+                  {filteredTimezones.length > 0 ? (
+                    filteredTimezones.map(tz => (
+                      <button
+                        key={tz}
+                        type="button"
+                        onClick={() => {
+                          setTimezone(tz)
+                          setTimezoneSearch('')
+                          setShowTimezoneDropdown(false)
+                        }}
+                        className="w-full text-left px-4 py-3 border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors text-sm"
+                      >
+                        <div className="font-medium text-gray-900">{formatLabel(tz)}</div>
+                        <div className="text-xs text-gray-500">{getOffset(tz)}</div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                      No timezones found
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -325,49 +406,162 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
             <label className="block text-sm font-medium text-gray-900 mb-3">
               Recurrence
             </label>
-            <div className="space-y-2">
-              {RRULE_TEMPLATES.map(t => (
-                <label key={t.value} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                  <input
-                    type="radio"
-                    name="recurrence"
-                    value={t.value}
-                    checked={rrule === t.value && !customRrule}
-                    onChange={() => {
-                      setRrule(t.value)
-                      setCustomRrule('')
-                    }}
-                    disabled={loading}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700">{t.label}</span>
-                </label>
-              ))}
 
-              <label className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
-                <input
-                  type="radio"
-                  name="recurrence"
-                  checked={customRrule !== ''}
-                  onChange={() => setCustomRrule('')}
-                  disabled={loading}
-                  className="w-4 h-4"
-                />
-                <span className="text-sm text-gray-700">Custom RRULE</span>
-              </label>
-
-              {customRrule !== '' && (
-                <input
-                  type="text"
-                  value={customRrule}
-                  onChange={e => setCustomRrule(e.target.value)}
-                  placeholder="e.g. RRULE:FREQ=DAILY"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] mt-2 ml-7"
-                  disabled={loading}
-                  autoFocus
-                />
-              )}
+            {/* Mode toggle */}
+            <div className="flex gap-2 mb-4">
+              <button
+                type="button"
+                onClick={() => {
+                  setRecurrenceMode('preset')
+                  setSelectedPreset(RRULE_TEMPLATES[0].value)
+                }}
+                disabled={loading}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                  recurrenceMode === 'preset'
+                    ? 'bg-[#0D7377] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Quick Presets
+              </button>
+              <button
+                type="button"
+                onClick={() => setRecurrenceMode('custom')}
+                disabled={loading}
+                className={`flex-1 px-4 py-2 rounded-lg font-medium transition-colors text-sm ${
+                  recurrenceMode === 'custom'
+                    ? 'bg-[#0D7377] text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Custom Pattern
+              </button>
             </div>
+
+            {/* Preset mode */}
+            {recurrenceMode === 'preset' && (
+              <div className="space-y-2">
+                {RRULE_TEMPLATES.map(t => (
+                  <label key={t.value} className="flex items-center gap-3 p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors">
+                    <input
+                      type="radio"
+                      name="recurrence"
+                      value={t.value}
+                      checked={selectedPreset === t.value}
+                      onChange={() => setSelectedPreset(t.value)}
+                      disabled={loading}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm text-gray-700">{t.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Custom mode */}
+            {recurrenceMode === 'custom' && (
+              <div className="space-y-4">
+                {/* Frequency selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">Frequency</label>
+                  <div className="flex gap-2">
+                    {['DAILY', 'WEEKLY', 'MONTHLY'].map(freq => (
+                      <button
+                        key={freq}
+                        type="button"
+                        onClick={() => setCustomFrequency(freq)}
+                        disabled={loading}
+                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          customFrequency === freq
+                            ? 'bg-[#0D7377] text-white'
+                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                        }`}
+                      >
+                        {freq === 'DAILY' ? 'Daily' : freq === 'WEEKLY' ? 'Weekly' : 'Monthly'}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Interval selector */}
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-2">
+                    Every
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="31"
+                      value={customInterval}
+                      onChange={e => setCustomInterval(Math.max(1, Number(e.target.value)))}
+                      disabled={loading}
+                      className="w-16 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-center"
+                    />
+                    <span className="text-sm text-gray-700">
+                      {customFrequency === 'DAILY' && (customInterval === 1 ? 'day' : 'days')}
+                      {customFrequency === 'WEEKLY' && (customInterval === 1 ? 'week' : 'weeks')}
+                      {customFrequency === 'MONTHLY' && (customInterval === 1 ? 'month' : 'months')}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Weekly: day selector */}
+                {customFrequency === 'WEEKLY' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">On these days</label>
+                    <div className="grid grid-cols-4 gap-2">
+                      {WEEKDAYS.map(day => (
+                        <button
+                          key={day.rrule}
+                          type="button"
+                          onClick={() => {
+                            setCustomWeekdays(
+                              customWeekdays.includes(day.rrule)
+                                ? customWeekdays.filter(d => d !== day.rrule)
+                                : [...customWeekdays, day.rrule].sort()
+                            )
+                          }}
+                          disabled={loading}
+                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                            customWeekdays.includes(day.rrule)
+                              ? 'bg-[#0D7377] text-white'
+                              : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          }`}
+                        >
+                          {day.abbr}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Monthly: date selector */}
+                {customFrequency === 'MONTHLY' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-2">On day of month</label>
+                    <select
+                      value={customMonthDay}
+                      onChange={e => setCustomMonthDay(Number(e.target.value))}
+                      disabled={loading}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
+                    >
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map(day => (
+                        <option key={day} value={day}>{day}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* RRULE preview */}
+                <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
+                  <div className="text-xs font-semibold text-gray-700 mb-1">Generated RRULE</div>
+                  <code className="text-xs text-gray-600 break-all font-mono">
+                    {getSelectedRrule()}
+                  </code>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex gap-3 pt-4">
