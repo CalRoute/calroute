@@ -1,7 +1,30 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import type { TeamMeeting } from '@/types/database'
+
+const TIMEZONES = [
+  { value: 'America/New_York', label: 'Eastern (New York)' },
+  { value: 'America/Chicago', label: 'Central (Chicago)' },
+  { value: 'America/Denver', label: 'Mountain (Denver)' },
+  { value: 'America/Los_Angeles', label: 'Pacific (Los Angeles)' },
+  { value: 'America/Anchorage', label: 'Alaska (Anchorage)' },
+  { value: 'Pacific/Honolulu', label: 'Hawaii (Honolulu)' },
+  { value: 'Europe/London', label: 'UK (London)' },
+  { value: 'Europe/Paris', label: 'Central Europe (Paris)' },
+  { value: 'Europe/Berlin', label: 'Central Europe (Berlin)' },
+  { value: 'Europe/Amsterdam', label: 'Central Europe (Amsterdam)' },
+  { value: 'Europe/Istanbul', label: 'Turkey (Istanbul)' },
+  { value: 'Asia/Dubai', label: 'Gulf (Dubai)' },
+  { value: 'Asia/Kolkata', label: 'India (Mumbai)' },
+  { value: 'Asia/Bangkok', label: 'Thailand (Bangkok)' },
+  { value: 'Asia/Hong_Kong', label: 'Hong Kong' },
+  { value: 'Asia/Shanghai', label: 'China (Shanghai)' },
+  { value: 'Asia/Tokyo', label: 'Japan (Tokyo)' },
+  { value: 'Australia/Sydney', label: 'Australia (Sydney)' },
+  { value: 'Pacific/Auckland', label: 'New Zealand (Auckland)' },
+  { value: 'UTC', label: 'UTC' },
+]
 
 const RRULE_TEMPLATES = [
   { label: 'Weekly on Monday', value: 'RRULE:FREQ=WEEKLY;BYDAY=MO' },
@@ -26,8 +49,18 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
   const [timezone, setTimezone] = useState('UTC')
   const [rrule, setRrule] = useState(RRULE_TEMPLATES[0].value)
   const [customRrule, setCustomRrule] = useState('')
+  const [timezoneSearch, setTimezoneSearch] = useState('')
+  const [showTimezoneDropdown, setShowTimezoneDropdown] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const filteredTimezones = useMemo(() => {
+    if (!timezoneSearch.trim()) return TIMEZONES
+    const search = timezoneSearch.toLowerCase()
+    return TIMEZONES.filter(tz =>
+      tz.label.toLowerCase().includes(search) || tz.value.toLowerCase().includes(search)
+    )
+  }, [timezoneSearch])
 
   const hostIds = Object.keys(hostMap)
 
@@ -181,18 +214,44 @@ export default function CreateMeetingDialog({ onClose, onCreated, hostMap }: Pro
             </div>
           </div>
 
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-900 mb-2">
               Timezone
             </label>
             <input
               type="text"
-              value={timezone}
-              onChange={e => setTimezone(e.target.value)}
-              placeholder="e.g. America/New_York"
+              value={timezoneSearch || timezone}
+              onChange={e => setTimezoneSearch(e.target.value)}
+              onFocus={() => setShowTimezoneDropdown(true)}
+              placeholder="Search timezone..."
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
               disabled={loading}
             />
+            {showTimezoneDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-10 max-h-48 overflow-y-auto">
+                {filteredTimezones.length > 0 ? (
+                  filteredTimezones.map(tz => (
+                    <button
+                      key={tz.value}
+                      type="button"
+                      onClick={() => {
+                        setTimezone(tz.value)
+                        setTimezoneSearch('')
+                        setShowTimezoneDropdown(false)
+                      }}
+                      className="w-full text-left px-4 py-2 hover:bg-gray-100 border-b border-gray-100 last:border-b-0 text-sm"
+                    >
+                      <div className="font-medium text-gray-900">{tz.label}</div>
+                      <div className="text-xs text-gray-500">{tz.value}</div>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                    No timezones found
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <div>
