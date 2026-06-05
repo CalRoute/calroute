@@ -110,13 +110,13 @@ export async function POST(
           .get()
 
         const previousActionItems = (previousNotesSnap.data() as any)?.actionItems || []
-        const previousCardIds = new Set(
-          previousActionItems.filter((item: any) => item.trelloCardId).map((item: any) => item.trelloCardId)
+        const previousCardIds = new Set<string>(
+          previousActionItems.filter((item: any) => item.trelloCardId).map((item: any) => item.trelloCardId as string)
         )
-        const currentCardIds = new Set(actionItems.filter(item => item.trelloCardId).map(item => item.trelloCardId))
+        const currentCardIds = new Set<string>(actionItems.filter(item => item.trelloCardId).map(item => item.trelloCardId as string))
 
         // Delete cards that were removed from action items
-        const deletedCardIds = Array.from(previousCardIds).filter(id => !currentCardIds.has(id))
+        const deletedCardIds: string[] = Array.from(previousCardIds).filter((id: string) => !currentCardIds.has(id))
         for (const cardId of deletedCardIds) {
           try {
             await fetch(
@@ -135,9 +135,28 @@ export async function POST(
             if (item.trelloCardId) return item
 
             try {
-              const assigneeName = item.assigneeId
-                ? (await adminDb.collection('hosts').doc(item.assigneeId).get()).data()?.name
+              const assigneeDoc = item.assigneeId
+                ? await adminDb.collection('hosts').doc(item.assigneeId).get()
                 : null
+              const assigneeName = assigneeDoc?.data()?.name || null
+              const assigneeEmail = assigneeDoc?.data()?.email || null
+
+              // Get Trello member ID by email
+              let trelloMemberId: string | null = null
+              if (assigneeEmail) {
+                try {
+                  const memberRes = await fetch(
+                    `https://api.trello.com/1/members?query=${encodeURIComponent(assigneeEmail)}&key=${trello.apiKey}&token=${trello.token}`
+                  )
+                  if (memberRes.ok) {
+                    const members = await memberRes.json()
+                    const member = members.find((m: any) => m.email === assigneeEmail)
+                    if (member) trelloMemberId = member.id
+                  }
+                } catch (err) {
+                  console.error('[trello-member-lookup] error:', err)
+                }
+              }
 
               const due = item.dueDate ? new Date(item.dueDate).toISOString() : null
               const cardRes = await fetch(
@@ -154,6 +173,7 @@ export async function POST(
                       assigneeName ? `\nAssigned to: ${assigneeName}` : ''
                     }`,
                     ...(due ? { due } : {}),
+                    ...(trelloMemberId ? { idMembers: [trelloMemberId] } : {}),
                   }),
                 }
               )
