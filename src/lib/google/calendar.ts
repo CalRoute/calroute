@@ -221,3 +221,57 @@ export async function deleteCalendarEvent(
     return false
   }
 }
+
+/**
+ * Create a recurring team meeting on Google Calendar.
+ */
+export async function createRecurringTeamMeeting(
+  hostCalendar: ConnectedCalendar,
+  meeting: {
+    title: string
+    description?: string
+    startTime: Date
+    durationMinutes: number
+    attendeeEmails: string[]
+    rrule: string
+    timezone: string
+  }
+): Promise<string | null> {
+  try {
+    const auth = await getAuthenticatedClient(hostCalendar)
+    const calendarClient = google.calendar({ version: 'v3', auth })
+
+    const endTime = new Date(meeting.startTime.getTime() + meeting.durationMinutes * 60000)
+
+    const { data } = await calendarClient.events.insert({
+      calendarId: hostCalendar.calendarId,
+      sendUpdates: 'all',
+      requestBody: {
+        summary: meeting.title,
+        description: meeting.description,
+        start: {
+          dateTime: meeting.startTime.toISOString(),
+          timeZone: meeting.timezone,
+        },
+        end: {
+          dateTime: endTime.toISOString(),
+          timeZone: meeting.timezone,
+        },
+        recurrence: [meeting.rrule],
+        attendees: meeting.attendeeEmails.map(email => ({ email })),
+        conferenceData: {
+          createRequest: {
+            requestId: `calroute-team-${Date.now()}`,
+            conferenceSolutionKey: { type: 'hangoutsMeet' },
+          },
+        },
+      },
+      conferenceDataVersion: 1,
+    })
+
+    return data.id ?? null
+  } catch (error) {
+    console.error('Failed to create recurring team meeting:', error)
+    return null
+  }
+}

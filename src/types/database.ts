@@ -83,3 +83,45 @@ export interface Booking {
   cancellationReason: string | null
   createdAt: string
 }
+
+export interface TeamMeeting {
+  id: string
+  teamId: string
+  createdBy: string
+  title: string
+  description?: string
+  attendeeHostIds: string[]
+  startTime: string
+  durationMinutes: number
+  timezone: string
+  rrule: string
+  googleEventId: string | null
+  status: 'active' | 'cancelled'
+  createdAt: string
+}
+
+export interface MeetingNote {
+  occurrence: string
+  authorId: string
+  content: string
+  actionItems: {
+    id: string
+    text: string
+    assigneeId: string | null
+    trelloCardId?: string
+    done: boolean
+  }[]
+  emailSentAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface TrelloIntegration {
+  apiKey: string
+  token: string
+  boardId: string
+  boardName: string
+  listId: string
+  listName: string
+  connectedAt: string
+}
