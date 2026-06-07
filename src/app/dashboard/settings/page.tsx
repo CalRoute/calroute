@@ -15,6 +15,7 @@ import BookingLinksSection from './BookingLinksSection'
 import BillingSection from './BillingSection'
 import ApiKeysSection from './ApiKeysSection'
 import VacationDatesEditor from './VacationDatesEditor'
+import ExternalDataSection from './ExternalDataSection'
 
 export default async function SettingsPage({
   searchParams,
@@ -74,6 +75,21 @@ export default async function SettingsPage({
     id: d.id,
     ...d.data(),
   })) as any[]
+
+  const externalDataSnap = await adminDb
+    .collection('hosts')
+    .doc(user.uid)
+    .collection('settings')
+    .doc('external_data')
+    .get()
+
+  const externalDataConfig = externalDataSnap.exists
+    ? {
+        configured: true,
+        apiEndpoint: externalDataSnap.data()?.apiEndpoint,
+        updatedAt: externalDataSnap.data()?.updatedAt,
+      }
+    : { configured: false }
 
   const blackoutDatesSnap = await adminDb
     .collection('hosts')
@@ -217,6 +233,8 @@ export default async function SettingsPage({
           )}
         </div>
 
+              {/* External Data Integration */}
+              <ExternalDataSection initialConfig={externalDataConfig} />
             </div>
           </div>
         </div>

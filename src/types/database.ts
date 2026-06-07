@@ -42,7 +42,15 @@ export interface BookingLink {
   meetingType?: 'google_meet' | 'phone_call'
   isActive: boolean
   maxDaysAhead: number
+  externalDataEnabled?: boolean
   createdAt: string
+}
+
+export interface ExternalDataConfig {
+  apiEndpoint: string
+  apiKey: string
+  createdAt: string
+  updatedAt: string
 }
 
 // Shape expected by BookingWidget (snake_case for backwards compat)
@@ -81,6 +89,7 @@ export interface Booking {
   status: 'confirmed' | 'cancelled' | 'rescheduled'
   cancelledAt: string | null
   cancellationReason: string | null
+  externalData?: Record<string, any>
   createdAt: string
 }
 
