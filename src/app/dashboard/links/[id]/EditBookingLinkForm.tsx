@@ -55,6 +55,36 @@ export default function EditBookingLinkForm({
   const [testingApi, setTestingApi] = useState(false)
   const [apiTestResult, setApiTestResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null)
 
+  // Auto-test saved credentials on mount
+  useEffect(() => {
+    if (link.externalDataEnabled && link.externalDataApiEndpoint && link.externalDataApiKey && !apiTestResult) {
+      const testCreds = async () => {
+        setTestingApi(true)
+        try {
+          const res = await fetch('/api/external-data/test', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              apiEndpoint: link.externalDataApiEndpoint,
+              apiKey: link.externalDataApiKey,
+            }),
+          })
+          const data = await res.json()
+          if (res.ok) {
+            setApiTestResult({ status: 'success', message: 'API credentials verified ✓' })
+          } else {
+            setApiTestResult({ status: 'error', message: data.error || 'API test failed' })
+          }
+        } catch (err) {
+          setApiTestResult({ status: 'error', message: 'Connection failed' })
+        } finally {
+          setTestingApi(false)
+        }
+      }
+      testCreds()
+    }
+  }, [])
+
   function slugify(val: string) {
     return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
   }
@@ -327,6 +357,25 @@ export default function EditBookingLinkForm({
 
             {form.externalDataEnabled && (
               <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                {/* Status badge if config exists */}
+                {link.externalDataApiEndpoint && (
+                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
+                    <div>
+                      <p className="text-sm font-medium text-gray-900">Current Configuration</p>
+                      <p className="text-xs text-gray-500 mt-0.5">{link.externalDataApiEndpoint}</p>
+                    </div>
+                    {apiTestResult && (
+                      <div className={`text-xs font-medium px-2 py-1 rounded ${
+                        apiTestResult.status === 'success'
+                          ? 'bg-green-100 text-green-800'
+                          : 'bg-red-100 text-red-800'
+                      }`}>
+                        {apiTestResult.status === 'success' ? '✓ Valid' : '✗ Invalid'}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-900 mb-2">API Endpoint</label>
                   <input
@@ -376,11 +425,12 @@ export default function EditBookingLinkForm({
                 </button>
 
                 {apiTestResult && (
-                  <div className={`p-3 rounded-lg text-sm ${
+                  <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
                     apiTestResult.status === 'success'
                       ? 'bg-green-100 border border-green-300 text-green-800'
                       : 'bg-red-100 border border-red-300 text-red-800'
                   }`}>
+                    <span className="text-lg">{apiTestResult.status === 'success' ? '✓' : '✗'}</span>
                     {apiTestResult.message}
                   </div>
                 )}

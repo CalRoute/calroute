@@ -31,13 +31,16 @@ export async function POST(request: NextRequest) {
 
     console.log('[external-data-test] testing endpoint:', apiEndpoint)
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 5000)
+
     const response = await fetch(testUrl.toString(), {
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      timeout: 5000,
-    })
+      signal: controller.signal,
+    }).finally(() => clearTimeout(timeoutId))
 
     // We don't care about the response body, just check if authentication worked
     if (response.status === 401 || response.status === 403) {
