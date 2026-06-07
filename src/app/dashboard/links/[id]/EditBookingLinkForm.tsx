@@ -52,9 +52,43 @@ export default function EditBookingLinkForm({
   const [addLoading, setAddLoading] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [removingUid, setRemovingUid] = useState<string | null>(null)
+  const [testingApi, setTestingApi] = useState(false)
+  const [apiTestResult, setApiTestResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null)
 
   function slugify(val: string) {
     return val.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '')
+  }
+
+  async function handleTestApi() {
+    if (!form.externalDataApiEndpoint || !form.externalDataApiKey) {
+      setApiTestResult({ status: 'error', message: 'API endpoint and key are required' })
+      return
+    }
+
+    setTestingApi(true)
+    setApiTestResult(null)
+
+    try {
+      const res = await fetch('/api/external-data/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiEndpoint: form.externalDataApiEndpoint,
+          apiKey: form.externalDataApiKey,
+        }),
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        setApiTestResult({ status: 'success', message: 'API credentials verified ✓' })
+      } else {
+        setApiTestResult({ status: 'error', message: data.error || 'API test failed' })
+      }
+    } catch (err) {
+      setApiTestResult({ status: 'error', message: err instanceof Error ? err.message : 'Connection failed' })
+    } finally {
+      setTestingApi(false)
+    }
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -298,7 +332,10 @@ export default function EditBookingLinkForm({
                   <input
                     type="url"
                     value={form.externalDataApiEndpoint}
-                    onChange={e => setForm(f => ({ ...f, externalDataApiEndpoint: e.target.value }))}
+                    onChange={e => {
+                      setForm(f => ({ ...f, externalDataApiEndpoint: e.target.value }))
+                      setApiTestResult(null)
+                    }}
                     placeholder="https://api.example.com/users/lookup"
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
                   />
@@ -311,7 +348,10 @@ export default function EditBookingLinkForm({
                     <input
                       type={showApiKeyInput ? 'text' : 'password'}
                       value={form.externalDataApiKey}
-                      onChange={e => setForm(f => ({ ...f, externalDataApiKey: e.target.value }))}
+                      onChange={e => {
+                        setForm(f => ({ ...f, externalDataApiKey: e.target.value }))
+                        setApiTestResult(null)
+                      }}
                       placeholder="••••••••••••••••"
                       className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
                     />
@@ -325,6 +365,25 @@ export default function EditBookingLinkForm({
                   </div>
                   <p className="text-xs text-gray-600 mt-1">Sent as: Authorization: Bearer [key]</p>
                 </div>
+
+                <button
+                  type="button"
+                  onClick={handleTestApi}
+                  disabled={testingApi || !form.externalDataApiEndpoint || !form.externalDataApiKey}
+                  className="w-full px-4 py-2 bg-white text-[#0D7377] border border-[#0D7377] rounded-lg hover:bg-[#0D7377]/5 disabled:opacity-50 font-medium text-sm transition-colors"
+                >
+                  {testingApi ? 'Testing...' : 'Test API Credentials'}
+                </button>
+
+                {apiTestResult && (
+                  <div className={`p-3 rounded-lg text-sm ${
+                    apiTestResult.status === 'success'
+                      ? 'bg-green-100 border border-green-300 text-green-800'
+                      : 'bg-red-100 border border-red-300 text-red-800'
+                  }`}>
+                    {apiTestResult.message}
+                  </div>
+                )}
               </div>
             )}
           </div>
