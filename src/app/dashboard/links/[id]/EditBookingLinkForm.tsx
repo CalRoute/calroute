@@ -39,6 +39,7 @@ export default function EditBookingLinkForm({
     routingStrategy: link.routingStrategy ?? 'priority',
     maxDaysAhead: link.maxDaysAhead ?? 30,
     meetingType: link.meetingType ?? 'google_meet',
+    externalDataEnabled: link.externalDataEnabled ?? false,
   })
 
   // Team state
@@ -260,6 +261,34 @@ export default function EditBookingLinkForm({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* External Data */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+            <h2 className="font-semibold text-gray-900">External user data</h2>
+            <p className="text-sm text-gray-500">Automatically fetch and pre-fill user information from your external systems</p>
+            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
+              <div className="flex-1">
+                <p className="text-sm font-medium text-gray-900">Fetch user data on booking</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  When users visit with parameters like ?email=user@example.com&pdCode=ABC123, their data will be pre-filled from your configured API
+                </p>
+              </div>
+              <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
+                <input
+                  type="checkbox"
+                  checked={form.externalDataEnabled}
+                  onChange={e => setForm(f => ({ ...f, externalDataEnabled: e.target.checked }))}
+                  className="w-5 h-5 rounded border-gray-300 text-[#0D7377] focus:ring-[#0D7377]"
+                />
+                <span className="text-sm font-medium text-gray-700">Enable</span>
+              </label>
+            </div>
+            {form.externalDataEnabled && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
+                ℹ️ Make sure to configure your external data API in <a href="/dashboard/settings" className="underline hover:text-blue-700 font-medium">Settings</a> first
+              </div>
+            )}
           </div>
 
           {/* Routing */}
