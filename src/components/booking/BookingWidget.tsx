@@ -54,7 +54,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            hostId: link.ownerId,
+            linkId: link.id,
             queryParams,
           }),
         })

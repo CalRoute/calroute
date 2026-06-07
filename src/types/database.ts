@@ -43,14 +43,9 @@ export interface BookingLink {
   isActive: boolean
   maxDaysAhead: number
   externalDataEnabled?: boolean
+  externalDataApiEndpoint?: string
+  externalDataApiKey?: string
   createdAt: string
-}
-
-export interface ExternalDataConfig {
-  apiEndpoint: string
-  apiKey: string
-  createdAt: string
-  updatedAt: string
 }
 
 // Shape expected by BookingWidget (snake_case for backwards compat)

@@ -6,28 +6,34 @@ import type { ExternalDataConfig } from '@/types/database'
 
 export async function POST(request: NextRequest) {
   try {
-    const { hostId, queryParams } = await request.json() as {
-      hostId: string
+    const { linkId, queryParams } = await request.json() as {
+      linkId: string
       queryParams: Record<string, string>
     }
 
-    if (!hostId || !queryParams) {
+    if (!linkId || !queryParams) {
       return NextResponse.json({ error: 'Missing required parameters' }, { status: 400 })
     }
 
-    // Get external data config from the host
-    const configSnap = await adminDb
-      .collection('hosts')
-      .doc(hostId)
-      .collection('settings')
-      .doc('external_data')
+    // Get external data config from the booking link
+    const linkSnap = await adminDb
+      .collection('booking_links')
+      .doc(linkId)
       .get()
 
-    if (!configSnap.exists) {
-      return NextResponse.json({ error: 'External data not configured' }, { status: 404 })
+    if (!linkSnap.exists) {
+      return NextResponse.json({ error: 'Booking link not found' }, { status: 404 })
     }
 
-    const config = configSnap.data() as ExternalDataConfig
+    const link = linkSnap.data() as any
+    if (!link.externalDataEnabled || !link.externalDataApiEndpoint || !link.externalDataApiKey) {
+      return NextResponse.json({ error: 'External data not configured for this link' }, { status: 404 })
+    }
+
+    const config = {
+      apiEndpoint: link.externalDataApiEndpoint,
+      apiKey: link.externalDataApiKey,
+    }
 
     // Build query string from parameters
     const queryString = new URLSearchParams(queryParams).toString()

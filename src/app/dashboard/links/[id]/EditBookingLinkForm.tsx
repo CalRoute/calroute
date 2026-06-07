@@ -40,7 +40,10 @@ export default function EditBookingLinkForm({
     maxDaysAhead: link.maxDaysAhead ?? 30,
     meetingType: link.meetingType ?? 'google_meet',
     externalDataEnabled: link.externalDataEnabled ?? false,
+    externalDataApiEndpoint: link.externalDataApiEndpoint ?? '',
+    externalDataApiKey: link.externalDataApiKey ?? '',
   })
+  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
   // Team state
   const [hosts, setHosts] = useState<TeamMember[]>(initialHosts)
@@ -264,14 +267,17 @@ export default function EditBookingLinkForm({
           </div>
 
           {/* External Data */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">External user data</h2>
-            <p className="text-sm text-gray-500">Automatically fetch and pre-fill user information from your external systems</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <div>
+              <h2 className="font-semibold text-gray-900">External user data</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Automatically fetch and pre-fill user information from your external systems</p>
+            </div>
+
             <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
               <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Fetch user data on booking</p>
+                <p className="text-sm font-medium text-gray-900">Enable external data fetching</p>
                 <p className="text-xs text-gray-500 mt-1">
-                  When users visit with parameters like ?email=user@example.com&pdCode=ABC123, their data will be pre-filled from your configured API
+                  Visit with ?email=user@example.com&pdCode=ABC123 to pre-fill the form
                 </p>
               </div>
               <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
@@ -284,9 +290,41 @@ export default function EditBookingLinkForm({
                 <span className="text-sm font-medium text-gray-700">Enable</span>
               </label>
             </div>
+
             {form.externalDataEnabled && (
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-900">
-                ℹ️ Make sure to configure your external data API in <a href="/dashboard/settings" className="underline hover:text-blue-700 font-medium">Settings</a> first
+              <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">API Endpoint</label>
+                  <input
+                    type="url"
+                    value={form.externalDataApiEndpoint}
+                    onChange={e => setForm(f => ({ ...f, externalDataApiEndpoint: e.target.value }))}
+                    placeholder="https://api.example.com/users/lookup"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
+                  />
+                  <p className="text-xs text-gray-600 mt-1">Called with your URL query parameters appended</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">API Secret Key</label>
+                  <div className="flex gap-2">
+                    <input
+                      type={showApiKeyInput ? 'text' : 'password'}
+                      value={form.externalDataApiKey}
+                      onChange={e => setForm(f => ({ ...f, externalDataApiKey: e.target.value }))}
+                      placeholder="••••••••••••••••"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowApiKeyInput(!showApiKeyInput)}
+                      className="px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
+                    >
+                      {showApiKeyInput ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 mt-1">Sent as: Authorization: Bearer [key]</p>
+                </div>
               </div>
             )}
           </div>
