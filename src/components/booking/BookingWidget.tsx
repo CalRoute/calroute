@@ -35,6 +35,52 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
   const today = startOfDay(new Date())
   const maxDate = addDays(today, link.maxDaysAhead)
 
+  // Fetch external user data on mount if enabled
+  useEffect(() => {
+    if (!link.externalDataEnabled) return
+
+    const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
+    const queryParams: Record<string, string> = {}
+    searchParams.forEach((value, key) => {
+      queryParams[key] = value
+    })
+
+    // Skip if no query params provided
+    if (Object.keys(queryParams).length === 0) return
+
+    const fetchExternalData = async () => {
+      try {
+        const res = await fetch('/api/external-data/lookup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            hostId: link.ownerId,
+            queryParams,
+          }),
+        })
+
+        if (res.ok) {
+          const { data } = await res.json()
+          // Pre-fill form with external data
+          setForm(f => ({
+            ...f,
+            name: data.name || f.name,
+            email: data.email || f.email,
+            phone: data.phone || f.phone,
+            notes: data.notes || f.notes,
+          }))
+        } else {
+          const err = await res.json()
+          console.warn('[external-data] lookup failed:', err.error)
+        }
+      } catch (err) {
+        console.warn('[external-data] error:', err)
+      }
+    }
+
+    fetchExternalData()
+  }, [link.externalDataEnabled, link.ownerId])
+
   useEffect(() => {
     if (!selectedDate) return
     setLoading(true)
@@ -107,6 +153,12 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
 
     setLoading(true)
     setError(null)
+
+    // Include external data if available
+    const externalData = link.externalDataEnabled
+      ? Object.fromEntries(new URLSearchParams(typeof window !== 'undefined' ? window.location.search : ''))
+      : undefined
+
     const res = await fetch('/api/bookings', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -121,6 +173,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
         customer_phone: link.meetingType === 'phone_call' ? form.phone : undefined,
         language: selectedLanguage || undefined,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        external_data: externalData,
       }),
     })
     const data = await res.json()
