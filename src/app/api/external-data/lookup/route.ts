@@ -2,7 +2,6 @@ export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
-import type { ExternalDataConfig } from '@/types/database'
 
 export async function POST(request: NextRequest) {
   try {
