@@ -25,6 +25,7 @@ export async function PATCH(
     title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
     routingStrategy, maxDaysAhead, isActive, emailTemplates, meetingType,
+    externalDataEnabled, externalDataApiEndpoint, externalDataApiKey,
   } = body
 
   if (!title || !slug) {
@@ -55,6 +56,9 @@ export async function PATCH(
     ...(isActive !== undefined && { isActive }),
     ...(meetingType && { meetingType }),
     ...(emailTemplates && { emailTemplates }),
+    ...(externalDataEnabled !== undefined && { externalDataEnabled }),
+    ...(externalDataApiEndpoint && { externalDataApiEndpoint }),
+    ...(externalDataApiKey && { externalDataApiKey }),
     updatedAt: new Date().toISOString(),
   })
 
