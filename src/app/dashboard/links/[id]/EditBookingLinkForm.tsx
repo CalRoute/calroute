@@ -42,6 +42,7 @@ export default function EditBookingLinkForm({
     externalDataEnabled: link.externalDataEnabled ?? false,
     externalDataApiEndpoint: link.externalDataApiEndpoint ?? '',
     externalDataApiKey: link.externalDataApiKey ?? '',
+    redirectUrlOnBooking: link.redirectUrlOnBooking ?? '',
   })
   const [showApiKeyInput, setShowApiKeyInput] = useState(false)
 
@@ -443,6 +444,27 @@ export default function EditBookingLinkForm({
                 )}
               </div>
             )}
+          </div>
+
+          {/* Post-booking redirect */}
+          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+            <div>
+              <h2 className="font-semibold text-gray-900">Post-booking redirect</h2>
+              <p className="text-sm text-gray-500 mt-0.5">Redirect customers to a success page after booking completes</p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-900 mb-2">Redirect URL (optional)</label>
+              <input
+                type="url"
+                value={form.redirectUrlOnBooking}
+                onChange={e => setForm(f => ({ ...f, redirectUrlOnBooking: e.target.value }))}
+                placeholder="https://example.com/booking-success"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+              />
+              <p className="text-xs text-gray-500 mt-2">
+                Customers will be redirected with <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">?booked=true</span>
+              </p>
+            </div>
           </div>
 
           {/* Routing */}

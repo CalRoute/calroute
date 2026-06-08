@@ -184,6 +184,15 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
       return
     }
     setStep('confirmed')
+
+    // Redirect after 2 seconds if configured
+    if (link.redirectUrlOnBooking) {
+      setTimeout(() => {
+        const url = new URL(link.redirectUrlOnBooking as string)
+        url.searchParams.set('booked', 'true')
+        window.location.href = url.toString()
+      }, 2000)
+    }
   }
 
   // Build calendar grid
