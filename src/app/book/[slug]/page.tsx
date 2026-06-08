@@ -72,6 +72,7 @@ export default async function BookPage({ params }: Props) {
     maxDaysAhead: link.maxDaysAhead ?? 30,
     ownerId: link.ownerId,
     externalDataEnabled: link.externalDataEnabled ?? false,
+    redirectUrlOnBooking: link.redirectUrlOnBooking ?? undefined,
     createdAt: link.createdAt,
   }
 
