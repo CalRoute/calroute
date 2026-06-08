@@ -412,7 +412,7 @@ export default function EditBookingLinkForm({
                       {showApiKeyInput ? 'Hide' : 'Show'}
                     </button>
                   </div>
-                  <p className="text-xs text-gray-600 mt-1">Sent as: Authorization: Bearer [key]</p>
+                  <p className="text-xs text-gray-600 mt-1">Sent as: x-platform-key header</p>
                 </div>
 
                 <button

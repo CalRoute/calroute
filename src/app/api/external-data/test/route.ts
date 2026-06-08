@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     const response = await fetch(testUrl.toString(), {
       headers: {
-        'Authorization': `Bearer ${apiKey}`,
+        'x-platform-key': apiKey,
         'Content-Type': 'application/json',
       },
       signal: controller.signal,

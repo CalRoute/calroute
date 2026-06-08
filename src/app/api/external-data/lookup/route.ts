@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     // Call external API with the config's API key
     const response = await fetch(url, {
       headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
+        'x-platform-key': config.apiKey,
         'Content-Type': 'application/json',
       },
     })
