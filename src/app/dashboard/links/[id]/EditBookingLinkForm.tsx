@@ -54,6 +54,7 @@ export default function EditBookingLinkForm({
   const [removingUid, setRemovingUid] = useState<string | null>(null)
   const [testingApi, setTestingApi] = useState(false)
   const [apiTestResult, setApiTestResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   // Auto-test saved credentials on mount
   useEffect(() => {
@@ -125,6 +126,7 @@ export default function EditBookingLinkForm({
     e.preventDefault()
     setLoading(true)
     setError(null)
+    setSaveSuccess(false)
     try {
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
@@ -133,7 +135,8 @@ export default function EditBookingLinkForm({
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to update link')
-      router.push('/dashboard')
+      setSaveSuccess(true)
+      setTimeout(() => router.push('/dashboard'), 1500)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -222,6 +225,10 @@ export default function EditBookingLinkForm({
 
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>
+          )}
+
+          {saveSuccess && (
+            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">✓ Booking link saved successfully</div>
           )}
 
           {/* Basic info */}
