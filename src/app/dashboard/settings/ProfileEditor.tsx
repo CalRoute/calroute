@@ -39,25 +39,27 @@ export default function ProfileEditor({ savedName, email }: Props) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Display name</label>
-        <input
-          type="text"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-          maxLength={100}
-        />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-900 mb-1">Email</label>
-        <input
-          type="email"
-          value={email}
-          disabled
-          className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-600 cursor-not-allowed"
-        />
-        <p className="text-xs text-gray-500 mt-1">Your email cannot be changed</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">Display name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+            maxLength={100}
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-900 mb-1">Email</label>
+          <input
+            type="email"
+            value={email}
+            disabled
+            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+          />
+          <p className="text-xs text-gray-400 mt-1">Cannot be changed</p>
+        </div>
       </div>
       <button
         onClick={handleSave}
