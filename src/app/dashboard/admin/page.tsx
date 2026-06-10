@@ -173,8 +173,8 @@ export default async function AdminPage() {
     >
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600 mt-2">System overview and user management</p>
+          <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
+          <p className="text-sm text-gray-500 mt-0.5">System overview and user management</p>
         </div>
 
         <AdminDashboardTabs

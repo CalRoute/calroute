@@ -22,92 +22,67 @@ interface Metrics {
   usersWithApiKeys: number
 }
 
+function StatCard({
+  label,
+  value,
+  sub,
+  accent,
+}: {
+  label: string
+  value: string | number
+  sub?: string
+  accent?: string
+}) {
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-5">
+      <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">{label}</p>
+      <p className={`text-3xl font-bold mb-1 ${accent ?? 'text-gray-900'}`}>{value}</p>
+      {sub && <p className="text-xs text-gray-400">{sub}</p>}
+    </div>
+  )
+}
+
 export default function AdminMetrics({ metrics }: { metrics: Metrics }) {
-  const statCards = [
-    {
-      label: 'Total Users',
-      value: metrics.totalUsers,
-      subtitle: `+${metrics.newSignupsToday} today, +${metrics.newSignupsWeek} this week`,
-      color: 'bg-blue-50',
-      icon: '👥',
-    },
-    {
-      label: 'Active Users (30d)',
-      value: metrics.activeUsers,
-      percentage: `${metrics.retentionRate}% retention`,
-      color: 'bg-green-50',
-      icon: '✨',
-    },
-    {
-      label: 'Booking Links',
-      value: metrics.totalLinks,
-      subtitle: `${metrics.personalLinks} personal, ${metrics.teamLinks} team`,
-      color: 'bg-purple-50',
-      icon: '🔗',
-    },
-    {
-      label: 'Total Bookings',
-      value: metrics.totalBookings,
-      subtitle: `${metrics.confirmedBookings} confirmed`,
-      color: 'bg-orange-50',
-      icon: '📅',
-    },
-    {
-      label: 'Cancellation Rate',
-      value: `${metrics.cancelRate}%`,
-      subtitle: `${metrics.cancelledBookings} of ${metrics.confirmedBookings + metrics.cancelledBookings}`,
-      color: 'bg-red-50',
-      icon: '⚠️',
-    },
-    {
-      label: 'Phone Call Bookings',
-      value: metrics.phoneCallBookings,
-      percentage: metrics.confirmedBookings > 0 ? ((metrics.phoneCallBookings / metrics.confirmedBookings) * 100).toFixed(0) : '0',
-      color: 'bg-indigo-50',
-      icon: '📞',
-    },
-    {
-      label: 'Video Bookings',
-      value: metrics.videoCallBookings,
-      percentage: metrics.confirmedBookings > 0 ? ((metrics.videoCallBookings / metrics.confirmedBookings) * 100).toFixed(0) : '0',
-      color: 'bg-cyan-50',
-      icon: '📹',
-    },
-    {
-      label: 'Webhooks Created',
-      value: metrics.totalWebhooks,
-      subtitle: `${metrics.usersWithWebhooks} users adopted`,
-      color: 'bg-yellow-50',
-      icon: '🪝',
-    },
-    {
-      label: 'API Keys Generated',
-      value: metrics.totalApiKeys,
-      subtitle: `${metrics.usersWithApiKeys} users generated`,
-      color: 'bg-pink-50',
-      icon: '🔑',
-    },
-  ]
+  const phonePct = metrics.confirmedBookings > 0
+    ? ((metrics.phoneCallBookings / metrics.confirmedBookings) * 100).toFixed(0)
+    : '0'
+  const videoPct = metrics.confirmedBookings > 0
+    ? ((metrics.videoCallBookings / metrics.confirmedBookings) * 100).toFixed(0)
+    : '0'
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {statCards.map((card) => (
-        <div key={card.label} className={`${card.color} rounded-2xl border border-gray-200 p-5 sm:p-6`}>
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{card.label}</p>
-            </div>
-            <span className="text-2xl">{card.icon}</span>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 mb-1">{card.value}</p>
-          {card.percentage && (
-            <p className="text-xs text-gray-600">{card.percentage}% of total</p>
-          )}
-          {card.subtitle && (
-            <p className="text-xs text-gray-600">{card.subtitle}</p>
-          )}
+    <div className="space-y-4">
+      {/* Users row */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Users</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Total users" value={metrics.totalUsers} sub={`+${metrics.newSignupsMonth} this month`} />
+          <StatCard label="Active (30 d)" value={metrics.activeUsers} sub={`${metrics.retentionRate}% retention`} accent="text-[#0D7377]" />
+          <StatCard label="New today" value={metrics.newSignupsToday} />
+          <StatCard label="New this week" value={metrics.newSignupsWeek} />
         </div>
-      ))}
+      </div>
+
+      {/* Bookings row */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Bookings</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Total bookings" value={metrics.totalBookings} />
+          <StatCard label="Confirmed" value={metrics.confirmedBookings} accent="text-teal-600" />
+          <StatCard label="Cancelled" value={metrics.cancelledBookings} sub={`${metrics.cancelRate}% cancel rate`} accent={Number(metrics.cancelRate) > 20 ? 'text-red-500' : 'text-gray-900'} />
+          <StatCard label="Phone vs video" value={`${phonePct}% / ${videoPct}%`} sub={`${metrics.phoneCallBookings} phone · ${metrics.videoCallBookings} video`} />
+        </div>
+      </div>
+
+      {/* Links & integrations row */}
+      <div>
+        <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Links & integrations</p>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCard label="Booking links" value={metrics.totalLinks} sub={`${metrics.personalLinks} personal · ${metrics.teamLinks} team`} />
+          <StatCard label="Webhooks" value={metrics.totalWebhooks} sub={`${metrics.usersWithWebhooks} users`} />
+          <StatCard label="API keys" value={metrics.totalApiKeys} sub={`${metrics.usersWithApiKeys} users`} />
+        </div>
+      </div>
     </div>
   )
 }
