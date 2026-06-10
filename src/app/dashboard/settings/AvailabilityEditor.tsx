@@ -128,82 +128,72 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-0.5">
       {days.map((day, dayIdx) => (
-        <div key={day.dayOfWeek} className={`rounded-xl px-3 py-2.5 transition-colors ${day.enabled ? 'bg-gray-50' : ''}`}>
-          <div className="flex items-start gap-3">
-            {/* Toggle + day name */}
-            <div className="flex items-center gap-2.5 pt-0.5 min-w-[72px] flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => toggleDay(dayIdx)}
-                className={`w-9 h-5 rounded-full transition-colors flex-shrink-0 relative ${day.enabled ? 'bg-[#0D7377]' : 'bg-gray-200'}`}
-              >
-                <span className={`absolute top-0.5 w-4 h-4 bg-white rounded-full shadow transition-all ${day.enabled ? 'left-[18px]' : 'left-0.5'}`} />
-              </button>
-              <span className={`text-sm font-medium w-7 ${day.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
-                {DAYS[day.dayOfWeek]}
-              </span>
-            </div>
+        <div key={day.dayOfWeek} className="flex items-center gap-3 py-1.5">
+          {/* Toggle */}
+          <button
+            type="button"
+            onClick={() => toggleDay(dayIdx)}
+            className={`w-8 h-4.5 rounded-full transition-colors flex-shrink-0 relative ${day.enabled ? 'bg-[#0D7377]' : 'bg-gray-200'}`}
+            style={{ width: 32, height: 18 }}
+          >
+            <span className={`absolute top-0.5 w-3.5 h-3.5 bg-white rounded-full shadow transition-all ${day.enabled ? 'left-[15px]' : 'left-0.5'}`} />
+          </button>
 
-            {/* Ranges or unavailable */}
-            {!day.enabled ? (
-              <span className="text-sm text-gray-400 pt-0.5">Unavailable</span>
-            ) : (
-              <div className="flex-1 space-y-1.5">
-                {day.ranges.map((range, rangeIdx) => (
-                  <div key={rangeIdx} className="flex items-center gap-1.5">
-                    <input
-                      type="time"
-                      value={range.startTime}
-                      onChange={e => updateRange(dayIdx, rangeIdx, 'startTime', e.target.value)}
-                      className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]/30 focus:border-[#0D7377] min-w-0 bg-white"
-                    />
-                    <span className="text-gray-400 text-xs flex-shrink-0">–</span>
-                    <input
-                      type="time"
-                      value={range.endTime}
-                      onChange={e => updateRange(dayIdx, rangeIdx, 'endTime', e.target.value)}
-                      className="flex-1 border border-gray-200 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]/30 focus:border-[#0D7377] min-w-0 bg-white"
-                    />
-                    {day.ranges.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeRange(dayIdx, rangeIdx)}
-                        className="w-6 h-6 flex items-center justify-center text-gray-400 hover:text-red-500 flex-shrink-0 transition-colors rounded"
-                        title="Remove"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    )}
-                    {day.ranges.length === 1 && <div className="w-6 flex-shrink-0" />}
-                  </div>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => addRange(dayIdx)}
-                  className="text-xs text-[#0D7377] hover:text-[#0a5f63] font-medium transition-colors"
-                >
-                  + Add block
-                </button>
-              </div>
-            )}
-          </div>
+          {/* Day label */}
+          <span className={`text-sm font-medium w-8 flex-shrink-0 ${day.enabled ? 'text-gray-900' : 'text-gray-400'}`}>
+            {DAYS[day.dayOfWeek]}
+          </span>
+
+          {/* Ranges or unavailable */}
+          {!day.enabled ? (
+            <span className="text-sm text-gray-400">Unavailable</span>
+          ) : (
+            <div className="flex flex-wrap items-center gap-1.5 flex-1 min-w-0">
+              {day.ranges.map((range, rangeIdx) => (
+                <div key={rangeIdx} className="flex items-center gap-1">
+                  <input
+                    type="time"
+                    value={range.startTime}
+                    onChange={e => updateRange(dayIdx, rangeIdx, 'startTime', e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#0D7377] bg-white w-28"
+                  />
+                  <span className="text-gray-400 text-xs">–</span>
+                  <input
+                    type="time"
+                    value={range.endTime}
+                    onChange={e => updateRange(dayIdx, rangeIdx, 'endTime', e.target.value)}
+                    className="border border-gray-200 rounded-lg px-2 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-[#0D7377] bg-white w-28"
+                  />
+                  {day.ranges.length > 1 && (
+                    <button type="button" onClick={() => removeRange(dayIdx, rangeIdx)}
+                      className="text-gray-300 hover:text-red-400 transition-colors ml-0.5" title="Remove">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button type="button" onClick={() => addRange(dayIdx)}
+                className="text-xs text-[#0D7377] hover:text-[#0a5f63] font-medium px-1.5 py-1 rounded-lg hover:bg-[#0D7377]/5 transition-colors"
+                title="Add time block"
+              >
+                + Add
+              </button>
+            </div>
+          )}
         </div>
       ))}
 
       {error && <p className="text-sm text-red-600 pt-1">{error}</p>}
 
-      <div className="pt-2">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={saving}
+      <div className="pt-3">
+        <button type="button" onClick={handleSave} disabled={saving}
           className="w-full py-2.5 bg-[#0D7377] text-white rounded-xl text-sm font-medium hover:bg-[#0a5f63] disabled:opacity-50 transition-colors"
         >
-          {saving ? 'Saving…' : saved ? 'Saved!' : 'Save availability'}
+          {saving ? 'Saving…' : saved ? 'Saved ✓' : 'Save availability'}
         </button>
       </div>
     </div>
