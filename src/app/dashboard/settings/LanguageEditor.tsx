@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 
 const LANGUAGES = [
   'English', 'French', 'Spanish', 'Portuguese', 'German',
@@ -10,15 +10,23 @@ const LANGUAGES = [
 
 export default function LanguageEditor({ savedLanguages }: { savedLanguages: string[] }) {
   const [selected, setSelected] = useState<string[]>(savedLanguages)
+  const [open, setOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [])
 
   function toggle(lang: string) {
     setSaved(false)
-    setSelected(prev =>
-      prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang]
-    )
+    setSelected(prev => prev.includes(lang) ? prev.filter(l => l !== lang) : [...prev, lang])
   }
 
   async function handleSave() {
@@ -36,6 +44,7 @@ export default function LanguageEditor({ savedLanguages }: { savedLanguages: str
         throw new Error(data.error ?? 'Failed to save')
       }
       setSaved(true)
+      setOpen(false)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -44,34 +53,66 @@ export default function LanguageEditor({ savedLanguages }: { savedLanguages: str
   }
 
   return (
-    <div className="space-y-4">
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {LANGUAGES.map(lang => {
-          const isSelected = selected.includes(lang)
-          return (
-            <button
-              key={lang}
-              type="button"
-              onClick={() => toggle(lang)}
-              className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border text-sm font-medium transition-colors text-left ${
-                isSelected
-                  ? 'bg-[#0D7377]/10 border-[#0D7377] text-[#0D7377]'
-                  : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              <span className={`w-4 h-4 rounded-full border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
-                isSelected ? 'border-[#0D7377] bg-[#0D7377]' : 'border-gray-300'
-              }`}>
-                {isSelected && (
-                  <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
-                    <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                )}
-              </span>
-              {lang}
-            </button>
-          )
-        })}
+    <div className="space-y-3">
+      <div ref={ref} className="relative">
+        {/* Trigger */}
+        <button
+          type="button"
+          onClick={() => setOpen(o => !o)}
+          className="w-full flex items-center justify-between gap-2 border border-gray-300 rounded-xl px-4 py-2.5 text-sm bg-white hover:border-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+        >
+          <div className="flex flex-wrap gap-1.5 flex-1 min-w-0">
+            {selected.length === 0 ? (
+              <span className="text-gray-400">Select languages…</span>
+            ) : (
+              selected.map(lang => (
+                <span key={lang} className="inline-flex items-center gap-1 bg-[#0D7377]/10 text-[#0D7377] text-xs font-medium px-2 py-0.5 rounded-full">
+                  {lang}
+                  <button
+                    type="button"
+                    onClick={e => { e.stopPropagation(); toggle(lang) }}
+                    className="hover:text-[#0a5f63] leading-none"
+                  >×</button>
+                </span>
+              ))
+            )}
+          </div>
+          <svg className={`w-4 h-4 text-gray-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg overflow-hidden">
+            <div className="max-h-52 overflow-y-auto py-1">
+              {LANGUAGES.map(lang => {
+                const isSelected = selected.includes(lang)
+                return (
+                  <button
+                    key={lang}
+                    type="button"
+                    onClick={() => toggle(lang)}
+                    className={`w-full flex items-center gap-3 px-4 py-2 text-sm text-left transition-colors ${
+                      isSelected ? 'bg-[#0D7377]/5 text-[#0D7377]' : 'text-gray-700 hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
+                      isSelected ? 'border-[#0D7377] bg-[#0D7377]' : 'border-gray-300'
+                    }`}>
+                      {isSelected && (
+                        <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 10 10">
+                          <path d="M2 5l2.5 2.5L8 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      )}
+                    </span>
+                    {lang}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {error && <p className="text-sm text-red-600">{error}</p>}
