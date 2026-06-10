@@ -34,11 +34,11 @@ export default async function IntegrationsPage() {
           <p className="text-gray-600 mt-2">Connect CalRoute with your tools and workflows</p>
         </div>
 
-        {/* Webhooks */}
-        <WebhooksManager webhooks={webhooks} />
-
-        {/* Trello Integration */}
-        <TrelloConnector />
+        {/* Webhooks + Trello side by side */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <WebhooksManager webhooks={webhooks} />
+          <TrelloConnector />
+        </div>
 
         {/* Available via Webhooks */}
         <div>
