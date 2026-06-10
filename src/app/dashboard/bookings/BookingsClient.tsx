@@ -56,24 +56,18 @@ export default function BookingsClient({
   const [showRescheduleDialog, setShowRescheduleDialog] = useState(false)
   const [showConfirmCancel, setShowConfirmCancel] = useState(false)
 
-  const filterBookings = (bookings: Booking[]) => {
-    return bookings.filter(b => {
+  const filterBookings = (bookings: Booking[]) =>
+    bookings.filter(b => {
       const matchesSearch = !searchQuery ||
         b.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         b.customerEmail.toLowerCase().includes(searchQuery.toLowerCase())
-
       const matchesLink = !filterLink || b.linkTitle === filterLink
-
       const matchesDateRange =
         (!dateFrom || parseISO(b.startTime) >= parseISO(dateFrom + 'T00:00:00')) &&
         (!dateTo || parseISO(b.startTime) <= parseISO(dateTo + 'T23:59:59'))
-
-      const matchesMember =
-        !filterMember || b.teamMembers.some(m => m.uid === filterMember)
-
+      const matchesMember = !filterMember || b.teamMembers.some(m => m.uid === filterMember)
       return matchesSearch && matchesLink && matchesDateRange && matchesMember
     })
-  }
 
   const filteredUpcoming = filterStatus === 'all' || filterStatus === 'upcoming' ? filterBookings(upcoming) : []
   const filteredPast = filterStatus === 'all' || filterStatus === 'past' ? filterBookings(past) : []
@@ -86,23 +80,14 @@ export default function BookingsClient({
 
   const hasActiveFilters = searchQuery || filterLink || dateFrom || dateTo || filterMember
 
-  const handleExportFiltered = () => {
-    const allFiltered = [...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]
-    if (allFiltered.length === 0) {
-      showToast('No bookings to export', 'error')
-      return
-    }
-
+  const exportCSV = (bookingsToExport: Booking[]) => {
+    if (bookingsToExport.length === 0) { showToast('No bookings to export', 'error'); return }
     const headers = ['Name', 'Email', 'Date', 'Time', 'Duration (min)', 'Link', 'Status', 'Notes']
-    const rows = allFiltered.map(booking => [
-      booking.customerName,
-      booking.customerEmail,
-      format(parseISO(booking.startTime), 'MMM d yyyy'),
-      format(parseISO(booking.startTime), 'h:mm a'),
-      booking.durationMinutes,
-      booking.linkTitle,
-      booking.status,
-      booking.customerNotes || '',
+    const rows = bookingsToExport.map(b => [
+      b.customerName, b.customerEmail,
+      format(parseISO(b.startTime), 'MMM d yyyy'),
+      format(parseISO(b.startTime), 'h:mm a'),
+      b.durationMinutes, b.linkTitle, b.status, b.customerNotes || '',
     ])
     const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
     const blob = new Blob([csv], { type: 'text/csv' })
@@ -115,14 +100,6 @@ export default function BookingsClient({
     showToast('CSV exported', 'success')
   }
 
-  const handleClearFilters = () => {
-    setSearchQuery('')
-    setFilterLink('')
-    setDateFrom('')
-    setDateTo('')
-    setFilterMember('')
-  }
-
   const confirmBulkCancel = async () => {
     setShowConfirmCancel(false)
     setBulkLoading(true)
@@ -132,22 +109,13 @@ export default function BookingsClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingIds: Array.from(selectedIds) }),
       })
-
-      if (!res.ok) {
-        const err = await res.json()
-        showToast(err.error || 'Failed to cancel bookings', 'error')
-        return
-      }
-
+      if (!res.ok) { const e = await res.json(); showToast(e.error || 'Failed to cancel', 'error'); return }
       const data = await res.json()
       setSelectedIds(new Set())
       showToast(`${data.successful} booking${data.successful !== 1 ? 's' : ''} cancelled`, 'success')
       window.location.reload()
-    } catch (error) {
-      showToast('Error cancelling bookings', 'error')
-    } finally {
-      setBulkLoading(false)
-    }
+    } catch { showToast('Error cancelling bookings', 'error') }
+    finally { setBulkLoading(false) }
   }
 
   const handleBulkReschedule = async (newStartTime: string) => {
@@ -158,335 +126,246 @@ export default function BookingsClient({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ bookingIds: Array.from(selectedIds), newStartTime }),
       })
-
-      if (!res.ok) {
-        const err = await res.json()
-        showToast(err.error || 'Failed to reschedule bookings', 'error')
-        return
-      }
-
+      if (!res.ok) { const e = await res.json(); showToast(e.error || 'Failed to reschedule', 'error'); return }
       const data = await res.json()
       setSelectedIds(new Set())
       setShowRescheduleDialog(false)
       showToast(`${data.successful} booking${data.successful !== 1 ? 's' : ''} rescheduled`, 'success')
       window.location.reload()
-    } catch (error) {
-      showToast('Error rescheduling bookings', 'error')
-    } finally {
-      setBulkLoading(false)
-    }
+    } catch { showToast('Error rescheduling bookings', 'error') }
+    finally { setBulkLoading(false) }
+  }
+
+  const allFiltered = [...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]
+
+  const tabCounts = {
+    all: allFiltered.length,
+    upcoming: filteredUpcoming.length,
+    past: filteredPast.length,
+    cancelled: filteredCancelled.length,
+    rescheduled: filteredRescheduled.length,
   }
 
   return (
-    <div className={`space-y-6 ${selectedIds.size > 0 ? 'pb-32 sm:pb-24' : ''}`}>
-      {/* Search and Filter Bar - Row 1 */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <div className="flex-1 relative">
-          <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search by name or email…"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-          />
+    <div className={`space-y-5 ${selectedIds.size > 0 ? 'pb-28' : ''}`}>
+
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Bookings</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{metrics.total} total</p>
         </div>
-        <select
-          value={filterLink}
-          onChange={(e) => setFilterLink(e.target.value)}
-          className="px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] bg-white"
-        >
-          <option value="">All booking links</option>
-          {linkTitles.map(title => (
-            <option key={title} value={title}>{title}</option>
-          ))}
-        </select>
+        <div className="flex gap-1 bg-white border border-gray-200 rounded-xl p-1">
+          <button
+            onClick={() => setViewMode('list')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-[#0D7377] text-white' : 'text-gray-500 hover:text-gray-800'}`}
+          >
+            List
+          </button>
+          <button
+            onClick={() => setViewMode('week')}
+            className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${viewMode === 'week' ? 'bg-[#0D7377] text-white' : 'text-gray-500 hover:text-gray-800'}`}
+          >
+            Week
+          </button>
+        </div>
       </div>
 
-      {/* Filter Bar - Row 2: Date range + Team member + View toggle */}
-      <div className="flex flex-col gap-3">
-        <div className="flex gap-2 flex-col sm:flex-row">
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-            placeholder="From"
-          />
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-            placeholder="To"
-          />
+      {/* Filters */}
+      <div className="bg-white rounded-2xl border border-gray-200 p-3">
+        <div className="flex flex-wrap gap-2">
+          {/* Search */}
+          <div className="flex-1 min-w-48 relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search by name or email…"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full pl-9 pr-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] bg-gray-50"
+            />
+          </div>
+
+          {/* Link filter */}
           <select
-            value={filterMember}
-            onChange={(e) => setFilterMember(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] bg-white"
+            value={filterLink}
+            onChange={e => setFilterLink(e.target.value)}
+            className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] bg-gray-50"
           >
-            <option value="">All team members</option>
-            {teamMembersForFilter.map(member => (
-              <option key={member.uid} value={member.uid}>{member.name}</option>
-            ))}
+            <option value="">All links</option>
+            {linkTitles.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
-        </div>
-        <div className="flex gap-2 items-center flex-wrap">
-          {hasActiveFilters && (
-            <button
-              onClick={handleClearFilters}
-              className="text-xs text-gray-600 hover:text-gray-900 underline"
+
+          {/* Date range */}
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+            <label className="text-xs text-gray-400 font-medium">From</label>
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="text-sm bg-transparent focus:outline-none text-gray-700"
+            />
+          </div>
+          <div className="flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl px-3 py-2">
+            <label className="text-xs text-gray-400 font-medium">To</label>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="text-sm bg-transparent focus:outline-none text-gray-700"
+            />
+          </div>
+
+          {/* Team member */}
+          {teamMembersForFilter.length > 0 && (
+            <select
+              value={filterMember}
+              onChange={e => setFilterMember(e.target.value)}
+              className="px-3 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] bg-gray-50"
             >
-              Clear filters
-            </button>
+              <option value="">All members</option>
+              {teamMembersForFilter.map(m => <option key={m.uid} value={m.uid}>{m.name}</option>)}
+            </select>
           )}
-          <button
-            onClick={handleExportFiltered}
-            className="px-2 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg whitespace-nowrap"
-          >
-            ⬇ Export
-          </button>
-          <div className="flex gap-1 border border-gray-200 rounded-lg p-1 bg-white ml-auto">
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            {hasActiveFilters && (
+              <button
+                onClick={() => { setSearchQuery(''); setFilterLink(''); setDateFrom(''); setDateTo(''); setFilterMember('') }}
+                className="px-3 py-2 text-xs text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                Clear
+              </button>
+            )}
             <button
-              onClick={() => setViewMode('list')}
-              className={`px-2 py-1 rounded text-xs font-medium ${viewMode === 'list' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
+              onClick={() => exportCSV(allFiltered)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
             >
-              ≡ List
-            </button>
-            <button
-              onClick={() => setViewMode('week')}
-              className={`px-2 py-1 rounded text-xs font-medium ${viewMode === 'week' ? 'bg-[#0D7377]/10 text-[#0D7377]' : 'text-gray-500'}`}
-            >
-              ◻ Week
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" />
+              </svg>
+              Export CSV
             </button>
           </div>
         </div>
       </div>
 
-      {/* Status Tabs */}
-      <div className="flex gap-2 border-b border-gray-200 overflow-x-auto pb-px sm:pb-0">
-        {(['all', 'upcoming', 'past', 'cancelled', 'rescheduled'] as const).map(status => {
-          const counts = {
-            all: filteredUpcoming.length + filteredPast.length + filteredCancelled.length + filteredRescheduled.length,
-            upcoming: filteredUpcoming.length,
-            past: filteredPast.length,
-            cancelled: filteredCancelled.length,
-            rescheduled: filteredRescheduled.length,
-          }
-          return (
+      {/* Tabs + metrics */}
+      <div>
+        <div className="flex gap-1 border-b border-gray-200 overflow-x-auto">
+          {(['all', 'upcoming', 'past', 'cancelled', 'rescheduled'] as const).map(s => (
             <button
-              key={status}
-              onClick={() => setFilterStatus(status)}
-              className={`px-3 sm:px-4 py-3 text-xs sm:text-sm font-medium border-b-2 transition-colors capitalize whitespace-nowrap ${
-                filterStatus === status
-                  ? 'border-[#0D7377] text-[#0D7377]'
-                  : 'border-transparent text-gray-600 hover:text-gray-900'
+              key={s}
+              onClick={() => setFilterStatus(s)}
+              className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors capitalize whitespace-nowrap ${
+                filterStatus === s ? 'border-[#0D7377] text-[#0D7377]' : 'border-transparent text-gray-500 hover:text-gray-800'
               }`}
             >
-              {status} <span className="text-xs text-gray-500">({counts[status]})</span>
+              {s} <span className="text-xs opacity-60">({tabCounts[s]})</span>
             </button>
-          )
-        })}
+          ))}
+        </div>
+        {metrics.total > 0 && (
+          <div className="flex items-center gap-4 pt-2 pb-1">
+            <div className="flex items-center gap-3 text-xs">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-teal-500 inline-block" /><span className="text-gray-500">{confirmedPct}% confirmed</span></span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /><span className="text-gray-500">{cancelledPct}% cancelled</span></span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-amber-400 inline-block" /><span className="text-gray-500">{rescheduledPct}% rescheduled</span></span>
+            </div>
+            <div className="flex h-1.5 flex-1 max-w-32 rounded-full overflow-hidden bg-gray-100">
+              <div className="bg-teal-500 transition-all" style={{ width: `${confirmedPct}%` }} />
+              <div className="bg-red-500 transition-all" style={{ width: `${cancelledPct}%` }} />
+              <div className="bg-amber-400 transition-all" style={{ width: `${rescheduledPct}%` }} />
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Metrics Bar */}
-      {metrics.total > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-200 p-3 sm:p-4 space-y-2">
-          <p className="text-xs font-medium text-gray-500">Response metrics</p>
-          <p className="text-xs sm:text-sm text-gray-700">
-            <span className="font-semibold text-teal-600">{confirmedPct}%</span> confirmed <span className="hidden sm:inline">·</span>
-            <br className="sm:hidden" />
-            <span className="font-semibold text-red-600">{cancelledPct}%</span> cancelled <span className="hidden sm:inline">·</span>
-            <br className="sm:hidden" />
-            <span className="font-semibold text-amber-600">{rescheduledPct}%</span> rescheduled
-          </p>
-          <div className="flex gap-1 h-2 rounded-full overflow-hidden bg-gray-100">
-            <div className="bg-teal-500" style={{ width: `${confirmedPct}%` }} />
-            <div className="bg-red-500" style={{ width: `${cancelledPct}%` }} />
-            <div className="bg-amber-500" style={{ width: `${rescheduledPct}%` }} />
-          </div>
-        </div>
-      )}
-
-      {/* Bulk Action Bar */}
+      {/* Bulk action bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 shadow-lg">
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 flex items-center justify-between gap-3 shadow-lg z-40">
           <p className="text-sm font-medium text-gray-900">{selectedIds.size} selected</p>
-          <div className="flex gap-2 flex-wrap">
-            <button
-              onClick={() => setShowConfirmCancel(true)}
-              disabled={bulkLoading}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg disabled:opacity-50 whitespace-nowrap"
-            >
-              {bulkLoading ? 'Cancelling...' : 'Cancel'}
+          <div className="flex gap-2">
+            <button onClick={() => setShowConfirmCancel(true)} disabled={bulkLoading}
+              className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg disabled:opacity-50">
+              {bulkLoading ? 'Cancelling…' : 'Cancel'}
             </button>
-            <button
-              onClick={() => setShowRescheduleDialog(true)}
-              disabled={bulkLoading}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg disabled:opacity-50 whitespace-nowrap"
-            >
+            <button onClick={() => setShowRescheduleDialog(true)} disabled={bulkLoading}
+              className="px-3 py-1.5 text-xs font-medium text-amber-600 bg-amber-50 hover:bg-amber-100 rounded-lg disabled:opacity-50">
               Reschedule
             </button>
             <button
               onClick={() => {
-                const headers = ['Name', 'Email', 'Date', 'Time', 'Duration (min)', 'Link', 'Status', 'Notes']
-                const allFiltered = [...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]
-                const rows = Array.from(selectedIds).map(id => {
-                  const booking = allFiltered.find(b => b.id === id)
-                  if (!booking) return []
-                  return [
-                    booking.customerName,
-                    booking.customerEmail,
-                    format(parseISO(booking.startTime), 'MMM d yyyy'),
-                    format(parseISO(booking.startTime), 'h:mm a'),
-                    booking.durationMinutes,
-                    booking.linkTitle,
-                    booking.status,
-                    booking.customerNotes || '',
-                  ]
-                })
-                const csv = [headers, ...rows].map(r => r.map(v => `"${v}"`).join(',')).join('\n')
-                const blob = new Blob([csv], { type: 'text/csv' })
-                const url = URL.createObjectURL(blob)
-                const a = document.createElement('a')
-                a.href = url
-                a.download = `bookings-${new Date().toISOString().split('T')[0]}.csv`
-                a.click()
-                URL.revokeObjectURL(url)
-                showToast('CSV exported', 'success')
+                const sel = allFiltered.filter(b => selectedIds.has(b.id))
+                exportCSV(sel)
               }}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg whitespace-nowrap"
-            >
-              CSV
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg">
+              Export CSV
             </button>
-            <button
-              onClick={() => setSelectedIds(new Set())}
-              className="flex-1 sm:flex-none px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg whitespace-nowrap"
-            >
+            <button onClick={() => setSelectedIds(new Set())}
+              className="px-3 py-1.5 text-xs font-medium text-gray-600 hover:text-gray-900 border border-gray-200 rounded-lg">
               Clear
             </button>
           </div>
         </div>
       )}
 
-      {/* Week Calendar View */}
+      {/* Week view */}
       {viewMode === 'week' && (
         <WeekCalendar
-          allBookings={[...filteredUpcoming, ...filteredPast, ...filteredCancelled, ...filteredRescheduled]}
+          allBookings={allFiltered}
           selectedIds={selectedIds}
-          onToggleSelect={(id) => {
-            const newIds = new Set(selectedIds)
-            if (newIds.has(id)) newIds.delete(id)
-            else newIds.add(id)
-            setSelectedIds(newIds)
+          onToggleSelect={id => {
+            const s = new Set(selectedIds)
+            s.has(id) ? s.delete(id) : s.add(id)
+            setSelectedIds(s)
           }}
         />
       )}
 
-      {/* List View */}
+      {/* List view */}
       {viewMode === 'list' && (
-        <>
-          {/* Upcoming */}
-      {(filterStatus === 'all' || filterStatus === 'upcoming') && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Upcoming ({filteredUpcoming.length})</h3>
-          {filteredUpcoming.length === 0 ? (
-            <div className="text-center py-8 text-gray-500 text-sm">
-              {upcoming.length === 0 ? 'No upcoming bookings' : 'No matching bookings'}
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {filteredUpcoming.map(booking => (
+        <div className="space-y-6">
+          {(filterStatus === 'all' || filterStatus === 'upcoming') && (
+            <Section title="Upcoming" count={filteredUpcoming.length} empty="No upcoming bookings" emptyAlt="No matching bookings" hasData={upcoming.length > 0}>
+              {filteredUpcoming.map(b => (
                 <BookingCard
-                  key={booking.id}
-                  booking={booking}
-                  isSelected={selectedIds.has(booking.id)}
+                  key={b.id}
+                  booking={b}
+                  isSelected={selectedIds.has(b.id)}
                   onToggleSelect={() => {
-                    const newIds = new Set(selectedIds)
-                    if (newIds.has(booking.id)) newIds.delete(booking.id)
-                    else newIds.add(booking.id)
-                    setSelectedIds(newIds)
+                    const s = new Set(selectedIds)
+                    s.has(b.id) ? s.delete(b.id) : s.add(b.id)
+                    setSelectedIds(s)
                   }}
                 />
               ))}
-            </div>
+            </Section>
+          )}
+
+          {(filterStatus === 'all' || filterStatus === 'past') && filteredPast.length > 0 && (
+            <Section title="Past" count={filteredPast.length}>
+              {filteredPast.map(b => <BookingCard key={b.id} booking={b} past />)}
+            </Section>
+          )}
+
+          {(filterStatus === 'all' || filterStatus === 'cancelled') && filteredCancelled.length > 0 && (
+            <Section title="Cancelled" count={filteredCancelled.length}>
+              {filteredCancelled.map(b => <BookingCard key={b.id} booking={b} statusBadge="cancelled" />)}
+            </Section>
+          )}
+
+          {(filterStatus === 'all' || filterStatus === 'rescheduled') && filteredRescheduled.length > 0 && (
+            <Section title="Rescheduled" count={filteredRescheduled.length}>
+              {filteredRescheduled.map(b => <BookingCard key={b.id} booking={b} statusBadge="rescheduled" />)}
+            </Section>
           )}
         </div>
       )}
 
-      {/* Past */}
-      {(filterStatus === 'all' || filterStatus === 'past') && filteredPast.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Past ({filteredPast.length})</h3>
-          <div className="space-y-3 opacity-60">
-            {filteredPast.map(booking => (
-              <BookingCard key={booking.id} booking={booking} past />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Cancelled */}
-      {(filterStatus === 'all' || filterStatus === 'cancelled') && filteredCancelled.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Cancelled ({filteredCancelled.length})</h3>
-          <div className="space-y-3 opacity-60">
-            {filteredCancelled.map(booking => (
-              <div key={booking.id} className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium px-2 py-0.5 bg-red-50 text-red-600 rounded-full">Cancelled</span>
-                  </div>
-                  <p className="font-medium text-gray-900 text-sm truncate">{booking.customerName}</p>
-                  <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
-                  <p className="text-xs text-gray-600 mt-1">{booking.linkTitle}</p>
-                  {booking.customerNotes && (
-                    <p className="text-xs text-gray-500 italic mt-1">"{booking.customerNotes}"</p>
-                  )}
-                </div>
-                <div className="text-left sm:text-right flex-shrink-0">
-                  <div className="text-sm font-medium text-gray-900">{format(parseISO(booking.startTime), 'MMM d')}</div>
-                  <div className="text-xs text-gray-500">{format(parseISO(booking.startTime), 'h:mm a')}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Rescheduled */}
-      {(filterStatus === 'all' || filterStatus === 'rescheduled') && filteredRescheduled.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Rescheduled ({filteredRescheduled.length})</h3>
-          <div className="space-y-3 opacity-60">
-            {filteredRescheduled.map(booking => (
-              <div key={booking.id} className="bg-white rounded-xl border border-gray-200 p-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-medium px-2 py-0.5 bg-amber-50 text-amber-600 rounded-full">Rescheduled</span>
-                  </div>
-                  <p className="font-medium text-gray-900 text-sm truncate">{booking.customerName}</p>
-                  <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
-                  <p className="text-xs text-gray-600 mt-1">{booking.linkTitle}</p>
-                  {booking.customerNotes && (
-                    <p className="text-xs text-gray-500 italic mt-1">"{booking.customerNotes}"</p>
-                  )}
-                </div>
-                <div className="text-left sm:text-right flex-shrink-0">
-                  <div className="text-sm font-medium text-gray-900">{format(parseISO(booking.startTime), 'MMM d')}</div>
-                  <div className="text-xs text-gray-500">{format(parseISO(booking.startTime), 'h:mm a')}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-        </>
-      )}
-
-      {/* Reschedule Dialog */}
       {showRescheduleDialog && (
         <RescheduleDialog
           onClose={() => setShowRescheduleDialog(false)}
@@ -495,8 +374,6 @@ export default function BookingsClient({
           count={selectedIds.size}
         />
       )}
-
-      {/* Confirm Cancel Dialog */}
       {showConfirmCancel && (
         <ConfirmDialog
           title="Cancel bookings?"
@@ -512,45 +389,130 @@ export default function BookingsClient({
   )
 }
 
+function Section({
+  title, count, children, empty, emptyAlt, hasData,
+}: {
+  title: string
+  count: number
+  children: React.ReactNode
+  empty?: string
+  emptyAlt?: string
+  hasData?: boolean
+}) {
+  return (
+    <div>
+      <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">{title} · {count}</h3>
+      {count === 0 ? (
+        <p className="text-sm text-gray-400 py-4 text-center">{hasData ? emptyAlt : empty}</p>
+      ) : (
+        <div className="space-y-2">{children}</div>
+      )}
+    </div>
+  )
+}
+
 function BookingCard({
   booking,
   past = false,
+  statusBadge,
   isSelected = false,
   onToggleSelect,
 }: {
   booking: Booking
   past?: boolean
+  statusBadge?: 'cancelled' | 'rescheduled'
   isSelected?: boolean
   onToggleSelect?: () => void
 }) {
+  const initials = booking.customerName
+    .split(' ')
+    .map(w => w[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase()
+
+  const accentColor = statusBadge === 'cancelled'
+    ? 'bg-red-400'
+    : statusBadge === 'rescheduled'
+    ? 'bg-amber-400'
+    : past
+    ? 'bg-gray-200'
+    : 'bg-[#0D7377]'
+
+  const notes = typeof booking.customerNotes === 'string' ? booking.customerNotes : null
+
   return (
-    <div className={`bg-white rounded-xl border ${isSelected ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200'} p-4 ${past ? 'opacity-50' : ''}`}>
-      <div className="flex flex-col sm:flex-row sm:items-start gap-3 mb-3">
-        {onToggleSelect && !past && (
-          <input
-            type="checkbox"
-            checked={isSelected}
-            onChange={onToggleSelect}
-            className="mt-1 w-4 h-4 cursor-pointer"
-          />
-        )}
-        <div className="flex-1 min-w-0">
-          <p className="font-medium text-gray-900 text-sm truncate">{booking.customerName}</p>
-          <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
-          {booking.customerPhone && (
-            <p className="text-xs text-gray-500">📞 {booking.customerPhone}</p>
+    <div className={`bg-white rounded-2xl border overflow-hidden transition-colors ${isSelected ? 'border-[#0D7377] shadow-sm' : 'border-gray-200'} ${past || statusBadge ? 'opacity-60' : ''}`}>
+      <div className="flex">
+        {/* Left accent */}
+        <div className={`w-1 flex-shrink-0 ${accentColor}`} />
+
+        <div className="flex-1 p-4">
+          <div className="flex items-start gap-3">
+            {/* Checkbox */}
+            {onToggleSelect && !past && !statusBadge && (
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={onToggleSelect}
+                className="mt-1 w-4 h-4 rounded cursor-pointer accent-[#0D7377]"
+              />
+            )}
+
+            {/* Avatar */}
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 ${past || statusBadge ? 'bg-gray-100 text-gray-400' : 'bg-[#0D7377]/10 text-[#0D7377]'}`}>
+              {initials}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900 text-sm truncate">{booking.customerName}</p>
+                  <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
+                  {booking.customerPhone && (
+                    <p className="text-xs text-gray-500 mt-0.5">📞 {booking.customerPhone}</p>
+                  )}
+                </div>
+                {/* Date */}
+                <div className="text-right flex-shrink-0">
+                  <div className="text-sm font-bold text-gray-900">{format(parseISO(booking.startTime), 'MMM d')}</div>
+                  <div className="text-xs text-gray-400">{format(parseISO(booking.startTime), 'h:mm a')}</div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <span className="text-xs font-medium text-[#0D7377] bg-[#0D7377]/8 px-2 py-0.5 rounded-full">
+                  {booking.linkTitle}
+                </span>
+                {statusBadge === 'cancelled' && (
+                  <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">Cancelled</span>
+                )}
+                {statusBadge === 'rescheduled' && (
+                  <span className="text-xs font-medium text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">Rescheduled</span>
+                )}
+              </div>
+
+              {notes && (
+                <p className="text-xs text-gray-500 mt-2 line-clamp-2 italic">"{notes}"</p>
+              )}
+            </div>
+          </div>
+
+          {/* Actions */}
+          {!past && !statusBadge && (
+            <div className="mt-3 pl-11">
+              <BookingActions
+                bookingId={booking.id}
+                customerEmail={booking.customerEmail}
+                linkSlug={booking.linkSlug}
+                durationMinutes={booking.durationMinutes}
+                teamMembers={booking.teamMembers}
+              />
+            </div>
           )}
-          <p className="text-xs text-gray-600 mt-1">{booking.linkTitle}</p>
-          {booking.customerNotes && (
-            <p className="text-xs text-gray-500 italic mt-1">"{booking.customerNotes}"</p>
-          )}
-        </div>
-        <div className="text-left sm:text-right flex-shrink-0">
-          <div className="text-sm font-medium text-gray-900">{format(parseISO(booking.startTime), 'MMM d')}</div>
-          <div className="text-xs text-gray-500">{format(parseISO(booking.startTime), 'h:mm a')}</div>
         </div>
       </div>
-      {!past && <BookingActions bookingId={booking.id} customerEmail={booking.customerEmail} linkSlug={booking.linkSlug} durationMinutes={booking.durationMinutes} teamMembers={booking.teamMembers} />}
     </div>
   )
 }
