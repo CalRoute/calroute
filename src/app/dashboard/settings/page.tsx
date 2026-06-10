@@ -97,19 +97,21 @@ export default async function SettingsPage({
           ),
           availability: (
             <>
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-                <div>
-                  <h2 className="font-semibold text-gray-900 text-lg">Weekly availability</h2>
-                  <p className="text-sm text-gray-500 mt-1">Hours you&apos;re available to take bookings. Applies to all links where you&apos;re a host.</p>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 text-lg">Weekly availability</h2>
+                    <p className="text-sm text-gray-500 mt-1">Hours you&apos;re available to take bookings.</p>
+                  </div>
+                  <AvailabilityEditor savedAvailability={savedAvailability} />
                 </div>
-                <AvailabilityEditor savedAvailability={savedAvailability} />
-              </div>
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-                <div>
-                  <h2 className="font-semibold text-gray-900 text-lg">Vacation & blackout dates</h2>
-                  <p className="text-sm text-gray-500 mt-1">Guests won&apos;t be able to book during these periods.</p>
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 text-lg">Vacation & blackout dates</h2>
+                    <p className="text-sm text-gray-500 mt-1">Guests won&apos;t be able to book during these periods.</p>
+                  </div>
+                  <VacationDatesEditor savedDates={blackoutDates} />
                 </div>
-                <VacationDatesEditor savedDates={blackoutDates} />
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
                 <div>
