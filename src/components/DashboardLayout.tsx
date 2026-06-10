@@ -46,6 +46,14 @@ function SettingsIcon({ className = 'w-5 h-5' }: { className?: string }) {
   )
 }
 
+function LinksIcon({ className = 'w-5 h-5' }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+    </svg>
+  )
+}
+
 function IntegrationsIcon({ className = 'w-5 h-5' }: { className?: string }) {
   return (
     <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -69,9 +77,10 @@ export default function DashboardLayout({ children, user, pageTitle, breadcrumbs
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', Icon: DashboardIcon },
     { href: '/dashboard/bookings', label: 'Bookings', Icon: BookingsIcon },
+    { href: '/dashboard/links', label: 'Links', Icon: LinksIcon },
     { href: '/dashboard/team', label: 'Team', Icon: TeamIcon },
-    { href: '/dashboard/settings', label: 'Settings', Icon: SettingsIcon },
     { href: '/dashboard/integrations', label: 'Integrations', Icon: IntegrationsIcon },
+    { href: '/dashboard/settings', label: 'Settings', Icon: SettingsIcon },
     { href: '/dashboard/help', label: 'Help', Icon: HelpIcon },
   ]
 

@@ -3,9 +3,8 @@ export const dynamic = 'force-dynamic'
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
-import { format, parseISO, startOfMonth, endOfMonth, formatDistanceToNow } from 'date-fns'
+import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import DashboardLayout from '@/components/DashboardLayout'
-import TeamAvailabilityWidget from './TeamAvailabilityWidget'
 
 export default async function DashboardPage() {
   const user = await requireUser('/dashboard')
@@ -13,7 +12,6 @@ export default async function DashboardPage() {
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
 
-  // Fetch all bookings for stats
   const bookingsSnap = await adminDb
     .collection('bookings')
     .where('hostId', '==', user.uid)
@@ -23,385 +21,155 @@ export default async function DashboardPage() {
     .filter(d => d.data().status === 'confirmed')
     .map(d => ({ id: d.id, ...d.data() })) as any[]
 
-  // Stats
   const now = new Date()
   const monthStart = startOfMonth(now)
   const monthEnd = endOfMonth(now)
+
   const thisMonthCount = allBookings.filter(b => {
     const d = parseISO(b.startTime)
     return d >= monthStart && d <= monthEnd
   }).length
-
-  const upcomingCount = allBookings.filter(b => b.startTime >= now.toISOString()).length
-
-  let teamSize = 0
-  try {
-    const linksSnap = await adminDb.collection('booking_links').where('ownerId', '==', user.uid).get()
-    const teamMemberSet = new Set<string>()
-    for (const linkDoc of linksSnap.docs) {
-      const hostsSnap = await adminDb.collection('booking_links').doc(linkDoc.id).collection('hosts').get()
-      hostsSnap.docs.forEach(h => {
-        if (h.data().hostId !== user.uid) {
-          teamMemberSet.add(h.data().hostId)
-        }
-      })
-    }
-    teamSize = teamMemberSet.size
-  } catch (e) {
-    console.error('[dashboard] failed to calculate team size:', e)
-  }
-
-  // Links I own — with team member count
-  const linksSnap = await adminDb
-    .collection('booking_links')
-    .where('ownerId', '==', user.uid)
-    .orderBy('createdAt', 'desc')
-    .get()
-
-  const links = await Promise.all(
-    linksSnap.docs.map(async (d) => {
-      const hostsSnap = await adminDb
-        .collection('booking_links').doc(d.id).collection('hosts').get()
-
-      const members = await Promise.all(
-        hostsSnap.docs.map(async (hDoc) => {
-          const hData = hDoc.data()
-          const profileSnap = await adminDb.collection('hosts').doc(hData.hostId).get()
-          const profile = profileSnap.data()
-          return {
-            uid: hData.hostId,
-            name: profile?.name ?? hData.hostId,
-            avatarUrl: profile?.avatarUrl ?? null,
-          }
-        })
-      )
-
-      return { id: d.id, ...d.data(), members } as any
-    })
-  )
-
-  // Links I'm a team member on (but don't own)
-  let teamLinks: any[] = []
-  try {
-    const memberSnap = await adminDb
-      .collectionGroup('hosts')
-      .where('hostId', '==', user.uid)
-      .get()
-
-    teamLinks = (
-      await Promise.all(
-        memberSnap.docs.map(async (doc) => {
-          const linkId = doc.ref.parent.parent?.id
-          if (!linkId) return null
-          const linkSnap = await adminDb.collection('booking_links').doc(linkId).get()
-          if (!linkSnap.exists) return null
-          const data = linkSnap.data()!
-          if (data.ownerId === user.uid) return null
-          const ownerSnap = await adminDb.collection('hosts').doc(data.ownerId).get()
-          return {
-            id: linkSnap.id,
-            ...data,
-            ownerName: ownerSnap.data()?.name ?? data.ownerId,
-          }
-        })
-      )
-    ).filter(Boolean) as any[]
-  } catch (e) {
-    console.error('[dashboard] collectionGroup query failed:', e)
-  }
-
-  function initials(name: string) {
-    return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
-  }
 
   const upcomingBookings = allBookings
     .filter(b => b.startTime >= now.toISOString())
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
     .slice(0, 5)
 
-  // Recent activity feed
-  const activityFeed = allBookings
-    .concat(bookingsSnap.docs
-      .filter(d => d.data().status === 'cancelled' || d.data().status === 'rescheduled')
-      .map(d => ({ id: d.id, ...d.data() })))
-    .sort((a, b) => {
-      const aTime = a.cancelledAt || a.createdAt || a.startTime
-      const bTime = b.cancelledAt || b.createdAt || b.startTime
-      return parseISO(bTime).getTime() - parseISO(aTime).getTime()
-    })
-    .slice(0, 8)
-    .map(b => ({
-      id: b.id,
-      customerName: b.customerName,
-      linkTitle: b.linkTitle || 'Deleted link',
-      status: b.status,
-      timestamp: b.cancelledAt || b.createdAt || b.startTime,
-    }))
+  const upcomingCount = upcomingBookings.length
 
-  // Team members for the availability widget
-  const teamMembers: { uid: string; name: string }[] = []
-  try {
-    const linksSnap2 = await adminDb.collection('booking_links').where('ownerId', '==', user.uid).get()
-    const memberSet = new Map<string, string>()
-    for (const linkDoc of linksSnap2.docs) {
-      const hostsSnap = await adminDb.collection('booking_links').doc(linkDoc.id).collection('hosts').get()
-      for (const hDoc of hostsSnap.docs) {
-        const hData = hDoc.data()
-        if (hData.hostId !== user.uid && !memberSet.has(hData.hostId)) {
-          const profileSnap = await adminDb.collection('hosts').doc(hData.hostId).get()
-          const profile = profileSnap.data()
-          memberSet.set(hData.hostId, profile?.name ?? hData.hostId)
-        }
-      }
-    }
-    memberSet.forEach((name, uid) => {
-      teamMembers.push({ uid, name })
-    })
-  } catch (e) {
-    console.error('[dashboard] failed to load team members:', e)
-  }
+  const linksSnap = await adminDb
+    .collection('booking_links')
+    .where('ownerId', '==', user.uid)
+    .get()
+
+  const linkCount = linksSnap.size
+  const activeCount = linksSnap.docs.filter(d => d.data().isActive).length
 
   return (
     <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Dashboard">
-      <div className="space-y-8">
+      <div className="space-y-6">
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-gray-500 uppercase">This month</p>
-              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{thisMonthCount}</p>
+        {/* Welcome */}
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">
+            {host?.name ? `Hey, ${host.name.split(' ')[0]} 👋` : 'Welcome back'}
+          </h1>
+          <p className="text-sm text-gray-500 mt-1">Here&apos;s what&apos;s happening with your bookings.</p>
+        </div>
+
+        {/* Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">This month</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{thisMonthCount}</p>
+            <p className="text-xs text-gray-400 mt-1">bookings</p>
           </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-gray-500 uppercase">Upcoming</p>
-              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{upcomingCount}</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Upcoming</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{upcomingCount}</p>
+            <p className="text-xs text-gray-400 mt-1">confirmed</p>
           </div>
-
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium text-gray-500 uppercase">Team size</p>
-              <div className="w-9 h-9 bg-[#0D7377]/10 rounded-lg flex items-center justify-center">
-                <svg className="w-4 h-4 text-[#0D7377]" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-                </svg>
-              </div>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{teamSize}</p>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Links</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{linkCount}</p>
+            <p className="text-xs text-gray-400 mt-1">{activeCount} active</p>
+          </div>
+          <div className="bg-white rounded-2xl border border-gray-200 p-5">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">All time</p>
+            <p className="text-3xl font-bold text-gray-900 mt-2">{allBookings.length}</p>
+            <p className="text-xs text-gray-400 mt-1">bookings</p>
           </div>
         </div>
 
-        {/* Upcoming Meetings Widget */}
-        {upcomingBookings.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
-            <h3 className="font-semibold text-gray-900">Next bookings</h3>
-            <div className="space-y-2">
-              {upcomingBookings.map(booking => (
-                <div key={booking.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex-shrink-0 text-sm font-medium text-gray-400 min-w-fit">
-                    {format(parseISO(booking.startTime), 'MMM d, h:mm a')}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-gray-900 truncate">{booking.customerName}</p>
-                    <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+        {/* Next bookings */}
+        <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+            <h2 className="font-semibold text-gray-900">Upcoming bookings</h2>
             <Link href="/dashboard/bookings" className="text-xs text-[#0D7377] hover:underline font-medium">
-              View all bookings →
+              View all →
             </Link>
           </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-          <Link
-            href="/dashboard/links/new"
-            className="bg-[#0D7377] text-white px-4 py-3 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors text-center"
-          >
-            + New link
-          </Link>
-          <Link
-            href="/dashboard/bookings"
-            className="bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
-          >
-            View bookings
-          </Link>
-          <Link
-            href="/dashboard/analytics"
-            className="bg-white border border-gray-200 text-gray-900 px-4 py-3 rounded-xl text-sm font-medium hover:bg-gray-50 transition-colors text-center"
-          >
-            Analytics
-          </Link>
-        </div>
-
-        {/* Team Availability Widget */}
-        {teamMembers.length > 0 && <TeamAvailabilityWidget teamMembers={teamMembers} />}
-
-        {/* Recent Activity Feed */}
-        {activityFeed.length > 0 && (
-          <div className="bg-white rounded-2xl border border-gray-200 p-5 space-y-3">
-            <h3 className="font-semibold text-gray-900">Recent activity</h3>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {activityFeed.map(activity => {
-                const statusColor = activity.status === 'cancelled' ? 'text-red-600' : activity.status === 'rescheduled' ? 'text-amber-600' : 'text-teal-600'
-                const statusIcon = activity.status === 'cancelled' ? '✕' : activity.status === 'rescheduled' ? '↻' : '+'
-                return (
-                  <div key={activity.id} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                    <span className={`flex-shrink-0 text-lg font-semibold ${statusColor}`}>{statusIcon}</span>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-gray-900 truncate">{activity.customerName}</p>
-                      <p className="text-xs text-gray-500 truncate">{activity.linkTitle}</p>
-                    </div>
-                    <p className="text-xs text-gray-400 flex-shrink-0 whitespace-nowrap">
-                      {formatDistanceToNow(parseISO(activity.timestamp), { addSuffix: true })}
-                    </p>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
-        <div className="flex items-center justify-between gap-3">
-          <h2 className="text-2xl font-bold text-gray-900">Manage your booking links</h2>
-          <Link
-            href="/dashboard/links/new"
-            className="bg-[#0D7377] text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs sm:text-sm font-medium hover:bg-[#0a5f63] transition-colors whitespace-nowrap"
-          >
-            + New link
-          </Link>
-        </div>
-
-        {/* My links */}
-        <section>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">My booking links</h3>
-          {links.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200 p-10 sm:p-12 text-center">
-              <div className="text-4xl mb-3">📅</div>
-              <p className="text-gray-500 mb-4 text-sm">No booking links yet.</p>
-              <Link
-                href="/dashboard/links/new"
-                className="inline-flex items-center gap-1 bg-[#0D7377] text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-[#0a5f63] transition-colors"
-              >
-                Create your first link →
+          {upcomingBookings.length === 0 ? (
+            <div className="px-6 py-10 text-center">
+              <p className="text-sm text-gray-500">No upcoming bookings.</p>
+              <Link href="/dashboard/links" className="text-sm text-[#0D7377] hover:underline mt-2 inline-block">
+                Share a booking link to get started →
               </Link>
             </div>
           ) : (
-            <div className="space-y-3">
-              {links.map((link) => (
-                <div key={link.id} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 truncate">{link.title}</h3>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {link.durationMinutes} min · {link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing · {link.meetingType === 'phone_call' ? '📞' : '💻'}
-                      </p>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-[#0D7377] hover:underline mt-1 block truncate"
-                      >
-                        /book/{link.slug}
-                      </a>
-
-                      {/* Team member avatars */}
-                      {link.members.length > 0 && (
-                        <div className="flex items-center gap-2 mt-2.5">
-                          <div className="flex -space-x-1.5">
-                            {link.members.slice(0, 5).map((m: any) => (
-                              <div
-                                key={m.uid}
-                                title={m.name}
-                                className="w-6 h-6 rounded-full border-2 border-white bg-blue-100 text-blue-700 flex items-center justify-center text-[10px] font-semibold overflow-hidden flex-shrink-0"
-                              >
-                                {m.avatarUrl
-                                  ? <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
-                                  : initials(m.name)}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {link.members.length === 1
-                              ? '1 host'
-                              : `${link.members.length} hosts`}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <Link
-                        href={`/dashboard/links/${link.id}`}
-                        className="text-sm text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
-                      >
-                        Edit
-                      </Link>
-                    </div>
+            <div className="divide-y divide-gray-100">
+              {upcomingBookings.map(booking => (
+                <div key={booking.id} className="flex items-center gap-4 px-6 py-4">
+                  <div className="flex-shrink-0 w-14 text-center">
+                    <p className="text-xs font-semibold text-[#0D7377] uppercase">
+                      {format(parseISO(booking.startTime), 'MMM')}
+                    </p>
+                    <p className="text-xl font-bold text-gray-900 leading-none">
+                      {format(parseISO(booking.startTime), 'd')}
+                    </p>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-gray-900 truncate">{booking.customerName}</p>
+                    <p className="text-xs text-gray-500 truncate">{booking.customerEmail}</p>
+                  </div>
+                  <div className="flex-shrink-0 text-right">
+                    <p className="text-sm text-gray-700 font-medium">
+                      {format(parseISO(booking.startTime), 'h:mm a')}
+                    </p>
                   </div>
                 </div>
               ))}
             </div>
           )}
-        </section>
+        </div>
 
-        {/* Team links — links I'm a host on but don't own */}
-        {teamLinks.length > 0 && (
-          <section>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Team links I host</h3>
-            <div className="space-y-3">
-              {teamLinks.map((link) => (
-                <div key={link.id} className="bg-white rounded-2xl border border-gray-200 p-4 sm:p-5">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0 flex-1">
-                      <h3 className="font-medium text-gray-900 truncate">{link.title}</h3>
-                      <p className="text-sm text-gray-500 mt-0.5">
-                        {link.durationMinutes} min · managed by {link.ownerName} · {link.meetingType === 'phone_call' ? '📞' : '💻'}
-                      </p>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-[#0D7377] hover:underline mt-1 block truncate"
-                      >
-                        /book/{link.slug}
-                      </a>
-                    </div>
-                    <span className="text-xs text-gray-400 border border-gray-200 rounded-lg px-2.5 py-1.5 flex-shrink-0">
-                      Host
-                    </span>
-                  </div>
-                </div>
-              ))}
+        {/* Quick actions */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <Link
+            href="/dashboard/links/new"
+            className="flex items-center gap-3 bg-[#0D7377] text-white px-5 py-4 rounded-2xl hover:bg-[#0a5f63] transition-colors group"
+          >
+            <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
             </div>
-            <p className="text-xs text-gray-400 mt-3">
-              Set your availability in{' '}
-              <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link>{' '}
-              so bookings route to you correctly.
-            </p>
-          </section>
-        )}
-
-        {/* Sign out on mobile */}
-        <div className="sm:hidden text-center">
-          <Link href="/api/auth/signout" className="text-sm text-gray-400 hover:text-gray-600">
-            Sign out
+            <div>
+              <p className="font-semibold text-sm">New booking link</p>
+              <p className="text-xs text-white/70">Create and share</p>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/links"
+            className="flex items-center gap-3 bg-white border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Manage links</p>
+              <p className="text-xs text-gray-500">{linkCount} link{linkCount !== 1 ? 's' : ''}</p>
+            </div>
+          </Link>
+          <Link
+            href="/dashboard/settings"
+            className="flex items-center gap-3 bg-white border border-gray-200 text-gray-900 px-5 py-4 rounded-2xl hover:border-gray-300 hover:bg-gray-50 transition-colors"
+          >
+            <div className="w-9 h-9 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+              <svg className="w-5 h-5 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-semibold text-sm">Settings</p>
+              <p className="text-xs text-gray-500">Availability, profile</p>
+            </div>
           </Link>
         </div>
+
       </div>
     </DashboardLayout>
   )

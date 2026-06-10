@@ -212,16 +212,20 @@ export default function EditBookingLinkForm({
   }
 
   return (
-    <main className="min-h-screen bg-gray-50">
-      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <Link href="/dashboard" className="text-gray-400 hover:text-gray-600 text-sm">
-          ← Dashboard
-        </Link>
+    <main className="min-h-screen bg-[#F7F4EF]">
+      <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-2 text-sm">
+        <Link href="/dashboard" className="text-gray-400 hover:text-gray-700">Dashboard</Link>
         <span className="text-gray-300">/</span>
-        <span className="text-sm text-gray-700 font-medium">Edit booking link</span>
+        <Link href="/dashboard/links" className="text-gray-400 hover:text-gray-700">Links</Link>
+        <span className="text-gray-300">/</span>
+        <span className="text-gray-700 font-medium">Edit</span>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-6 py-8">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+        <div className="mb-6">
+          <h1 className="text-xl font-bold text-gray-900">Edit booking link</h1>
+          <p className="text-sm text-gray-500 mt-1">Changes take effect immediately.</p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {error && (
@@ -241,7 +245,7 @@ export default function EditBookingLinkForm({
                 type="text" value={form.teamName}
                 onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
                 placeholder="e.g. Sales Team, Support Team"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
               />
               <p className="text-xs text-gray-400 mt-1">Shown to team members on their dashboard.</p>
             </div>
@@ -251,7 +255,7 @@ export default function EditBookingLinkForm({
                 type="text" required value={form.title}
                 onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="e.g. 30-min intro call"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
               />
               <p className="text-xs text-gray-400 mt-1">Shown to customers on the booking page.</p>
             </div>
@@ -260,7 +264,7 @@ export default function EditBookingLinkForm({
               <textarea
                 rows={2} value={form.description}
                 onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
               />
             </div>
             <div>
@@ -299,7 +303,7 @@ export default function EditBookingLinkForm({
               <div className="flex items-center gap-2">
                 <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
                   onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
                 <span className="text-sm text-gray-500">min gap after each meeting</span>
               </div>
@@ -309,7 +313,7 @@ export default function EditBookingLinkForm({
               <div className="flex items-center gap-2">
                 <input type="number" min={1} max={90} value={form.maxDaysAhead}
                   onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
                 <span className="text-sm text-gray-500">days ahead</span>
               </div>
@@ -480,7 +484,7 @@ export default function EditBookingLinkForm({
                 <button key={opt.value} type="button"
                   onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
                   className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                    form.routingStrategy === opt.value ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    form.routingStrategy === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
                   }`}
                 >
                   <p className="font-medium text-sm text-gray-900">{opt.label}</p>
@@ -492,7 +496,7 @@ export default function EditBookingLinkForm({
 
           <div className="flex gap-3">
             <button type="submit" disabled={loading || !form.title || !form.slug}
-              className="flex-1 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="flex-1 py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Saving…' : 'Save changes'}
             </button>
@@ -535,7 +539,7 @@ export default function EditBookingLinkForm({
                   <select
                     value={host.priority}
                     onChange={e => handlePriorityChange(host.uid, Number(e.target.value))}
-                    className="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                   >
                     {[1, 2, 3, 4, 5].map(p => (
                       <option key={p} value={p}>{p}</option>
@@ -569,12 +573,12 @@ export default function EditBookingLinkForm({
                 placeholder="colleague@company.com"
                 value={addEmail}
                 onChange={e => setAddEmail(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-0"
+                className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
               />
               <select
                 value={addPriority}
                 onChange={e => setAddPriority(Number(e.target.value))}
-                className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] flex-shrink-0"
                 title="Priority"
               >
                 {[1, 2, 3, 4, 5].map(p => (
@@ -584,7 +588,7 @@ export default function EditBookingLinkForm({
               <button
                 type="submit"
                 disabled={addLoading || !addEmail.trim()}
-                className="px-4 py-2.5 bg-blue-600 text-white rounded-xl text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors flex-shrink-0"
+                className="px-4 py-2.5 bg-[#0D7377] text-white rounded-xl text-sm font-medium hover:bg-[#0a5f63] disabled:opacity-50 transition-colors flex-shrink-0"
               >
                 {addLoading ? 'Adding…' : 'Add'}
               </button>
