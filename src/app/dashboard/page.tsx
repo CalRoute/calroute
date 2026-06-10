@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   const upcomingBookings = allBookings
     .filter(b => b.startTime >= now.toISOString())
     .sort((a, b) => a.startTime.localeCompare(b.startTime))
-    .slice(0, 5)
+    .slice(0, 3)
 
   const upcomingCount = upcomingBookings.length
 
