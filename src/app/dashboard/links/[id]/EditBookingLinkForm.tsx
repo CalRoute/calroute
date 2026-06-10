@@ -197,7 +197,7 @@ export default function EditBookingLinkForm({
         <span className="text-gray-700 font-medium truncate max-w-xs">{link.title}</span>
       </nav>
 
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
 
         {/* Header */}
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -245,105 +245,111 @@ export default function EditBookingLinkForm({
         {tab === 'general' && (
           <form onSubmit={handleSubmit} className="space-y-5">
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-              <h2 className="font-semibold text-gray-900">Basic info</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Link title *</label>
-                <input
-                  type="text" required value={form.title}
-                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  placeholder="e.g. 30-min intro call"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
-                <input
-                  type="text" value={form.teamName}
-                  onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
-                  placeholder="e.g. Sales Team"
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  rows={2} value={form.description}
-                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL slug *</label>
-                <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
-                  <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+              {/* Left: Basic info */}
+              <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+                <h2 className="font-semibold text-gray-900">Basic info</h2>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Link title *</label>
                   <input
-                    type="text" required value={form.slug}
-                    onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
-                    className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                    type="text" required value={form.title}
+                    onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                    placeholder="e.g. 30-min intro call"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                   />
                 </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-              <h2 className="font-semibold text-gray-900">Duration & availability</h2>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
-                <div className="flex flex-wrap gap-2">
-                  {DURATIONS.map(d => (
-                    <button key={d} type="button"
-                      onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                        form.durationMinutes === d
-                          ? 'bg-[#0D7377] text-white border-[#0D7377]'
-                          : 'border-gray-300 text-gray-700 hover:border-[#0D7377]/40'
-                      }`}
-                    >{d} min</button>
-                  ))}
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Buffer after meeting</label>
-                  <div className="flex items-center gap-2">
-                    <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
-                      onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                      className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                    />
-                    <span className="text-sm text-gray-500">min</span>
-                  </div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+                  <input
+                    type="text" value={form.teamName}
+                    onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+                    placeholder="e.g. Sales Team"
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                  />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Max days ahead</label>
-                  <div className="flex items-center gap-2">
-                    <input type="number" min={1} max={90} value={form.maxDaysAhead}
-                      onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
-                      className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    rows={3} value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL slug *</label>
+                  <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
+                    <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
+                    <input
+                      type="text" required value={form.slug}
+                      onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
+                      className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
                     />
-                    <span className="text-sm text-gray-500">days</span>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-              <h2 className="font-semibold text-gray-900">Meeting type</h2>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { value: 'google_meet', label: 'Google Meet', desc: 'Video link in calendar' },
-                  { value: 'phone_call', label: 'Phone call', desc: 'Exchange phone numbers' },
-                ].map(opt => (
-                  <button key={opt.value} type="button"
-                    onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
-                    className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                      form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <p className="font-medium text-sm text-gray-900">{opt.label}</p>
-                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                  </button>
-                ))}
+              {/* Right: Duration & availability + Meeting type */}
+              <div className="space-y-5">
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+                  <h2 className="font-semibold text-gray-900">Duration & availability</h2>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
+                    <div className="flex flex-wrap gap-2">
+                      {DURATIONS.map(d => (
+                        <button key={d} type="button"
+                          onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
+                          className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                            form.durationMinutes === d
+                              ? 'bg-[#0D7377] text-white border-[#0D7377]'
+                              : 'border-gray-300 text-gray-700 hover:border-[#0D7377]/40'
+                          }`}
+                        >{d} min</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Buffer after meeting</label>
+                      <div className="flex items-center gap-2">
+                        <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
+                          onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
+                          className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                        />
+                        <span className="text-sm text-gray-500">min</span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Max days ahead</label>
+                      <div className="flex items-center gap-2">
+                        <input type="number" min={1} max={90} value={form.maxDaysAhead}
+                          onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
+                          className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                        />
+                        <span className="text-sm text-gray-500">days</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+                  <h2 className="font-semibold text-gray-900">Meeting type</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { value: 'google_meet', label: 'Google Meet', desc: 'Video link in calendar' },
+                      { value: 'phone_call', label: 'Phone call', desc: 'Exchange phone numbers' },
+                    ].map(opt => (
+                      <button key={opt.value} type="button"
+                        onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
+                        className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                          form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <p className="font-medium text-sm text-gray-900">{opt.label}</p>
+                        <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
 
