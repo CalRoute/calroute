@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
-
+type Tab = 'general' | 'routing' | 'integrations'
 
 type TeamMember = {
   uid: string
@@ -25,9 +25,11 @@ export default function EditBookingLinkForm({
   ownerId: string
 }) {
   const router = useRouter()
+  const [tab, setTab] = useState<Tab>('general')
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [saveSuccess, setSaveSuccess] = useState(false)
 
   const [form, setForm] = useState({
     title: link.title ?? '',
@@ -44,7 +46,7 @@ export default function EditBookingLinkForm({
     externalDataApiKey: link.externalDataApiKey ?? '',
     redirectUrlOnBooking: link.redirectUrlOnBooking ?? '',
   })
-  const [showApiKeyInput, setShowApiKeyInput] = useState(false)
+  const [showApiKey, setShowApiKey] = useState(false)
 
   // Team state
   const [hosts, setHosts] = useState<TeamMember[]>(initialHosts)
@@ -53,37 +55,23 @@ export default function EditBookingLinkForm({
   const [addLoading, setAddLoading] = useState(false)
   const [addError, setAddError] = useState<string | null>(null)
   const [removingUid, setRemovingUid] = useState<string | null>(null)
+
+  // API test state
   const [testingApi, setTestingApi] = useState(false)
   const [apiTestResult, setApiTestResult] = useState<{ status: 'success' | 'error'; message: string } | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
 
-  // Auto-test saved credentials on mount
   useEffect(() => {
-    if (link.externalDataEnabled && link.externalDataApiEndpoint && link.externalDataApiKey && !apiTestResult) {
-      const testCreds = async () => {
-        setTestingApi(true)
-        try {
-          const res = await fetch('/api/external-data/test', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              apiEndpoint: link.externalDataApiEndpoint,
-              apiKey: link.externalDataApiKey,
-            }),
-          })
-          const data = await res.json()
-          if (res.ok) {
-            setApiTestResult({ status: 'success', message: 'API credentials verified ✓' })
-          } else {
-            setApiTestResult({ status: 'error', message: data.error || 'API test failed' })
-          }
-        } catch (err) {
-          setApiTestResult({ status: 'error', message: 'Connection failed' })
-        } finally {
-          setTestingApi(false)
-        }
-      }
-      testCreds()
+    if (link.externalDataEnabled && link.externalDataApiEndpoint && link.externalDataApiKey) {
+      setTestingApi(true)
+      fetch('/api/external-data/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ apiEndpoint: link.externalDataApiEndpoint, apiKey: link.externalDataApiKey }),
+      })
+        .then(r => r.json().then(d => ({ ok: r.ok, d })))
+        .then(({ ok, d }) => setApiTestResult({ status: ok ? 'success' : 'error', message: ok ? 'Connected ✓' : d.error || 'Test failed' }))
+        .catch(() => setApiTestResult({ status: 'error', message: 'Connection failed' }))
+        .finally(() => setTestingApi(false))
     }
   }, [])
 
@@ -92,32 +80,18 @@ export default function EditBookingLinkForm({
   }
 
   async function handleTestApi() {
-    if (!form.externalDataApiEndpoint || !form.externalDataApiKey) {
-      setApiTestResult({ status: 'error', message: 'API endpoint and key are required' })
-      return
-    }
-
     setTestingApi(true)
     setApiTestResult(null)
-
     try {
       const res = await fetch('/api/external-data/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          apiEndpoint: form.externalDataApiEndpoint,
-          apiKey: form.externalDataApiKey,
-        }),
+        body: JSON.stringify({ apiEndpoint: form.externalDataApiEndpoint, apiKey: form.externalDataApiKey }),
       })
-
-      const data = await res.json()
-      if (res.ok) {
-        setApiTestResult({ status: 'success', message: 'API credentials verified ✓' })
-      } else {
-        setApiTestResult({ status: 'error', message: data.error || 'API test failed' })
-      }
-    } catch (err) {
-      setApiTestResult({ status: 'error', message: err instanceof Error ? err.message : 'Connection failed' })
+      const d = await res.json()
+      setApiTestResult({ status: res.ok ? 'success' : 'error', message: res.ok ? 'Connected ✓' : d.error || 'Test failed' })
+    } catch {
+      setApiTestResult({ status: 'error', message: 'Connection failed' })
     } finally {
       setTestingApi(false)
     }
@@ -137,7 +111,7 @@ export default function EditBookingLinkForm({
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to update link')
       setSaveSuccess(true)
-      setTimeout(() => router.push('/dashboard'), 1500)
+      setTimeout(() => router.push('/dashboard/links'), 1500)
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -150,7 +124,7 @@ export default function EditBookingLinkForm({
     setDeleting(true)
     try {
       await fetch(`/api/booking-links/${link.id}`, { method: 'DELETE' })
-      router.push('/dashboard')
+      router.push('/dashboard/links')
     } catch {
       setError('Failed to delete link')
       setDeleting(false)
@@ -180,11 +154,11 @@ export default function EditBookingLinkForm({
   }
 
   async function handleRemoveMember(uid: string) {
-    if (!confirm('Remove this team member from this booking link?')) return
+    if (!confirm('Remove this team member?')) return
     setRemovingUid(uid)
     try {
       const res = await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed to remove member')
+      if (!res.ok) throw new Error('Failed to remove')
       setHosts(prev => prev.filter(h => h.uid !== uid))
     } catch (err: any) {
       setAddError(err.message)
@@ -195,410 +169,394 @@ export default function EditBookingLinkForm({
 
   async function handlePriorityChange(uid: string, priority: number) {
     setHosts(prev => prev.map(h => h.uid === uid ? { ...h, priority } : h))
-    try {
-      await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priority }),
-      })
-    } catch {
-      // silently revert on failure
-      setHosts(prev => prev.map(h => h.uid === uid ? { ...h, priority: hosts.find(x => x.uid === uid)?.priority ?? priority } : h))
-    }
+    await fetch(`/api/booking-links/${link.id}/hosts/${uid}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priority }),
+    })
   }
 
   function initials(name: string) {
     return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  const tabs: { id: Tab; label: string }[] = [
+    { id: 'general', label: 'General' },
+    { id: 'routing', label: 'Routing & Team' },
+    { id: 'integrations', label: 'Integrations' },
+  ]
+
   return (
     <main className="min-h-screen bg-[#F7F4EF]">
+      {/* Top nav */}
       <nav className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-2 text-sm">
         <Link href="/dashboard" className="text-gray-400 hover:text-gray-700">Dashboard</Link>
         <span className="text-gray-300">/</span>
         <Link href="/dashboard/links" className="text-gray-400 hover:text-gray-700">Links</Link>
         <span className="text-gray-300">/</span>
-        <span className="text-gray-700 font-medium">Edit</span>
+        <span className="text-gray-700 font-medium truncate max-w-xs">{link.title}</span>
       </nav>
 
       <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8">
-        <div className="mb-6">
-          <h1 className="text-xl font-bold text-gray-900">Edit booking link</h1>
-          <p className="text-sm text-gray-500 mt-1">Changes take effect immediately.</p>
+
+        {/* Header */}
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">{link.title}</h1>
+            <a
+              href={`${process.env.NEXT_PUBLIC_APP_URL ?? ''}/book/${link.slug}`}
+              target="_blank" rel="noreferrer"
+              className="text-sm text-[#0D7377] hover:underline mt-0.5 inline-block"
+            >
+              /book/{link.slug} ↗
+            </a>
+          </div>
+          <button
+            type="button" onClick={handleDelete} disabled={deleting}
+            className="text-sm text-red-500 hover:text-red-700 border border-red-200 rounded-lg px-3 py-1.5 hover:bg-red-50 transition-colors disabled:opacity-50 flex-shrink-0"
+          >
+            {deleting ? 'Deleting…' : 'Delete link'}
+          </button>
         </div>
-        <form onSubmit={handleSubmit} className="space-y-6">
 
-          {error && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>
-          )}
+        {/* Tabs */}
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6">
+          {tabs.map(t => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => { setTab(t.id); setError(null); setSaveSuccess(false) }}
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                tab === t.id
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
 
-          {saveSuccess && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">✓ Booking link saved successfully</div>
-          )}
+        {/* Alerts */}
+        {error && <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">{error}</div>}
+        {saveSuccess && <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm">✓ Saved successfully</div>}
 
-          {/* Basic info */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Basic info</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
-              <input
-                type="text" value={form.teamName}
-                onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
-                placeholder="e.g. Sales Team, Support Team"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              />
-              <p className="text-xs text-gray-400 mt-1">Shown to team members on their dashboard.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Booking link title *</label>
-              <input
-                type="text" required value={form.title}
-                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                placeholder="e.g. 30-min intro call"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              />
-              <p className="text-xs text-gray-400 mt-1">Shown to customers on the booking page.</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                rows={2} value={form.description}
-                onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Link slug * <span className="text-gray-400 font-normal">— your booking URL</span>
-              </label>
-              <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-blue-500">
-                <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
+        {/* ── Tab: General ── */}
+        {tab === 'general' && (
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Basic info</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Link title *</label>
                 <input
-                  type="text" required value={form.slug}
-                  onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
-                  className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                  type="text" required value={form.title}
+                  onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                  placeholder="e.g. 30-min intro call"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                 />
               </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+                <input
+                  type="text" value={form.teamName}
+                  onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+                  placeholder="e.g. Sales Team"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  rows={2} value={form.description}
+                  onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL slug *</label>
+                <div className="flex items-center border border-gray-300 rounded-xl overflow-hidden focus-within:ring-2 focus-within:ring-[#0D7377]">
+                  <span className="px-3 py-2.5 bg-gray-50 text-gray-400 text-sm border-r border-gray-300 whitespace-nowrap">/book/</span>
+                  <input
+                    type="text" required value={form.slug}
+                    onChange={e => setForm(f => ({ ...f, slug: slugify(e.target.value) }))}
+                    className="flex-1 px-3 py-2.5 text-sm focus:outline-none"
+                  />
+                </div>
+              </div>
             </div>
-          </div>
 
-          {/* Duration & buffers */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <h2 className="font-semibold text-gray-900">Duration & buffers</h2>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
-              <div className="flex flex-wrap gap-2">
-                {DURATIONS.map(d => (
-                  <button key={d} type="button"
-                    onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
-                    className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
-                      form.durationMinutes === d ? 'bg-blue-600 text-white border-blue-600' : 'border-gray-300 text-gray-700 hover:border-blue-400'
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+              <h2 className="font-semibold text-gray-900">Duration & availability</h2>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Meeting duration</label>
+                <div className="flex flex-wrap gap-2">
+                  {DURATIONS.map(d => (
+                    <button key={d} type="button"
+                      onClick={() => setForm(f => ({ ...f, durationMinutes: d }))}
+                      className={`px-4 py-2 rounded-xl text-sm font-medium border transition-colors ${
+                        form.durationMinutes === d
+                          ? 'bg-[#0D7377] text-white border-[#0D7377]'
+                          : 'border-gray-300 text-gray-700 hover:border-[#0D7377]/40'
+                      }`}
+                    >{d} min</button>
+                  ))}
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Buffer after meeting</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
+                      onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
+                      className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                    />
+                    <span className="text-sm text-gray-500">min</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Max days ahead</label>
+                  <div className="flex items-center gap-2">
+                    <input type="number" min={1} max={90} value={form.maxDaysAhead}
+                      onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
+                      className="w-20 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                    />
+                    <span className="text-sm text-gray-500">days</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+              <h2 className="font-semibold text-gray-900">Meeting type</h2>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { value: 'google_meet', label: 'Google Meet', desc: 'Video link in calendar' },
+                  { value: 'phone_call', label: 'Phone call', desc: 'Exchange phone numbers' },
+                ].map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
+                    className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                      form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
                     }`}
-                  >{d} min</button>
+                  >
+                    <p className="font-medium text-sm text-gray-900">{opt.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                  </button>
                 ))}
               </div>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Buffer between meetings (min)</label>
-              <div className="flex items-center gap-2">
-                <input type="number" min={0} max={60} value={form.bufferAfterMinutes}
-                  onChange={e => setForm(f => ({ ...f, bufferAfterMinutes: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-                <span className="text-sm text-gray-500">min gap after each meeting</span>
-              </div>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">How far ahead can customers book?</label>
-              <div className="flex items-center gap-2">
-                <input type="number" min={1} max={90} value={form.maxDaysAhead}
-                  onChange={e => setForm(f => ({ ...f, maxDaysAhead: Number(e.target.value) }))}
-                  className="w-24 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                />
-                <span className="text-sm text-gray-500">days ahead</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Meeting type */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">Meeting type</h2>
-            <p className="text-sm text-gray-500">How will meetings with customers take place?</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {[
-                { value: 'google_meet', label: 'Google Meet', desc: 'Video conference link in calendar' },
-                { value: 'phone_call', label: 'Phone Call', desc: 'Exchange phone numbers' },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
-                  className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                    form.meetingType === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-sm text-gray-900">{opt.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* External Data */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <div>
-              <h2 className="font-semibold text-gray-900">External user data</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Automatically fetch and pre-fill user information from your external systems</p>
-            </div>
-
-            <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">Enable external data fetching</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Visit with ?email=user@example.com&pdCode=ABC123 to pre-fill the form
-                </p>
-              </div>
-              <label className="flex items-center gap-2 cursor-pointer flex-shrink-0">
-                <input
-                  type="checkbox"
-                  checked={form.externalDataEnabled}
-                  onChange={e => setForm(f => ({ ...f, externalDataEnabled: e.target.checked }))}
-                  className="w-5 h-5 rounded border-gray-300 text-[#0D7377] focus:ring-[#0D7377]"
-                />
-                <span className="text-sm font-medium text-gray-700">Enable</span>
-              </label>
-            </div>
-
-            {form.externalDataEnabled && (
-              <div className="space-y-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                {/* Status badge if config exists */}
-                {link.externalDataApiEndpoint && (
-                  <div className="flex items-center justify-between p-3 bg-white rounded-lg border border-blue-200">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">Current Configuration</p>
-                      <p className="text-xs text-gray-500 mt-0.5">{link.externalDataApiEndpoint}</p>
-                    </div>
-                    {apiTestResult && (
-                      <div className={`text-xs font-medium px-2 py-1 rounded ${
-                        apiTestResult.status === 'success'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {apiTestResult.status === 'success' ? '✓ Valid' : '✗ Invalid'}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">API Endpoint</label>
-                  <input
-                    type="url"
-                    value={form.externalDataApiEndpoint}
-                    onChange={e => {
-                      setForm(f => ({ ...f, externalDataApiEndpoint: e.target.value }))
-                      setApiTestResult(null)
-                    }}
-                    placeholder="https://api.example.com/users/lookup"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
-                  />
-                  <p className="text-xs text-gray-600 mt-1">Called with your URL query parameters appended</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-900 mb-2">API Secret Key</label>
-                  <div className="flex gap-2">
-                    <input
-                      type={showApiKeyInput ? 'text' : 'password'}
-                      value={form.externalDataApiKey}
-                      onChange={e => {
-                        setForm(f => ({ ...f, externalDataApiKey: e.target.value }))
-                        setApiTestResult(null)
-                      }}
-                      placeholder="••••••••••••••••"
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0D7377] text-sm"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowApiKeyInput(!showApiKeyInput)}
-                      className="px-3 py-2 text-xs text-gray-600 hover:text-gray-900 border border-gray-300 rounded-lg"
-                    >
-                      {showApiKeyInput ? 'Hide' : 'Show'}
-                    </button>
-                  </div>
-                  <p className="text-xs text-gray-600 mt-1">Sent as: x-platform-key header</p>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handleTestApi}
-                  disabled={testingApi || !form.externalDataApiEndpoint || !form.externalDataApiKey}
-                  className="w-full px-4 py-2 bg-white text-[#0D7377] border border-[#0D7377] rounded-lg hover:bg-[#0D7377]/5 disabled:opacity-50 font-medium text-sm transition-colors"
-                >
-                  {testingApi ? 'Testing...' : 'Test API Credentials'}
-                </button>
-
-                {apiTestResult && (
-                  <div className={`p-3 rounded-lg text-sm flex items-center gap-2 ${
-                    apiTestResult.status === 'success'
-                      ? 'bg-green-100 border border-green-300 text-green-800'
-                      : 'bg-red-100 border border-red-300 text-red-800'
-                  }`}>
-                    <span className="text-lg">{apiTestResult.status === 'success' ? '✓' : '✗'}</span>
-                    {apiTestResult.message}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Post-booking redirect */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-            <div>
-              <h2 className="font-semibold text-gray-900">Post-booking redirect</h2>
-              <p className="text-sm text-gray-500 mt-0.5">Redirect customers to a success page after booking completes</p>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-900 mb-2">Redirect URL (optional)</label>
-              <input
-                type="url"
-                value={form.redirectUrlOnBooking}
-                onChange={e => setForm(f => ({ ...f, redirectUrlOnBooking: e.target.value }))}
-                placeholder="https://example.com/booking-success"
-                className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-              />
-              <p className="text-xs text-gray-500 mt-2">
-                Customers will be redirected with <span className="font-mono bg-gray-100 px-1.5 py-0.5 rounded">?booked=true</span>
-              </p>
-            </div>
-          </div>
-
-          {/* Routing */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
-            <h2 className="font-semibold text-gray-900">Host routing</h2>
-            <p className="text-sm text-gray-500">When multiple hosts are free at the same time, who gets assigned?</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {[
-                { value: 'priority', label: 'Priority', desc: 'Highest-priority host first' },
-                { value: 'round_robin', label: 'Round robin', desc: 'Whoever was booked longest ago' },
-                { value: 'smart', label: 'Smart', desc: 'Same timezone as guest, then priority' },
-              ].map(opt => (
-                <button key={opt.value} type="button"
-                  onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
-                  className={`text-left p-4 rounded-xl border-2 transition-colors ${
-                    form.routingStrategy === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <p className="font-medium text-sm text-gray-900">{opt.label}</p>
-                  <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="flex gap-3">
             <button type="submit" disabled={loading || !form.title || !form.slug}
-              className="flex-1 py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Saving…' : 'Save changes'}
             </button>
-            <button type="button" onClick={handleDelete} disabled={deleting}
-              className="px-6 py-3 text-red-600 border border-red-200 rounded-xl font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
-            >
-              {deleting ? 'Deleting…' : 'Delete'}
-            </button>
-          </div>
-
-        </form>
-
-        {/* Team members — outside the form, saves immediately */}
-        <div className="mt-6 bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
-          <div>
-            <h2 className="font-semibold text-gray-900">Team members</h2>
-            <p className="text-sm text-gray-500 mt-0.5">
-              Bookings are routed to available team members based on the strategy above.
-            </p>
-          </div>
-
-          {/* Current members */}
-          <div className="space-y-2">
-            {hosts.map(host => (
-              <div key={host.uid} className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-0">
-                <div className="w-9 h-9 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                  {host.avatarUrl
-                    ? <img src={host.avatarUrl} alt="" className="w-9 h-9 rounded-full object-cover" />
-                    : initials(host.name)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
-                    {host.name}
-                    {host.uid === ownerId && <span className="ml-1.5 text-xs text-gray-400 font-normal">(you)</span>}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">{host.email}</p>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <label className="text-xs text-gray-500 hidden sm:block">Priority</label>
-                  <select
-                    value={host.priority}
-                    onChange={e => handlePriorityChange(host.uid, Number(e.target.value))}
-                    className="border border-gray-300 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                  >
-                    {[1, 2, 3, 4, 5].map(p => (
-                      <option key={p} value={p}>{p}</option>
-                    ))}
-                  </select>
-                  {host.uid !== ownerId && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveMember(host.uid)}
-                      disabled={removingUid === host.uid}
-                      className="text-xs text-red-500 hover:text-red-700 disabled:opacity-50 px-1"
-                    >
-                      {removingUid === host.uid ? '…' : 'Remove'}
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Add member form */}
-          <form onSubmit={handleAddMember} className="pt-1 space-y-3">
-            <p className="text-xs font-medium text-gray-700">Add a team member</p>
-            {addError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">{addError}</div>
-            )}
-            <div className="flex gap-2">
-              <input
-                type="email"
-                required
-                placeholder="colleague@company.com"
-                value={addEmail}
-                onChange={e => setAddEmail(e.target.value)}
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
-              />
-              <select
-                value={addPriority}
-                onChange={e => setAddPriority(Number(e.target.value))}
-                className="border border-gray-300 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] flex-shrink-0"
-                title="Priority"
-              >
-                {[1, 2, 3, 4, 5].map(p => (
-                  <option key={p} value={p}>P{p}</option>
-                ))}
-              </select>
-              <button
-                type="submit"
-                disabled={addLoading || !addEmail.trim()}
-                className="px-4 py-2.5 bg-[#0D7377] text-white rounded-xl text-sm font-medium hover:bg-[#0a5f63] disabled:opacity-50 transition-colors flex-shrink-0"
-              >
-                {addLoading ? 'Adding…' : 'Add'}
-              </button>
-            </div>
-            <p className="text-xs text-gray-400">
-              They must have a CalRoute account. Each member sets their own hours in their{' '}
-              <a href="/dashboard/settings" className="underline hover:text-gray-600">Settings</a>.
-            </p>
           </form>
-        </div>
+        )}
+
+        {/* ── Tab: Routing & Team ── */}
+        {tab === 'routing' && (
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
+              <h2 className="font-semibold text-gray-900">Host routing</h2>
+              <p className="text-sm text-gray-500">When multiple hosts are free, who gets assigned?</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { value: 'priority', label: 'Priority', desc: 'Highest priority first' },
+                  { value: 'round_robin', label: 'Round robin', desc: 'Booked longest ago' },
+                  { value: 'smart', label: 'Smart', desc: 'Same timezone first' },
+                ].map(opt => (
+                  <button key={opt.value} type="button"
+                    onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
+                    className={`text-left p-4 rounded-xl border-2 transition-colors ${
+                      form.routingStrategy === opt.value ? 'border-[#0D7377] bg-[#0D7377]/5' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <p className="font-medium text-sm text-gray-900">{opt.label}</p>
+                    <p className="text-xs text-gray-500 mt-0.5">{opt.desc}</p>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Saving…' : 'Save routing'}
+            </button>
+
+            {/* Team members — saves instantly, separate from form */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">Team members</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Members are added or removed immediately.</p>
+              </div>
+
+              <div className="space-y-1">
+                {hosts.map(host => (
+                  <div key={host.uid} className="flex items-center gap-3 py-2.5 border-b border-gray-100 last:border-0">
+                    <div className="w-8 h-8 rounded-full bg-[#0D7377]/10 text-[#0D7377] flex items-center justify-center text-xs font-semibold flex-shrink-0 overflow-hidden">
+                      {host.avatarUrl
+                        ? <img src={host.avatarUrl} alt="" className="w-8 h-8 object-cover" />
+                        : initials(host.name)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {host.name}
+                        {host.uid === ownerId && <span className="ml-1.5 text-xs text-gray-400">(you)</span>}
+                      </p>
+                      <p className="text-xs text-gray-500 truncate">{host.email}</p>
+                    </div>
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <select
+                        value={host.priority}
+                        onChange={e => handlePriorityChange(host.uid, Number(e.target.value))}
+                        className="border border-gray-200 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                        title="Priority"
+                      >
+                        {[1, 2, 3, 4, 5].map(p => <option key={p} value={p}>P{p}</option>)}
+                      </select>
+                      {host.uid !== ownerId && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveMember(host.uid)}
+                          disabled={removingUid === host.uid}
+                          className="text-xs text-red-400 hover:text-red-600 disabled:opacity-50"
+                        >
+                          {removingUid === host.uid ? '…' : 'Remove'}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <form onSubmit={handleAddMember} className="space-y-2 pt-1">
+                <p className="text-xs font-medium text-gray-700">Add team member</p>
+                {addError && <div className="p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs">{addError}</div>}
+                <div className="flex gap-2">
+                  <input
+                    type="email" required placeholder="colleague@company.com"
+                    value={addEmail} onChange={e => setAddEmail(e.target.value)}
+                    className="flex-1 border border-gray-300 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] min-w-0"
+                  />
+                  <select
+                    value={addPriority} onChange={e => setAddPriority(Number(e.target.value))}
+                    className="border border-gray-300 rounded-xl px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                    title="Priority"
+                  >
+                    {[1, 2, 3, 4, 5].map(p => <option key={p} value={p}>P{p}</option>)}
+                  </select>
+                  <button type="submit" disabled={addLoading || !addEmail.trim()}
+                    className="px-4 py-2 bg-[#0D7377] text-white rounded-xl text-sm font-medium hover:bg-[#0a5f63] disabled:opacity-50 transition-colors"
+                  >
+                    {addLoading ? '…' : 'Add'}
+                  </button>
+                </div>
+                <p className="text-xs text-gray-400">They must already have a CalRoute account.</p>
+              </form>
+            </div>
+          </form>
+        )}
+
+        {/* ── Tab: Integrations ── */}
+        {tab === 'integrations' && (
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* External data */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">External user data</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Fetch customer data from your system and pre-fill the booking form.</p>
+              </div>
+
+              <label className="flex items-center gap-3 cursor-pointer">
+                <div className={`w-11 h-6 rounded-full transition-colors relative ${form.externalDataEnabled ? 'bg-[#0D7377]' : 'bg-gray-200'}`}>
+                  <div className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${form.externalDataEnabled ? 'translate-x-5' : ''}`} />
+                  <input
+                    type="checkbox" className="sr-only"
+                    checked={form.externalDataEnabled}
+                    onChange={e => setForm(f => ({ ...f, externalDataEnabled: e.target.checked }))}
+                  />
+                </div>
+                <span className="text-sm font-medium text-gray-900">Enable external data fetching</span>
+              </label>
+
+              {form.externalDataEnabled && (
+                <div className="space-y-4 pt-1">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">API Endpoint</label>
+                    <input
+                      type="url" value={form.externalDataApiEndpoint}
+                      onChange={e => { setForm(f => ({ ...f, externalDataApiEndpoint: e.target.value })); setApiTestResult(null) }}
+                      placeholder="https://api.example.com/users/lookup"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Query parameters from the booking URL are forwarded to this endpoint.</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">API Secret Key</label>
+                    <div className="flex gap-2">
+                      <input
+                        type={showApiKey ? 'text' : 'password'} value={form.externalDataApiKey}
+                        onChange={e => { setForm(f => ({ ...f, externalDataApiKey: e.target.value })); setApiTestResult(null) }}
+                        placeholder="••••••••••••••••"
+                        className="flex-1 border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                      />
+                      <button type="button" onClick={() => setShowApiKey(!showApiKey)}
+                        className="px-3 py-2 text-xs text-gray-600 border border-gray-300 rounded-xl hover:bg-gray-50"
+                      >
+                        {showApiKey ? 'Hide' : 'Show'}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Sent as <span className="font-mono bg-gray-100 px-1 rounded">x-platform-key</span> header.</p>
+                  </div>
+                  <div className="flex gap-2 items-center">
+                    <button type="button" onClick={handleTestApi}
+                      disabled={testingApi || !form.externalDataApiEndpoint || !form.externalDataApiKey}
+                      className="px-4 py-2 text-sm font-medium text-[#0D7377] border border-[#0D7377] rounded-xl hover:bg-[#0D7377]/5 disabled:opacity-50 transition-colors"
+                    >
+                      {testingApi ? 'Testing…' : 'Test connection'}
+                    </button>
+                    {apiTestResult && (
+                      <span className={`text-sm font-medium ${apiTestResult.status === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                        {apiTestResult.message}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Post-booking redirect */}
+            <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">Post-booking redirect</h2>
+                <p className="text-sm text-gray-500 mt-0.5">Send customers to a specific page after they book.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Redirect URL</label>
+                <input
+                  type="url" value={form.redirectUrlOnBooking}
+                  onChange={e => setForm(f => ({ ...f, redirectUrlOnBooking: e.target.value }))}
+                  placeholder="https://example.com/thank-you"
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Customers are redirected with <span className="font-mono bg-gray-100 px-1 rounded">?booked=true</span> appended.
+                </p>
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Saving…' : 'Save integrations'}
+            </button>
+          </form>
+        )}
 
       </div>
     </main>
