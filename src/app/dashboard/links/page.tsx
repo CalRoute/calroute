@@ -4,6 +4,7 @@ import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import DashboardLayout from '@/components/DashboardLayout'
+import LinkRowActions from './LinkRowActions'
 
 export default async function LinksPage() {
   const user = await requireUser('/dashboard/links')
@@ -118,9 +119,6 @@ export default async function LinksPage() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2.5 mb-1">
                         <h3 className="font-semibold text-gray-900 truncate">{link.title}</h3>
-                        <span className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${link.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-                          {link.isActive ? 'Active' : 'Inactive'}
-                        </span>
                       </div>
                       <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
                         <span>{link.durationMinutes} min</span>
@@ -159,14 +157,12 @@ export default async function LinksPage() {
                       )}
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-sm text-gray-500 hover:text-gray-900 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap hidden sm:block"
-                      >
-                        Preview
-                      </a>
+                      <LinkRowActions
+                        linkId={link.id}
+                        slug={link.slug}
+                        isActive={link.isActive}
+                        appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
+                      />
                       <Link
                         href={`/dashboard/links/${link.id}`}
                         className="text-sm text-white bg-[#0D7377] hover:bg-[#0a5f63] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
