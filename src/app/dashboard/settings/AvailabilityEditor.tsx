@@ -103,13 +103,6 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
         .filter(d => d.enabled && d.ranges.length > 0)
         .map(d => ({ dayOfWeek: d.dayOfWeek, ranges: mergeRanges(d.ranges) }))
 
-      // Update UI to reflect merged ranges
-      setDays(prev => prev.map(d => {
-        if (!d.enabled) return d
-        const merged = mergeRanges(d.ranges)
-        return merged.length !== d.ranges.length ? { ...d, ranges: merged } : d
-      }))
-
       const res = await fetch('/api/hosts/me/availability', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -119,6 +112,14 @@ export default function AvailabilityEditor({ savedAvailability }: { savedAvailab
         const data = await res.json()
         throw new Error(data.error ?? 'Failed to save')
       }
+
+      // Sync UI to exactly what was saved (merged ranges applied)
+      setDays(prev => prev.map(d => {
+        const saved = availability.find(a => a.dayOfWeek === d.dayOfWeek)
+        if (!saved) return { ...d, enabled: false }
+        return { ...d, enabled: true, ranges: saved.ranges }
+      }))
+
       setSaved(true)
     } catch (err: any) {
       setError(err.message)
