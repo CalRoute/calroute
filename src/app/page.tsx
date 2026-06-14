@@ -7,34 +7,31 @@ export default function HomePage() {
       {/* Nav */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F4EF]/90 backdrop-blur-xl border-b border-[#1a1a1a]/[0.06]">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
-          <svg viewBox="0 0 440 100" className="w-40 h-auto" xmlns="http://www.w3.org/2000/svg">
-            <defs>
-              <linearGradient id="text-route-grad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#10b981" />
-              </linearGradient>
-            </defs>
-            <g transform="translate(16, 12) scale(0.8)">
-              <rect x="0" y="6" width="60" height="62" rx="10" fill="#1e293b" />
-              <path d="M 0 16 L 60 16 L 60 16 C 60 10.47, 55.53 6, 50 6 L 10 6 C 4.47 6, 0 10.47, 0 16 Z" fill="#334155" />
-              <rect x="14" y="0" width="6" height="10" rx="3" fill="#64748b" />
-              <rect x="40" y="0" width="6" height="10" rx="3" fill="#64748b" />
-              <rect x="10" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="25" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="40" y="24" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="10" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="40" y="39" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="10" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="25" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <rect x="40" y="54" width="10" height="10" rx="2.5" fill="#0b0f19" opacity="0.6" />
-              <path d="M -6 35 C 4 35, 12 44, 30 44" fill="none" stroke="url(#text-route-grad)" strokeWidth="5" strokeLinecap="round" />
-              <rect x="25" y="39" width="10" height="10" rx="2.5" fill="none" stroke="#ffffff" strokeWidth="2" />
-              <circle cx="30" cy="44" r="2.5" fill="#ffffff" />
-              <path d="M 30 44 L 68 44" fill="none" stroke="url(#text-route-grad)" strokeWidth="5" strokeLinecap="round" />
-              <path d="M 61 38 L 68 44 L 61 50" fill="none" stroke="url(#text-route-grad)" strokeWidth="4.5" strokeLinecap="round" strokeLinejoin="round" />
-            </g>
-            <text x="96" y="52" fontFamily="system-ui, -apple-system, sans-serif" fontWeight="800" fontSize="34" fill="#1a1a1a" letterSpacing="-0.5">Cal<tspan fill="url(#text-route-grad)">Route</tspan></text>
-          </svg>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <svg viewBox="0 0 100 100" className="w-9 h-9 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <linearGradient id="landingLogoGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#2563eb" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(15, 12)">
+                <rect x="0" y="8" width="70" height="72" rx="14" fill="#1e293b" />
+                <path d="M 0 20 L 70 20 L 70 20 C 70 13.37, 63.63 8, 56 8 L 14 8 C 6.37 8, 0 13.37, 0 20 Z" fill="#334155" />
+                <rect x="16" y="0" width="8" height="14" rx="4" fill="#64748b" />
+                <rect x="46" y="0" width="8" height="14" rx="4" fill="#64748b" />
+                <path d="M 12 56 C 24 56, 26 38, 44 38" fill="none" stroke="url(#landingLogoGrad)" strokeWidth="7" strokeLinecap="round" />
+                <rect x="36" y="30" width="16" height="16" rx="4" fill="none" stroke="#ffffff" strokeWidth="3" />
+                <circle cx="44" cy="38" r="3.5" fill="#ffffff" />
+                <path d="M 44 38 L 78 38" fill="none" stroke="url(#landingLogoGrad)" strokeWidth="7" strokeLinecap="round" />
+                <path d="M 69 30 L 78 38 L 69 46" fill="none" stroke="url(#landingLogoGrad)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
+              </g>
+            </svg>
+            <span className="text-xl font-bold text-[#1a1a1a] group-hover:text-[#0D7377] transition-colors">
+              Cal<span className="text-[#0D7377]">Route</span>
+            </span>
+          </Link>
           <div className="flex items-center gap-8">
             <a href="#features" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Features</a>
             <a href="#how" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">How it works</a>
