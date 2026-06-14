@@ -252,6 +252,11 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
         {link.description && (
           <p className="text-gray-500 text-sm mt-2 leading-relaxed">{link.description}</p>
         )}
+        {(link as any).greeting && (
+          <p className="text-gray-700 text-sm mt-3 leading-relaxed whitespace-pre-line bg-[#0D7377]/5 rounded-xl px-4 py-3 border border-[#0D7377]/10">
+            {(link as any).greeting}
+          </p>
+        )}
       </div>
 
       <div className="space-y-2.5">
@@ -305,6 +310,9 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
           <div className="lg:hidden px-5 py-4 border-b border-gray-100">
             <p className="text-xs font-semibold uppercase tracking-widest text-[#0D7377] mb-0.5">Meeting</p>
             <h1 className="text-base font-bold text-gray-900 leading-snug">{link.title}</h1>
+            {(link as any).greeting && (
+              <p className="text-xs text-gray-600 mt-1.5 leading-relaxed whitespace-pre-line">{(link as any).greeting}</p>
+            )}
             <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
               <span className="flex items-center gap-1">
                 <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>

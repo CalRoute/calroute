@@ -45,6 +45,7 @@ export default function EditBookingLinkForm({
     externalDataApiEndpoint: link.externalDataApiEndpoint ?? '',
     externalDataApiKey: link.externalDataApiKey ?? '',
     redirectUrlOnBooking: link.redirectUrlOnBooking ?? '',
+    greeting: link.greeting ?? '',
   })
   const [showApiKey, setShowApiKey] = useState(false)
 
@@ -274,6 +275,16 @@ export default function EditBookingLinkForm({
                     onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                     className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
                   />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Greeting message</label>
+                  <textarea
+                    rows={3} value={form.greeting}
+                    onChange={e => setForm(f => ({ ...f, greeting: e.target.value }))}
+                    placeholder="e.g. Hey! Looking forward to our chat. Feel free to share a bit about what you'd like to cover."
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-none"
+                  />
+                  <p className="text-xs text-gray-400 mt-1">Shown to visitors at the top of your booking page.</p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Booking URL slug *</label>

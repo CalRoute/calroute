@@ -26,7 +26,7 @@ export async function PATCH(
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
     routingStrategy, maxDaysAhead, isActive, emailTemplates, meetingType,
     externalDataEnabled, externalDataApiEndpoint, externalDataApiKey,
-    redirectUrlOnBooking,
+    redirectUrlOnBooking, greeting,
   } = body
 
   if (!title || !slug) {
@@ -61,6 +61,7 @@ export async function PATCH(
     ...(externalDataApiEndpoint && { externalDataApiEndpoint }),
     ...(externalDataApiKey && { externalDataApiKey }),
     ...(redirectUrlOnBooking && { redirectUrlOnBooking }),
+    greeting: greeting || null,
     updatedAt: new Date().toISOString(),
   })
 

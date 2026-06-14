@@ -46,6 +46,7 @@ export interface BookingLink {
   externalDataApiEndpoint?: string
   externalDataApiKey?: string
   redirectUrlOnBooking?: string
+  greeting?: string
   createdAt: string
 }
 

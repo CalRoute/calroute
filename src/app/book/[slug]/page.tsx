@@ -73,6 +73,7 @@ export default async function BookPage({ params }: Props) {
     ownerId: link.ownerId,
     externalDataEnabled: link.externalDataEnabled ?? false,
     redirectUrlOnBooking: link.redirectUrlOnBooking ?? undefined,
+    greeting: link.greeting ?? null,
     createdAt: link.createdAt,
   }
 
