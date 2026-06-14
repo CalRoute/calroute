@@ -218,7 +218,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
     return (
       <div className="bg-white rounded-3xl shadow-lg overflow-hidden max-w-md mx-auto">
         <div className="h-1.5 bg-[#0D7377]" />
-        <div className="p-8 text-center space-y-4">
+        <div className="p-5 sm:p-8 text-center space-y-4">
           <div className="w-16 h-16 bg-[#0D7377]/10 rounded-full flex items-center justify-center mx-auto">
             <svg className="w-8 h-8 text-[#0D7377]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -294,21 +294,40 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
   )
 
   return (
-    <div className="bg-white rounded-3xl shadow-lg overflow-hidden">
+    <div className="bg-white rounded-2xl sm:rounded-3xl shadow-lg overflow-hidden">
       <div className="h-1 bg-[#0D7377]" />
 
-      <div className="flex flex-col lg:flex-row min-h-[480px]">
+      <div className="flex flex-col lg:flex-row">
 
-        {/* Left: info */}
-        <div className="lg:w-72 xl:w-80 flex-shrink-0 p-6 sm:p-8 lg:border-r border-gray-100">
-          <InfoPanel />
+        {/* Left: info — compact on mobile, full on desktop */}
+        <div className="lg:w-72 xl:w-80 flex-shrink-0 lg:border-r border-gray-100">
+          {/* Mobile: compact horizontal summary */}
+          <div className="lg:hidden px-5 py-4 border-b border-gray-100">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#0D7377] mb-0.5">Meeting</p>
+            <h1 className="text-base font-bold text-gray-900 leading-snug">{link.title}</h1>
+            <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-500">
+              <span className="flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {link.durationMinutes} min
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3" />
+                </svg>
+                {timezone}
+              </span>
+            </div>
+          </div>
+          {/* Desktop: full info panel */}
+          <div className="hidden lg:block p-8">
+            <InfoPanel />
+          </div>
         </div>
 
-        {/* Divider on mobile */}
-        <div className="lg:hidden h-px bg-gray-100 mx-6" />
-
         {/* Right: booking steps */}
-        <div className="flex-1 p-6 sm:p-8">
+        <div className="flex-1 p-4 sm:p-6 lg:p-8">
 
           {error && (
             <div className="mb-5 p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm">
@@ -387,7 +406,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
                       key={dateStr}
                       onClick={() => selectable && setSelectedDate(dateStr)}
                       disabled={!selectable}
-                      className={`aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-all mx-auto w-9 h-9 ${
+                      className={`aspect-square flex items-center justify-center rounded-full text-sm font-medium transition-all mx-auto w-8 h-8 sm:w-9 sm:h-9 ${
                         isSelected
                           ? 'bg-[#0D7377] text-white shadow-md'
                           : selectable
@@ -422,7 +441,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
                   )}
 
                   {!loading && slotsOnDate.length > 0 && (
-                    <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                    <div className="space-y-2 sm:max-h-64 sm:overflow-y-auto pr-1">
                       {slotsOnDate.map(slot => (
                         <button
                           key={slot.start}
