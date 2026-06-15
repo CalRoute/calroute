@@ -86,16 +86,19 @@ export async function POST(request: Request) {
       isActive: doc.data().isActive,
     }))
 
-    // Get recent bookings
+    // Get recent bookings — no orderBy to avoid requiring a composite index
     const bookingsSnap = await adminDb
       .collection('bookings')
       .where('hostId', '==', uid)
-      .orderBy('startTime', 'desc')
-      .limit(20)
+      .limit(50)
       .get()
 
+    const sortedBookingDocs = bookingsSnap.docs
+      .sort((a, b) => (b.data().startTime ?? '').localeCompare(a.data().startTime ?? ''))
+      .slice(0, 20)
+
     const recentBookings = await Promise.all(
-      bookingsSnap.docs.map(async (doc) => {
+      sortedBookingDocs.map(async (doc) => {
         const data = doc.data()
         const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
         return {
