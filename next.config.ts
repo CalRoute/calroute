@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const ADMIN_SUBDOMAIN = process.env.ADMIN_SUBDOMAIN_URL ?? 'https://admin.calroute.me'
+
 const nextConfig: NextConfig = {
   // Proxy Firebase's auth handler through calroute.me so signInWithPopup
   // works. When authDomain is set to calroute.me, the OAuth popup returns
@@ -16,6 +18,22 @@ const nextConfig: NextConfig = {
       destination: 'https://calroute-65ffe.firebaseapp.com/__/firebase/:path*',
     },
   ],
+  // When ADMIN_CUTOVER=true, redirect /dashboard/admin/* to the subdomain.
+  // Leave unset during transition so both paths work.
+  ...(process.env.ADMIN_CUTOVER === 'true' ? {
+    redirects: async () => [
+      {
+        source: '/dashboard/admin',
+        destination: ADMIN_SUBDOMAIN,
+        permanent: false,
+      },
+      {
+        source: '/dashboard/admin/:path*',
+        destination: `${ADMIN_SUBDOMAIN}/dashboard/:path*`,
+        permanent: false,
+      },
+    ],
+  } : {}),
 };
 
 export default nextConfig;
