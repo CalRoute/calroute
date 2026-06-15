@@ -1,11 +1,15 @@
 export const dynamic = 'force-dynamic'
 
 import { NextRequest, NextResponse } from 'next/server'
-import { adminAuth } from '@/lib/firebase/admin'
+import { jwtVerify, createRemoteJWKSet } from 'jose'
+import { adminDb } from '@/lib/firebase/admin'
 import { signAdminSession, sessionCookieOpts } from '@/lib/session'
 
 const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') ?? []
+const ADMIN_EMAILS = process.env.ADMIN_EMAILS?.split(',') ?? []
 const ADMIN_URL = process.env.NEXT_PUBLIC_ADMIN_URL ?? 'https://admin.calroute.me'
+
+const GOOGLE_JWKS = createRemoteJWKSet(new URL('https://www.googleapis.com/oauth2/v3/certs'))
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -31,22 +35,48 @@ export async function GET(request: NextRequest) {
       }),
     })
     const tokens = await tokenRes.json()
-    if (!tokens.id_token) throw new Error('No id_token')
+    if (!tokens.id_token) {
+      console.error('[admin/callback] no id_token in response:', tokens)
+      throw new Error('No id_token')
+    }
 
-    // Verify the Firebase ID token
-    const decoded = await adminAuth.verifyIdToken(tokens.id_token)
+    // Verify Google ID token using Google's public keys
+    const { payload } = await jwtVerify(tokens.id_token, GOOGLE_JWKS, {
+      issuer: ['https://accounts.google.com', 'accounts.google.com'],
+      audience: process.env.GOOGLE_CLIENT_ID!,
+    })
 
-    // Must be an admin UID
-    if (!ADMIN_UIDS.includes(decoded.uid)) {
+    const email = payload.email as string | undefined
+    const googleSub = payload.sub as string // Google's user ID
+
+    if (!email) throw new Error('No email in token')
+
+    // Look up the Firebase UID by email
+    let uid: string
+    let resolvedEmail = email
+
+    // Try to find the user in Firestore by email (hosts collection)
+    const hostsSnap = await adminDb.collection('hosts').where('email', '==', email).limit(1).get()
+    if (!hostsSnap.empty) {
+      uid = hostsSnap.docs[0].id
+    } else {
+      // Fall back to using Google sub as uid identifier
+      uid = googleSub
+    }
+
+    // Authorization check: uid must be in ADMIN_UIDS or email in ADMIN_EMAILS
+    const isAllowed = ADMIN_UIDS.includes(uid) || ADMIN_EMAILS.includes(email)
+    if (!isAllowed) {
+      console.error('[admin/callback] unauthorized uid/email:', uid, email)
       return NextResponse.redirect(`${ADMIN_URL}/login?error=unauthorized`)
     }
 
-    // Issue pre-TOTP session (not yet fully authenticated)
-    const preSessionToken = await signAdminSession(decoded.uid, decoded.email ?? '')
+    // Issue pre-TOTP session
+    const preSessionToken = await signAdminSession(uid, resolvedEmail)
 
     const response = NextResponse.redirect(`${ADMIN_URL}/verify`)
     response.cookies.delete('admin_login_state')
-    response.cookies.set('admin-pre-session', preSessionToken, sessionCookieOpts(60 * 60)) // 1h to complete TOTP
+    response.cookies.set('admin-pre-session', preSessionToken, sessionCookieOpts(60 * 60))
     return response
   } catch (e) {
     console.error('[admin/callback] error:', e)
