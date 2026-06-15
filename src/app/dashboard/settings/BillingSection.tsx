@@ -132,13 +132,22 @@ export default function BillingSection({ linkCount }: Props) {
             </div>
             <div className="flex flex-col gap-2 w-full max-w-xs">
               {isSubscribed ? (
-                <button
-                  onClick={handlePortal}
-                  disabled={checkoutLoading}
-                  className="px-3 py-1.5 text-xs font-medium text-[#0D7377] bg-[#0D7377]/10 hover:bg-[#0D7377]/20 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50"
-                >
-                  {checkoutLoading ? 'Loading...' : 'Manage billing'}
-                </button>
+                <div className="flex flex-col gap-2">
+                  <button
+                    onClick={handlePortal}
+                    disabled={checkoutLoading}
+                    className="px-3 py-1.5 text-xs font-medium text-[#0D7377] bg-[#0D7377]/10 hover:bg-[#0D7377]/20 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50"
+                  >
+                    {checkoutLoading ? 'Loading...' : 'Manage billing & invoices'}
+                  </button>
+                  <button
+                    onClick={handlePortal}
+                    disabled={checkoutLoading}
+                    className="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors whitespace-nowrap disabled:opacity-50"
+                  >
+                    {checkoutLoading ? 'Loading...' : 'Cancel subscription'}
+                  </button>
+                </div>
               ) : (
                 <>
                   <input

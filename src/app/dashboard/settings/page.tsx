@@ -15,6 +15,7 @@ import BillingSection from './BillingSection'
 import ApiKeysSection from './ApiKeysSection'
 import VacationDatesEditor from './VacationDatesEditor'
 import SettingsTabs from './SettingsTabs'
+import DangerZone from './DangerZone'
 
 export default async function SettingsPage({
   searchParams,
@@ -155,6 +156,7 @@ export default async function SettingsPage({
             <>
               <BillingSection linkCount={linkCount} />
               <ApiKeysSection apiKeys={apiKeys} isFree={billing.isFree} />
+              <DangerZone />
             </>
           ),
         }}
