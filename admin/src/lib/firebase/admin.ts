@@ -10,6 +10,7 @@ function getAdminApp(): App {
       clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY
         ?.replace(/^"|"$/g, '')
+        ?.replace(/\\\\n/g, '\n')
         ?.replace(/\\n/g, '\n'),
     }),
   })
