@@ -98,6 +98,17 @@ export async function getCalendarSyncStatus() {
 }
 
 export async function getBookingRescheduleAnalytics() {
+  // Reschedule tracking fields (originalStartTime, rescheduleReason, rescheduledAt)
+  // are not currently written to booking documents. This returns a not-tracked sentinel
+  // so the UI can show an honest empty state rather than zeros.
+  return {
+    tracked: false,
+    totalReschedules: 0,
+    rescheduleRate: '0',
+    reasonBreakdown: {} as Record<string, number>,
+    peakRescheduleHour: null as number | null,
+  }
+
   try {
     const bookingsSnap = await adminDb.collection('bookings').get()
     const bookings = bookingsSnap.docs.map(d => d.data())
@@ -105,15 +116,11 @@ export async function getBookingRescheduleAnalytics() {
     const rescheduleAttempts = bookings.filter(b => b.originalStartTime).length
     const totalBookings = bookings.length
 
-    // Group by reason
     const reasons: Record<string, number> = {}
     bookings.forEach(b => {
-      if (b.rescheduleReason) {
-        reasons[b.rescheduleReason] = (reasons[b.rescheduleReason] || 0) + 1
-      }
+      if (b.rescheduleReason) reasons[b.rescheduleReason] = (reasons[b.rescheduleReason] || 0) + 1
     })
 
-    // Calculate by time of day
     const reschedulesByHour: Record<number, number> = {}
     bookings.forEach(b => {
       if (b.rescheduledAt) {
@@ -123,11 +130,13 @@ export async function getBookingRescheduleAnalytics() {
     })
 
     return {
+      tracked: rescheduleAttempts > 0,
       totalReschedules: rescheduleAttempts,
-      rescheduleRate:
-        totalBookings > 0 ? ((rescheduleAttempts / totalBookings) * 100).toFixed(1) : '0',
+      rescheduleRate: totalBookings > 0 ? ((rescheduleAttempts / totalBookings) * 100).toFixed(1) : '0',
       reasonBreakdown: reasons,
-      peakRescheduleHour: Object.entries(reschedulesByHour).sort((a, b) => b[1] - a[1])[0]?.[0] || 0,
+      peakRescheduleHour: Object.entries(reschedulesByHour).sort((a, b) => b[1] - a[1])[0]?.[0]
+        ? parseInt(Object.entries(reschedulesByHour).sort((a, b) => b[1] - a[1])[0][0])
+        : null,
     }
   } catch (error) {
     console.error('[reschedule] error:', error)

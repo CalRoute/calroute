@@ -1,124 +1,82 @@
 import { getAdminSession } from '@/lib/session'
 import { adminDb } from '@/lib/firebase/admin'
 
-
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getAdminSession()
-  if (!session?.totpVerified) return Response.json({ error: "Unauthorized" }, { status: 401 })
-  const user = { uid: session.uid, email: session.email }
+  if (!session?.totpVerified) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    // Get API metrics from logs for the last 24 hours
     const twentyFourHoursAgo = new Date()
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24)
 
-    const apiLogsSnap = await adminDb.collection('api_logs').get()
-    const allLogs = apiLogsSnap.docs.map(d => d.data())
-
-    const recentLogs = allLogs.filter(log => {
-      const logTime = new Date(log.timestamp || new Date())
-      return logTime >= twentyFourHoursAgo
-    })
-
-    // Calculate API metrics
-    let totalRequests = recentLogs.length
-    let errorCount = 0
-    let totalResponseTime = 0
-    let cacheHits = 0
-
-    recentLogs.forEach(log => {
-      if (log.status >= 400) {
-        errorCount++
-      }
-      totalResponseTime += log.responseTime || 0
-      if (log.cached) {
-        cacheHits++
-      }
-    })
-
-    const avgResponseTime = totalRequests > 0 ? Math.round(totalResponseTime / totalRequests) : 100
-    const cacheHitRate = totalRequests > 0 ? Math.round((cacheHits / totalRequests) * 100) : 0
-    const errorRate = totalRequests > 0 ? (errorCount / totalRequests) * 100 : 0
-
-    // Get delivery logs for email queue status
-    const deliveryLogsSnap = await adminDb.collection('delivery_logs').get()
-    const deliveryLogs = deliveryLogsSnap.docs.map(d => d.data())
-
-    // Count pending emails (emails from last 1 hour that haven't succeeded)
-    const oneHourAgo = new Date()
-    oneHourAgo.setHours(oneHourAgo.getHours() - 1)
-
-    const pendingEmails = deliveryLogs.filter(log => {
-      const logTime = new Date(log.timestamp)
-      return log.type === 'email' && log.status === 'pending' && logTime >= oneHourAgo
-    }).length
-
-    // Get database size estimate from collections
-    const collections = ['hosts', 'bookings', 'booking_links', 'delivery_logs', 'api_logs']
-    let totalDocuments = 0
-    let databasePercentage = 0
-
-    await Promise.all(
-      collections.map(async (col) => {
-        const snap = await adminDb.collection(col).get()
-        totalDocuments += snap.size
-      })
+    // Count webhook failures from error_logs (written by webhooks.ts on delivery failure)
+    const errorLogsSnap = await adminDb.collection('error_logs').get()
+    const allErrorLogs = errorLogsSnap.docs.map(d => d.data())
+    const webhookFailures = allErrorLogs.filter(l =>
+      l.errorType === 'webhook_delivery' && new Date(l.timestamp) >= twentyFourHoursAgo
     )
 
-    // Estimate database size (assuming ~1KB per document on average)
-    const estimatedSize = totalDocuments * 1 // in KB
-    const firestoreLimit = 1048576 // 1GB in KB
-    databasePercentage = Math.min(100, Math.round((estimatedSize / firestoreLimit) * 100))
+    const totalWebhooksSnap = await adminDb.collectionGroup('webhooks').get()
+    const totalWebhooks = totalWebhooksSnap.size
+    const failedWebhooks = webhookFailures.length
+    const failureRate = totalWebhooks > 0 ? ((failedWebhooks / totalWebhooks) * 100).toFixed(1) : '0.0'
 
-    // Calculate uptime (assume 99.5% base + adjust by error rate)
-    const baseUptime = 99.5
-    const uptimeAdjustment = Math.min(0.5, (errorRate / 100) * 2)
-    const uptime = (baseUptime - uptimeAdjustment).toFixed(1)
+    // api_metrics is the correct collection (written by api-metrics.ts trackApiRequest)
+    const apiMetricsSnap = await adminDb.collection('api_metrics').get()
+    const allMetrics = apiMetricsSnap.docs.map(d => d.data())
 
-    // Get DB query time estimate from recent logs
-    let totalQueryTime = 0
-    let queryCount = 0
-    recentLogs.forEach(log => {
-      if (log.dbQueryTime) {
-        totalQueryTime += log.dbQueryTime
-        queryCount++
-      }
+    const recentMetrics = allMetrics.filter(m => {
+      const t = new Date(m.timestamp || 0)
+      return t >= twentyFourHoursAgo
     })
-    const avgQueryTime = queryCount > 0 ? Math.round(totalQueryTime / queryCount) : 30
+
+    const totalRequests = recentMetrics.length
+    const errorCount = recentMetrics.filter(m => (m.statusCode ?? m.status ?? 0) >= 400).length
+    const totalResponseTime = recentMetrics.reduce((sum, m) => sum + (m.responseTime ?? m.duration ?? 0), 0)
+    const cacheHits = recentMetrics.filter(m => m.cached).length
+
+    const avgResponseTime = totalRequests > 0 ? Math.round(totalResponseTime / totalRequests) : 0
+    const cacheHitRate = totalRequests > 0 ? Math.round((cacheHits / totalRequests) * 100) : 0
+    const errorRate = totalRequests > 0 ? ((errorCount / totalRequests) * 100) : 0
+
+    // Pending emails from delivery_logs
+    const oneHourAgo = new Date()
+    oneHourAgo.setHours(oneHourAgo.getHours() - 1)
+    const deliverySnap = await adminDb.collection('delivery_logs').get()
+    const pendingEmails = deliverySnap.docs
+      .map(d => d.data())
+      .filter(l => l.type === 'email' && l.status === 'pending' && new Date(l.timestamp) >= oneHourAgo)
+      .length
+
+    // DB size estimate from doc count
+    const collections = ['hosts', 'bookings', 'booking_links', 'delivery_logs', 'api_metrics']
+    let totalDocuments = 0
+    await Promise.all(collections.map(async col => {
+      const snap = await adminDb.collection(col).get()
+      totalDocuments += snap.size
+    }))
+    const databasePercentage = Math.min(100, Math.round((totalDocuments / 1048576) * 100))
 
     return Response.json({
-      webhooks: {
-        totalWebhooks: 0,
-        failedWebhooks: 0,
-        failureRate: '0.0',
-      },
-      api: {
-        totalRequests,
-        errorCount,
-        errorRate: errorRate.toFixed(2),
-        avgResponseTime,
-      },
+      webhooks: { totalWebhooks, failedWebhooks, failureRate },
+      api: { totalRequests, errorCount, errorRate: errorRate.toFixed(2), avgResponseTime },
       performance: {
-        cacheHitRate,
-        avgResponseTime,
-        dbQueryTime: avgQueryTime,
-        uptime: parseFloat(uptime),
+        cacheHitRate: totalRequests > 0 ? cacheHitRate : null,
+        avgResponseTime: totalRequests > 0 ? avgResponseTime : null,
+        uptime: null,
       },
       capacity: {
         databaseSize: databasePercentage,
-        apiRateLimit: 5, // 5% of typical rate limit
+        apiRateLimit: null,
       },
       health: {
-        status: errorRate < 1 ? '✅ Healthy' : '⚠️ Issues detected',
-        calendarAPI: '✅ Connected',
-        emailService: pendingEmails === 0 ? '✅ Active' : '⚠️ Pending emails',
-        database: '✅ Healthy',
+        status: totalRequests === 0 ? '— No API data yet' : errorRate < 1 ? '✅ Healthy' : '⚠️ Issues detected',
+        emailService: pendingEmails === 0 ? '✅ No pending emails' : `⚠️ ${pendingEmails} pending`,
+        database: '✅ Connected',
         firebase: '✅ Connected',
+        calendarAPI: '— Not monitored',
       },
-      emailQueue: {
-        pending: pendingEmails,
-        empty: pendingEmails === 0,
-      },
+      emailQueue: { pending: pendingEmails, empty: pendingEmails === 0 },
     })
   } catch (error) {
     console.error('[admin] system health stats error:', error)

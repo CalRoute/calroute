@@ -1,15 +1,34 @@
 import { getAdminSession } from '@/lib/session'
-import { getAccountStatuses, disableUserAccount, enableUserAccount, deleteUserAccount } from '@/lib/account-management'
+import { adminDb, adminAuth } from '@/lib/firebase/admin'
 
-
-export async function GET(request: Request) {
+export async function GET() {
   const session = await getAdminSession()
-  if (!session?.totpVerified) return Response.json({ error: "Unauthorized" }, { status: 401 })
-  const user = { uid: session.uid, email: session.email }
+  if (!session?.totpVerified) return Response.json({ error: 'Unauthorized' }, { status: 401 })
 
   try {
-    const statuses = await getAccountStatuses()
-    return Response.json({ statuses })
+    const [hostsSnap, accountsSnap] = await Promise.all([
+      adminDb.collection('hosts').get(),
+      adminDb.collection('user_accounts').get(),
+    ])
+
+    // Build a map of manually-actioned statuses
+    const actionedMap = new Map(accountsSnap.docs.map(d => [d.id, d.data()]))
+
+    const accounts = hostsSnap.docs.map(doc => {
+      const host = doc.data()
+      const actioned = actionedMap.get(doc.id)
+      return {
+        uid: doc.id,
+        email: host.email || '',
+        name: host.name || '',
+        createdAt: host.createdAt || '',
+        status: (actioned?.status ?? 'active') as 'active' | 'disabled' | 'deleted',
+        disabledAt: actioned?.disabledAt,
+        disabledReason: actioned?.disabledReason,
+      }
+    })
+
+    return Response.json({ accounts })
   } catch (error) {
     console.error('[accounts] error:', error)
     return Response.json({ error: 'Failed to fetch accounts' }, { status: 500 })

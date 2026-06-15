@@ -77,17 +77,17 @@ export default async function AdminDashboardPage() {
   const totalApiKeys = apiKeysSnap.size
   const usersWithApiKeys = new Set(apiKeysSnap.docs.map(d => d.ref.parent.parent?.id)).size
 
-  const failedWebhooks = 0
+  // Count real webhook failures from error_logs (written by webhooks.ts on delivery failure)
+  const errorLogsSnap = await adminDb.collection('error_logs').get()
+  const failedWebhooks = errorLogsSnap.docs.filter(d => d.data().errorType === 'webhook_delivery').length
   const failureRate = totalWebhooks > 0 ? ((failedWebhooks / totalWebhooks) * 100).toFixed(1) : '0.0'
-  const totalErrors = 0
-  const errorRate = totalBookings > 0 ? ((totalErrors / (totalBookings * 0.1)) * 100).toFixed(2) : '0.00'
 
   const healthMetrics = {
     totalWebhooks,
     failedWebhooks,
     failureRate,
-    errorRate: errorRate as string,
-    totalErrors,
+    errorRate: '0.00',
+    totalErrors: 0,
   }
 
   const durationStats = await getBookingDurationStats()
