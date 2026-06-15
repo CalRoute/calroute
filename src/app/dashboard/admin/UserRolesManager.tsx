@@ -73,31 +73,29 @@ export default function UserRolesManager() {
         {users.map(user => {
           const currentRole = ROLES.find(r => r.value === user.role)
           return (
-            <div key={user.uid} className="p-4 border border-gray-200 rounded-lg flex items-center justify-between">
+            <div key={user.uid} className="p-4 border border-gray-200 rounded-lg flex items-center gap-3">
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+                <p className="font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
                 <p className="text-xs text-gray-400 mt-1">
                   Joined {new Date(user.createdAt).toLocaleDateString()}
                 </p>
               </div>
 
-              <div className="flex items-center gap-3 ml-4">
-                <select
-                  value={user.role}
-                  onChange={(e) => updateRole(user.uid, e.target.value)}
-                  disabled={updating === user.uid}
-                  className={`px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0D7377] ${
-                    currentRole?.color || ''
-                  } disabled:opacity-50`}
-                >
-                  {ROLES.map(role => (
-                    <option key={role.value} value={role.value}>
-                      {role.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <select
+                value={user.role}
+                onChange={(e) => updateRole(user.uid, e.target.value)}
+                disabled={updating === user.uid}
+                className={`flex-shrink-0 px-3 py-1.5 text-sm rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#0D7377] ${
+                  currentRole?.color || ''
+                } disabled:opacity-50`}
+              >
+                {ROLES.map(role => (
+                  <option key={role.value} value={role.value}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
             </div>
           )
         })}

@@ -67,14 +67,14 @@ export default function AccountManagement() {
         <p className="text-sm text-gray-600 mt-1">Manage user accounts and access</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <p className="text-sm text-green-700">Active Accounts</p>
-          <p className="text-3xl font-bold text-green-900">{activeAccounts.length}</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Active Accounts</p>
+          <p className="text-3xl font-bold text-teal-600">{activeAccounts.length}</p>
         </div>
-        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-          <p className="text-sm text-red-700">Disabled Accounts</p>
-          <p className="text-3xl font-bold text-red-900">{disabledAccounts.length}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Disabled Accounts</p>
+          <p className="text-3xl font-bold text-gray-900">{disabledAccounts.length}</p>
         </div>
       </div>
 
@@ -84,26 +84,28 @@ export default function AccountManagement() {
           <p className="text-sm text-gray-500">No active accounts</p>
         ) : (
           activeAccounts.map(account => (
-            <div key={account.uid} className="p-4 border border-gray-200 rounded-lg flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">{account.name}</p>
-                <p className="text-sm text-gray-600">{account.email}</p>
-              </div>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => performAction(account.uid, 'disable')}
-                  disabled={actioningId === account.uid}
-                  className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
-                >
-                  Disable
-                </button>
-                <button
-                  onClick={() => performAction(account.uid, 'delete')}
-                  disabled={actioningId === account.uid}
-                  className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
-                >
-                  Delete
-                </button>
+            <div key={account.uid} className="p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{account.name}</p>
+                  <p className="text-sm text-gray-600 truncate">{account.email}</p>
+                </div>
+                <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => performAction(account.uid, 'disable')}
+                    disabled={actioningId === account.uid}
+                    className="px-3 py-1 text-sm bg-red-100 text-red-700 rounded hover:bg-red-200 disabled:opacity-50"
+                  >
+                    Disable
+                  </button>
+                  <button
+                    onClick={() => performAction(account.uid, 'delete')}
+                    disabled={actioningId === account.uid}
+                    className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+                  >
+                    Delete
+                  </button>
+                </div>
               </div>
             </div>
           ))
@@ -116,18 +118,20 @@ export default function AccountManagement() {
           <p className="text-sm text-gray-500">No disabled accounts</p>
         ) : (
           disabledAccounts.map(account => (
-            <div key={account.uid} className="p-4 border border-orange-200 bg-orange-50 rounded-lg flex items-center justify-between">
-              <div>
-                <p className="font-medium text-gray-900">{account.name}</p>
-                <p className="text-sm text-gray-600">{account.email}</p>
+            <div key={account.uid} className="p-4 border border-gray-200 rounded-lg">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium text-gray-900 truncate">{account.name}</p>
+                  <p className="text-sm text-gray-600 truncate">{account.email}</p>
+                </div>
+                <button
+                  onClick={() => performAction(account.uid, 'enable')}
+                  disabled={actioningId === account.uid}
+                  className="flex-shrink-0 px-3 py-1 text-sm bg-teal-100 text-teal-700 rounded hover:bg-teal-200 disabled:opacity-50"
+                >
+                  Re-enable
+                </button>
               </div>
-              <button
-                onClick={() => performAction(account.uid, 'enable')}
-                disabled={actioningId === account.uid}
-                className="px-3 py-1 text-sm bg-green-100 text-green-700 rounded hover:bg-green-200 disabled:opacity-50"
-              >
-                Re-enable
-              </button>
             </div>
           ))
         )}

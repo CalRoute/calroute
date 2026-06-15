@@ -53,18 +53,18 @@ export default function EmailTemplateAnalytics() {
         <p className="text-sm text-gray-600 mt-1">Email engagement metrics across all templates (last 30 days)</p>
       </div>
 
-      <div className="grid grid-cols-3 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <p className="text-sm text-blue-700">Total Sent</p>
-          <p className="text-2xl font-bold text-blue-900">{totalSent.toLocaleString()}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total Sent</p>
+          <p className="text-2xl font-bold text-gray-900">{totalSent.toLocaleString()}</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <p className="text-sm text-green-700">Avg Open Rate</p>
-          <p className="text-2xl font-bold text-green-900">{averageOpenRate}%</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Avg Open Rate</p>
+          <p className="text-2xl font-bold text-teal-600">{averageOpenRate}%</p>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <p className="text-sm text-purple-700">Avg Click Rate</p>
-          <p className="text-2xl font-bold text-purple-900">{averageClickRate}%</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200 col-span-2 sm:col-span-1">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Avg Click Rate</p>
+          <p className="text-2xl font-bold text-gray-900">{averageClickRate}%</p>
         </div>
       </div>
 

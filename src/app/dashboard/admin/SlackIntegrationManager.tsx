@@ -54,18 +54,18 @@ export default function SlackIntegrationManager() {
       </div>
 
       {stats && (
-        <div className="grid grid-cols-3 gap-4">
-          <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-            <p className="text-sm text-purple-700">Total</p>
-            <p className="text-2xl font-bold text-purple-900">{stats.totalIntegrations}</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.totalIntegrations}</p>
           </div>
-          <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-            <p className="text-sm text-green-700">Active</p>
-            <p className="text-2xl font-bold text-green-900">{stats.activeIntegrations}</p>
+          <div className="bg-white rounded-xl p-4 border border-gray-200">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Active</p>
+            <p className="text-2xl font-bold text-teal-600">{stats.activeIntegrations}</p>
           </div>
-          <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-            <p className="text-sm text-blue-700">With Notifications</p>
-            <p className="text-2xl font-bold text-blue-900">{stats.notificationsEnabled}</p>
+          <div className="bg-white rounded-xl p-4 border border-gray-200 col-span-2 sm:col-span-1">
+            <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">With Notifications</p>
+            <p className="text-2xl font-bold text-gray-900">{stats.notificationsEnabled}</p>
           </div>
         </div>
       )}

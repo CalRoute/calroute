@@ -57,22 +57,22 @@ export default function EmailDeliveryMonitoring() {
         <p className="text-sm text-gray-600 mt-1">Email delivery status and performance (last 30 days)</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
-          <p className="text-sm text-blue-700">Total Sent</p>
-          <p className="text-2xl font-bold text-blue-900">{totalSent.toLocaleString()}</p>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Total Sent</p>
+          <p className="text-2xl font-bold text-gray-900">{totalSent.toLocaleString()}</p>
         </div>
-        <div className="bg-green-50 rounded-lg p-4 border border-green-200">
-          <p className="text-sm text-green-700">Delivered</p>
-          <p className="text-2xl font-bold text-green-900">{totalDelivered.toLocaleString()}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Delivered</p>
+          <p className="text-2xl font-bold text-teal-600">{totalDelivered.toLocaleString()}</p>
         </div>
-        <div className="bg-red-50 rounded-lg p-4 border border-red-200">
-          <p className="text-sm text-red-700">Failed</p>
-          <p className="text-2xl font-bold text-red-900">{totalFailed.toLocaleString()}</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Failed</p>
+          <p className="text-2xl font-bold text-red-500">{totalFailed.toLocaleString()}</p>
         </div>
-        <div className="bg-purple-50 rounded-lg p-4 border border-purple-200">
-          <p className="text-sm text-purple-700">Success Rate</p>
-          <p className="text-2xl font-bold text-purple-900">{overallRate}%</p>
+        <div className="bg-white rounded-xl p-4 border border-gray-200">
+          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Success Rate</p>
+          <p className="text-2xl font-bold text-gray-900">{overallRate}%</p>
         </div>
       </div>
 
