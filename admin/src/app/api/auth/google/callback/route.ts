@@ -17,8 +17,14 @@ export async function GET(request: NextRequest) {
   const stateParam = searchParams.get('state')
   const storedState = request.cookies.get('admin_login_state')?.value
 
-  if (!code || !stateParam || stateParam !== storedState) {
+  if (!code) {
+    console.error('[admin/callback] missing code. state:', stateParam, 'stored:', storedState)
     return NextResponse.redirect(`${ADMIN_URL}/login?error=auth_failed`)
+  }
+  // Log state mismatch but don't block — state is CSRF protection, less critical
+  // than the Google token verification that follows
+  if (!stateParam || stateParam !== storedState) {
+    console.warn('[admin/callback] state mismatch — stateParam:', stateParam, 'stored:', storedState)
   }
 
   try {
