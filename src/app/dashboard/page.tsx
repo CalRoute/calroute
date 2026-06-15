@@ -5,6 +5,7 @@ import { adminDb } from '@/lib/firebase/admin'
 import Link from 'next/link'
 import { format, parseISO, startOfMonth, endOfMonth } from 'date-fns'
 import DashboardLayout from '@/components/DashboardLayout'
+import OnboardingChecklist from './OnboardingChecklist'
 
 export default async function DashboardPage() {
   const user = await requireUser('/dashboard')
@@ -45,6 +46,14 @@ export default async function DashboardPage() {
   const linkCount = linksSnap.size
   const activeCount = linksSnap.docs.filter(d => d.data().isActive).length
 
+  // Derive onboarding state from real data — no separate Firestore collection needed
+  const calendarsSnap = await adminDb
+    .collection('hosts').doc(user.uid).collection('connected_calendars').limit(1).get()
+  const hasCalendar = !calendarsSnap.empty
+  const hasLink = linkCount > 0
+  const hasBooking = allBookings.length > 0
+  const isNewUser = !hasCalendar && !hasLink
+
   return (
     <DashboardLayout user={{ email: user.email, name: host?.name }} pageTitle="Dashboard">
       <div className="space-y-6">
@@ -56,6 +65,11 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-sm text-gray-500 mt-1">Here&apos;s what&apos;s happening with your bookings.</p>
         </div>
+
+        {/* Onboarding checklist — shown until user has a calendar + link */}
+        {(!hasCalendar || !hasLink) && (
+          <OnboardingChecklist hasCalendar={hasCalendar} hasLink={hasLink} />
+        )}
 
         {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
