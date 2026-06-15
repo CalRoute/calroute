@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { getUserBilling } from '@/lib/billing/get-user-billing'
 import crypto from 'crypto'
 
 function generateRandomKey(length: number = 32): string {
@@ -53,6 +54,15 @@ export async function POST(request: NextRequest) {
 
     if (!name || typeof name !== 'string') {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
+    }
+
+    // API keys require a paid plan
+    const billing = await getUserBilling(user.uid)
+    if (billing.isFree) {
+      return NextResponse.json(
+        { error: 'API keys are available on the Solo and Team plans. Upgrade to access this feature.' },
+        { status: 403 }
+      )
     }
 
     // Check limit

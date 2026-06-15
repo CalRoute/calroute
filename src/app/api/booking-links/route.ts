@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminDb } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
+import { getUserBilling } from '@/lib/billing/get-user-billing'
 
 export async function POST(request: NextRequest) {
   const user = await getServerUser()
@@ -18,6 +19,22 @@ export async function POST(request: NextRequest) {
 
   if (!title || !slug) {
     return NextResponse.json({ error: 'Title and slug are required' }, { status: 400 })
+  }
+
+  // Enforce free tier: 1 booking link max
+  const billing = await getUserBilling(uid)
+  if (billing.isFree) {
+    const existingLinks = await adminDb
+      .collection('booking_links')
+      .where('ownerId', '==', uid)
+      .limit(1)
+      .get()
+    if (!existingLinks.empty) {
+      return NextResponse.json(
+        { error: 'Free plan is limited to 1 booking link. Upgrade to Solo to create unlimited links.' },
+        { status: 403 }
+      )
+    }
   }
 
   // Check slug is unique

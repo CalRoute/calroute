@@ -2,15 +2,45 @@ export const dynamic = 'force-dynamic'
 
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { getUserBilling } from '@/lib/billing/get-user-billing'
 import DashboardLayout from '@/components/DashboardLayout'
+import Link from 'next/link'
 import { startOfMonth, startOfYear, endOfYear, parseISO, format } from 'date-fns'
 import AnalyticsExportButton from './AnalyticsExportButton'
 
 export default async function AnalyticsPage() {
   const user = await requireUser('/dashboard/analytics')
 
-  const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
+  const [hostSnap, billing] = await Promise.all([
+    adminDb.collection('hosts').doc(user.uid).get(),
+    getUserBilling(user.uid),
+  ])
   const host = hostSnap.data()
+
+  if (billing.isFree) {
+    return (
+      <DashboardLayout
+        user={{ email: user.email, name: host?.name }}
+        breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Analytics' }]}
+      >
+        <div className="flex flex-col items-center justify-center py-24 text-center px-4">
+          <div className="w-14 h-14 bg-[#0D7377]/10 rounded-2xl flex items-center justify-center mx-auto mb-5">
+            <svg className="w-7 h-7 text-[#0D7377]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Analytics is a paid feature</h2>
+          <p className="text-sm text-gray-500 max-w-sm mb-6">Upgrade to Solo to unlock booking trends, peak hours, link performance, and more.</p>
+          <Link
+            href="/dashboard/settings?tab=billing"
+            className="inline-flex items-center gap-2 bg-[#0D7377] text-white font-semibold text-sm px-6 py-2.5 rounded-xl hover:bg-[#0a5f63] transition-colors"
+          >
+            Upgrade to Solo →
+          </Link>
+        </div>
+      </DashboardLayout>
+    )
+  }
 
   // Fetch all bookings
   const bookingsSnap = await adminDb
