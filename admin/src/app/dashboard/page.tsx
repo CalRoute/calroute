@@ -2,111 +2,155 @@ export const dynamic = 'force-dynamic'
 
 import { requireAdminSession } from '@/lib/session'
 import { adminDb } from '@/lib/firebase/admin'
-import { format, parseISO, subDays } from 'date-fns'
+import AdminDashboardTabs from './AdminDashboardTabs'
+import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
+import { getErrorStats } from '@/lib/error-logger'
+import { getDeliveryStats } from '@/lib/delivery-tracker'
 
 export default async function AdminDashboardPage() {
   await requireAdminSession()
 
-  const [hostsSnap, bookingsSnap, linksSnap] = await Promise.all([
-    adminDb.collection('hosts').get(),
-    adminDb.collection('bookings').get(),
-    adminDb.collection('booking_links').get(),
-  ])
-
+  const hostsSnap = await adminDb.collection('hosts').get()
   const totalUsers = hostsSnap.size
+
+  const bookingsSnap = await adminDb.collection('bookings').get()
   const totalBookings = bookingsSnap.size
-  const confirmed = bookingsSnap.docs.filter(d => d.data().status === 'confirmed').length
-  const cancelled = bookingsSnap.docs.filter(d => d.data().status === 'cancelled').length
+
+  const confirmedBookings = bookingsSnap.docs.filter(d => d.data().status === 'confirmed').length
+  const cancelledBookings = bookingsSnap.docs.filter(d => d.data().status === 'cancelled').length
+
+  const linksSnap = await adminDb.collection('booking_links').get()
   const totalLinks = linksSnap.size
 
-  const thirtyDaysAgo = subDays(new Date(), 30).toISOString()
-  const activeUsers = new Set(
-    bookingsSnap.docs
-      .filter(d => d.data().startTime >= thirtyDaysAgo)
-      .map(d => d.data().hostId)
-  ).size
+  const linksByMemberCount = await Promise.all(
+    linksSnap.docs.map(async (linkDoc) => {
+      const hostsSnap = await adminDb
+        .collection('booking_links')
+        .doc(linkDoc.id)
+        .collection('hosts')
+        .get()
+      return hostsSnap.size
+    })
+  )
+  const personalLinks = linksByMemberCount.filter(c => c === 1).length
+  const teamLinks = linksByMemberCount.filter(c => c > 1).length
 
-  const recentBookings = bookingsSnap.docs
-    .map(d => ({ id: d.id, ...d.data() }))
-    .filter((b: any) => b.status === 'confirmed')
-    .sort((a: any, b: any) => b.startTime?.localeCompare(a.startTime ?? '') ?? 0)
-    .slice(0, 10) as any[]
+  const thirtyDaysAgo = new Date()
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+  const thirtyDaysAgoStr = thirtyDaysAgo.toISOString()
 
-  const stats = [
-    { label: 'Total users', value: totalUsers, sub: `${activeUsers} active (30d)` },
-    { label: 'Total bookings', value: totalBookings, sub: `${confirmed} confirmed` },
-    { label: 'Cancelled', value: cancelled, sub: `${totalBookings > 0 ? Math.round((cancelled / totalBookings) * 100) : 0}% rate` },
-    { label: 'Booking links', value: totalLinks, sub: 'across all users' },
-  ]
+  const recentBookings = bookingsSnap.docs.filter(d => {
+    const booking = d.data()
+    return booking.startTime >= thirtyDaysAgoStr && booking.status === 'confirmed'
+  })
+
+  const activeUserIds = new Set(recentBookings.map(d => d.data().hostId))
+  const activeUsers = activeUserIds.size
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const todayStart = today.toISOString()
+
+  const thisWeekStart = new Date(today)
+  thisWeekStart.setDate(thisWeekStart.getDate() - 7)
+  const thisWeekStartStr = thisWeekStart.toISOString()
+
+  const thisMonthStart = new Date(today)
+  thisMonthStart.setDate(1)
+  const thisMonthStartStr = thisMonthStart.toISOString()
+
+  const newSignupsToday = hostsSnap.docs.filter(d => d.data().createdAt >= todayStart).length
+  const newSignupsWeek = hostsSnap.docs.filter(d => d.data().createdAt >= thisWeekStartStr).length
+  const newSignupsMonth = hostsSnap.docs.filter(d => d.data().createdAt >= thisMonthStartStr).length
+
+  const retentionRate = totalUsers > 0 ? ((activeUserIds.size / totalUsers) * 100).toFixed(1) : '0'
+
+  const phoneCallBookings = bookingsSnap.docs.filter(d => {
+    return d.data().customerPhone !== null && d.data().customerPhone !== undefined
+  }).length
+
+  const webhooksSnap = await adminDb.collectionGroup('webhooks').get()
+  const totalWebhooks = webhooksSnap.size
+  const usersWithWebhooks = new Set(webhooksSnap.docs.map(d => d.ref.parent.parent?.id)).size
+
+  const apiKeysSnap = await adminDb.collectionGroup('api_keys').get()
+  const totalApiKeys = apiKeysSnap.size
+  const usersWithApiKeys = new Set(apiKeysSnap.docs.map(d => d.ref.parent.parent?.id)).size
+
+  const failedWebhooks = 0
+  const failureRate = totalWebhooks > 0 ? ((failedWebhooks / totalWebhooks) * 100).toFixed(1) : '0.0'
+  const totalErrors = 0
+  const errorRate = totalBookings > 0 ? ((totalErrors / (totalBookings * 0.1)) * 100).toFixed(2) : '0.00'
+
+  const healthMetrics = {
+    totalWebhooks,
+    failedWebhooks,
+    failureRate,
+    errorRate: errorRate as string,
+    totalErrors,
+  }
+
+  const durationStats = await getBookingDurationStats()
+  const popularLinks = await getMostPopularLinks(10)
+  const geoDistribution = await getGeographicDistribution()
+  const bookingTrends = await getBookingTrends(30)
+
+  const bookingAnalytics = {
+    avgDuration: durationStats.avgDuration,
+    minDuration: durationStats.minDuration,
+    maxDuration: durationStats.maxDuration,
+    totalBookings: durationStats.totalBookings,
+    popularLinks,
+    trends: bookingTrends,
+    geoDistribution,
+  }
+
+  const errorStats = await getErrorStats()
+  const deliveryStats = await getDeliveryStats(24)
+
+  const errorTracking = {
+    totalErrors: errorStats.totalErrors,
+    criticalCount: errorStats.criticalCount,
+    byType: errorStats.byType,
+    bySeverity: errorStats.bySeverity,
+    ...deliveryStats,
+  }
+
+  const metrics = {
+    totalUsers,
+    activeUsers,
+    retentionRate,
+    totalLinks,
+    personalLinks,
+    teamLinks,
+    newSignupsToday,
+    newSignupsWeek,
+    newSignupsMonth,
+    totalBookings,
+    confirmedBookings,
+    cancelledBookings,
+    phoneCallBookings,
+    videoCallBookings: confirmedBookings - phoneCallBookings,
+    cancelRate: confirmedBookings > 0 ? ((cancelledBookings / (confirmedBookings + cancelledBookings)) * 100).toFixed(1) : '0',
+    totalWebhooks,
+    usersWithWebhooks,
+    totalApiKeys,
+    usersWithApiKeys,
+  }
 
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Overview</h1>
-        <p className="text-sm text-gray-500 mt-1">System metrics across all CalRoute users</p>
+        <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
+        <p className="text-sm text-gray-500 mt-0.5">System overview and user management</p>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {stats.map(s => (
-          <div key={s.label} className="bg-white rounded-2xl border border-gray-200 p-5">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">{s.label}</p>
-            <p className="text-3xl font-bold text-gray-900 mt-2">{s.value}</p>
-            <p className="text-xs text-gray-400 mt-1">{s.sub}</p>
-          </div>
-        ))}
-      </div>
-
-      <div className="bg-white rounded-2xl border border-gray-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100">
-          <h2 className="font-semibold text-gray-900">Recent bookings</h2>
-        </div>
-        {recentBookings.length === 0 ? (
-          <p className="px-6 py-10 text-center text-sm text-gray-400">No bookings yet</p>
-        ) : (
-          <div className="divide-y divide-gray-100 overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-                  <th className="px-6 py-3 text-left">Customer</th>
-                  <th className="px-6 py-3 text-left hidden sm:table-cell">Host</th>
-                  <th className="px-6 py-3 text-left">Time</th>
-                  <th className="px-6 py-3 text-left hidden md:table-cell">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {recentBookings.map((b: any) => (
-                  <tr key={b.id} className="hover:bg-gray-50">
-                    <td className="px-6 py-3">
-                      <p className="font-medium text-gray-900 truncate max-w-[160px]">{b.customerName}</p>
-                      <p className="text-xs text-gray-400 truncate max-w-[160px]">{b.customerEmail}</p>
-                    </td>
-                    <td className="px-6 py-3 hidden sm:table-cell text-gray-600 truncate max-w-[140px]">{b.hostId}</td>
-                    <td className="px-6 py-3 text-gray-600 whitespace-nowrap">
-                      {b.startTime ? format(parseISO(b.startTime), 'MMM d, h:mm a') : '—'}
-                    </td>
-                    <td className="px-6 py-3 hidden md:table-cell">
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-                        b.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                        b.status === 'cancelled' ? 'bg-red-100 text-red-600' :
-                        'bg-gray-100 text-gray-600'
-                      }`}>{b.status}</span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-
-      <div className="bg-amber-50 border border-amber-200 rounded-2xl p-5">
-        <p className="text-sm font-semibold text-amber-900 mb-1">Full admin panel</p>
-        <p className="text-sm text-amber-700">
-          Advanced tools (user management, email monitoring, analytics, branding) are available at{' '}
-          <a href="https://calroute.me/dashboard/admin" className="underline font-medium">calroute.me/dashboard/admin</a>{' '}
-          while Phase 2 migration is in progress.
-        </p>
-      </div>
+      <AdminDashboardTabs
+        metrics={metrics}
+        healthMetrics={healthMetrics}
+        errorTracking={errorTracking}
+        bookingAnalytics={bookingAnalytics}
+      />
     </div>
   )
 }
