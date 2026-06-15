@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { getUserBilling } from '@/lib/billing/get-user-billing'
 import type { ConnectedCalendar } from '@/types/database'
 import DashboardLayout from '@/components/DashboardLayout'
 import ProfileEditor from './ProfileEditor'
@@ -44,8 +45,10 @@ export default async function SettingsPage({
     .collection('booking_links').where('ownerId', '==', user.uid).get()
   const linkCount = linksSnap.size
 
-  const apiKeysSnap = await adminDb
-    .collection('hosts').doc(user.uid).collection('api_keys').get()
+  const [apiKeysSnap, billing] = await Promise.all([
+    adminDb.collection('hosts').doc(user.uid).collection('api_keys').get(),
+    getUserBilling(user.uid),
+  ])
   const apiKeys = apiKeysSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
 
   const blackoutDatesSnap = await adminDb
@@ -151,7 +154,7 @@ export default async function SettingsPage({
           billing: (
             <>
               <BillingSection linkCount={linkCount} />
-              <ApiKeysSection apiKeys={apiKeys} />
+              <ApiKeysSection apiKeys={apiKeys} isFree={billing.isFree} />
             </>
           ),
         }}

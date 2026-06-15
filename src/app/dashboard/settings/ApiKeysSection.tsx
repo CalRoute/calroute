@@ -12,9 +12,10 @@ interface ApiKey {
 
 interface Props {
   apiKeys: ApiKey[]
+  isFree: boolean
 }
 
-export default function ApiKeysSection({ apiKeys: initialKeys }: Props) {
+export default function ApiKeysSection({ apiKeys: initialKeys, isFree }: Props) {
   const { showToast } = useToast()
   const [keys, setKeys] = useState(initialKeys)
   const [loading, setLoading] = useState(false)
@@ -73,6 +74,30 @@ export default function ApiKeysSection({ apiKeys: initialKeys }: Props) {
     } finally {
       setDeleting(null)
     }
+  }
+
+  if (isFree) {
+    return (
+      <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6">
+        <div className="flex items-start gap-4">
+          <div className="w-10 h-10 bg-[#0D7377]/10 rounded-xl flex items-center justify-center flex-shrink-0">
+            <svg className="w-5 h-5 text-[#0D7377]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="font-semibold text-gray-900">API Keys</h2>
+            <p className="text-sm text-gray-500 mt-0.5 mb-3">Available on the Solo and Team plans.</p>
+            <a
+              href="/dashboard/settings?tab=billing"
+              className="inline-flex items-center gap-1.5 bg-[#0D7377] text-white text-sm font-medium px-4 py-2 rounded-xl hover:bg-[#0a5f63] transition-colors"
+            >
+              Upgrade to Solo →
+            </a>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (

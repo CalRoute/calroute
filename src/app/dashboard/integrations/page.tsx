@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic'
 
 import { requireUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { getUserBilling } from '@/lib/billing/get-user-billing'
 import DashboardLayout from '@/components/DashboardLayout'
 import WebhooksManager from './WebhooksManager'
 import TrelloConnector from './TrelloConnector'
@@ -9,14 +10,12 @@ import TrelloConnector from './TrelloConnector'
 export default async function IntegrationsPage() {
   const user = await requireUser('/dashboard/integrations')
 
-  const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
+  const [hostSnap, webhooksSnap, billing] = await Promise.all([
+    adminDb.collection('hosts').doc(user.uid).get(),
+    adminDb.collection('hosts').doc(user.uid).collection('webhooks').get(),
+    getUserBilling(user.uid),
+  ])
   const host = hostSnap.data()
-
-  const webhooksSnap = await adminDb
-    .collection('hosts')
-    .doc(user.uid)
-    .collection('webhooks')
-    .get()
 
   const webhooks = webhooksSnap.docs.map(d => ({
     id: d.id,
@@ -36,7 +35,7 @@ export default async function IntegrationsPage() {
 
         {/* Webhooks + Trello side by side */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
-          <WebhooksManager webhooks={webhooks} />
+          <WebhooksManager webhooks={webhooks} isFree={billing.isFree} />
           <TrelloConnector />
         </div>
 
