@@ -182,19 +182,13 @@ export default async function LinksPage() {
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                  <div className="mt-4 pt-3 border-t border-gray-100">
                     <LinkRowActions
                       linkId={link.id}
                       slug={link.slug}
                       isActive={link.isActive}
                       appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
                     />
-                    <Link
-                      href={`/dashboard/links/${link.id}`}
-                      className="ml-auto text-sm text-white bg-[#0D7377] hover:bg-[#0a5f63] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
-                    >
-                      Edit
-                    </Link>
                   </div>
                 </div>
               ))}

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 
 const DURATIONS = [15, 20, 30, 45, 60, 90]
-type Tab = 'general' | 'routing' | 'integrations'
+type Tab = 'general' | 'routing' | 'emails' | 'integrations'
 
 type TeamMember = {
   uid: string
@@ -48,6 +48,14 @@ export default function EditBookingLinkForm({
     greeting: link.greeting ?? '',
   })
   const [showApiKey, setShowApiKey] = useState(false)
+
+  // Email templates state
+  const [emailTemplates, setEmailTemplates] = useState<Record<string, string>>({
+    confirmed: link.emailTemplates?.confirmed ?? '',
+    cancelled: link.emailTemplates?.cancelled ?? '',
+    rescheduled: link.emailTemplates?.rescheduled ?? '',
+  })
+  const [emailTab, setEmailTab] = useState<'confirmed' | 'cancelled' | 'rescheduled'>('confirmed')
 
   // Team state
   const [hosts, setHosts] = useState<TeamMember[]>(initialHosts)
@@ -107,7 +115,15 @@ export default function EditBookingLinkForm({
       const res = await fetch(`/api/booking-links/${link.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, bufferBeforeMinutes: 0 }),
+        body: JSON.stringify({
+          ...form,
+          bufferBeforeMinutes: 0,
+          emailTemplates: {
+            confirmed: emailTemplates.confirmed || null,
+            cancelled: emailTemplates.cancelled || null,
+            rescheduled: emailTemplates.rescheduled || null,
+          },
+        }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error ?? 'Failed to update link')
@@ -184,6 +200,7 @@ export default function EditBookingLinkForm({
   const tabs: { id: Tab; label: string }[] = [
     { id: 'general', label: 'General' },
     { id: 'routing', label: 'Routing & Team' },
+    { id: 'emails', label: 'Emails' },
     { id: 'integrations', label: 'Integrations' },
   ]
 
@@ -221,13 +238,13 @@ export default function EditBookingLinkForm({
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6">
+        <div className="flex gap-1 bg-gray-100 p-1 rounded-xl mb-6 overflow-x-auto">
           {tabs.map(t => (
             <button
               key={t.id}
               type="button"
               onClick={() => { setTab(t.id); setError(null); setSaveSuccess(false) }}
-              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+              className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
                 tab === t.id
                   ? 'bg-white text-gray-900 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -475,6 +492,100 @@ export default function EditBookingLinkForm({
                 <p className="text-xs text-gray-400">They must already have a CalRoute account.</p>
               </form>
             </div>
+          </form>
+        )}
+
+        {/* ── Tab: Emails ── */}
+        {tab === 'emails' && (
+          <form onSubmit={handleSubmit} className="space-y-5">
+
+            <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
+              <div>
+                <h2 className="font-semibold text-gray-900">Custom email templates</h2>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  Write your own HTML for each email type. Leave blank to use the default CalRoute template.
+                </p>
+              </div>
+
+              {/* Email type picker */}
+              <div className="flex gap-1 bg-gray-100 p-1 rounded-xl overflow-x-auto">
+                {([
+                  { id: 'confirmed', label: 'Booking confirmed' },
+                  { id: 'cancelled', label: 'Cancelled' },
+                  { id: 'rescheduled', label: 'Rescheduled' },
+                ] as const).map(e => (
+                  <button
+                    key={e.id}
+                    type="button"
+                    onClick={() => setEmailTab(e.id)}
+                    className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors whitespace-nowrap ${
+                      emailTab === e.id
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    {e.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Available variables */}
+              <div className="bg-gray-50 rounded-xl p-4">
+                <p className="text-xs font-semibold text-gray-500 mb-2">Available variables</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {(emailTab === 'confirmed'
+                    ? ['{{customerName}}', '{{hostName}}', '{{title}}', '{{startTime}}', '{{rescheduleUrl}}', '{{cancelUrl}}', '{{customerPhone}}']
+                    : emailTab === 'cancelled'
+                    ? ['{{customerName}}', '{{hostName}}', '{{title}}', '{{startTime}}']
+                    : ['{{customerName}}', '{{hostName}}', '{{title}}', '{{newStartTime}}', '{{oldStartTime}}']
+                  ).map(v => (
+                    <button
+                      key={v}
+                      type="button"
+                      onClick={() => setEmailTemplates(t => ({ ...t, [emailTab]: (t[emailTab] || '') + v }))}
+                      className="font-mono text-[11px] bg-white border border-gray-200 text-[#0D7377] px-2 py-1 rounded-lg hover:bg-[#0D7377]/5 transition-colors"
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-xs text-gray-400 mt-2">Click a variable to insert it, or type it directly in the editor.</p>
+              </div>
+
+              {/* Editor */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-medium text-gray-700">HTML template</label>
+                  {emailTemplates[emailTab] && (
+                    <button
+                      type="button"
+                      onClick={() => setEmailTemplates(t => ({ ...t, [emailTab]: '' }))}
+                      className="text-xs text-red-500 hover:text-red-700"
+                    >
+                      Reset to default
+                    </button>
+                  )}
+                </div>
+                <textarea
+                  value={emailTemplates[emailTab]}
+                  onChange={e => setEmailTemplates(t => ({ ...t, [emailTab]: e.target.value }))}
+                  placeholder={`<p>Hi {{customerName}},</p>\n<p>Your booking for <strong>{{title}}</strong> is confirmed.</p>`}
+                  rows={12}
+                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-[#0D7377] resize-y"
+                  spellCheck={false}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Plain HTML only — no <code className="bg-gray-100 px-1 rounded">&lt;script&gt;</code> tags.
+                  Your HTML will be wrapped in CalRoute&apos;s standard email layout.
+                </p>
+              </div>
+            </div>
+
+            <button type="submit" disabled={loading}
+              className="w-full py-3 bg-[#0D7377] text-white rounded-xl font-semibold hover:bg-[#0a5f63] disabled:opacity-50 transition-colors"
+            >
+              {loading ? 'Saving…' : 'Save email templates'}
+            </button>
           </form>
         )}
 
