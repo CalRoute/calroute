@@ -2,10 +2,10 @@ import Link from 'next/link'
 
 export default function HomePage() {
   return (
-    <main className="bg-[#F7F4EF] text-[#1a1a1a] antialiased min-h-screen">
+    <main className="bg-white text-[#0f1117] antialiased min-h-screen">
 
       {/* Nav */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-[#F7F4EF]/90 backdrop-blur-xl border-b border-[#1a1a1a]/[0.06]">
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-xl border-b border-black/[0.06]">
         <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2.5 group">
             <svg viewBox="0 0 100 100" className="w-9 h-9 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
@@ -28,18 +28,18 @@ export default function HomePage() {
                 <path d="M 69 30 L 78 38 L 69 46" fill="none" stroke="url(#landingLogoGrad)" strokeWidth="6.5" strokeLinecap="round" strokeLinejoin="round" />
               </g>
             </svg>
-            <span className="text-xl font-bold text-[#1a1a1a] group-hover:text-[#0D7377] transition-colors">
+            <span className="text-xl font-bold text-[#0f1117] group-hover:text-[#0D7377] transition-colors">
               Cal<span className="text-[#0D7377]">Route</span>
             </span>
           </Link>
           <div className="flex items-center gap-8">
-            <a href="#features" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Features</a>
-            <a href="#how" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">How it works</a>
-            <a href="#pricing" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors hidden sm:block">Pricing</a>
-            <Link href="/login" className="text-xs text-[#1a1a1a]/40 hover:text-[#1a1a1a] transition-colors">Sign in</Link>
+            <a href="#features" className="text-sm text-black/40 hover:text-black transition-colors hidden sm:block">Features</a>
+            <a href="#how" className="text-sm text-black/40 hover:text-black transition-colors hidden sm:block">How it works</a>
+            <a href="#pricing" className="text-sm text-black/40 hover:text-black transition-colors hidden sm:block">Pricing</a>
+            <Link href="/login" className="text-sm text-black/40 hover:text-black transition-colors hidden sm:block">Sign in</Link>
             <Link
               href="/login"
-              className="text-xs font-semibold bg-[#0D7377] text-white px-4 py-2 rounded-lg hover:bg-[#0a5f63] transition-colors"
+              className="text-sm font-semibold bg-[#0D7377] text-white px-4 py-2 rounded-lg hover:bg-[#0a5f63] transition-colors"
             >
               Get started
             </Link>
@@ -47,88 +47,87 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="min-h-screen flex flex-col items-center justify-center px-6 pt-14">
+      {/* Hero — dark */}
+      <section className="bg-[#0f1117] text-white min-h-screen flex flex-col items-center justify-center px-6 pt-14 pb-20">
         <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 border border-[#0D7377]/20 bg-[#0D7377]/8 text-[#0D7377] text-xs font-medium px-3 py-1.5 rounded-full mb-8">
+          <div className="inline-flex items-center gap-2 border border-white/10 bg-white/5 text-white/60 text-xs font-medium px-3 py-1.5 rounded-full mb-10">
             <span className="w-1.5 h-1.5 bg-[#0D7377] rounded-full animate-pulse" />
             Free to start · No credit card
           </div>
 
-          <h1 className="text-4xl sm:text-6xl lg:text-[80px] font-bold tracking-[-0.03em] leading-[0.95] mb-8">
-            Scheduling that finds
+          <h1 className="text-5xl sm:text-7xl lg:text-[88px] font-bold tracking-[-0.03em] leading-[0.92] mb-8">
+            One link.
             <br />
-            <em className="not-italic text-[#0D7377]">the right person</em>
+            <span className="text-[#0D7377]">Right person.</span>
             <br />
-            automatically.
+            Every time.
           </h1>
 
-          <p className="text-[#1a1a1a]/50 text-xl max-w-xl mx-auto mb-12 leading-relaxed font-light">
-            One booking link. CalRoute checks your whole team&apos;s calendars in real time and routes each meeting to whoever is actually free.
+          <p className="text-white/50 text-lg sm:text-xl max-w-lg mx-auto mb-12 leading-relaxed">
+            CalRoute checks your whole team&apos;s availability in real time and routes each booking to whoever is actually free — automatically.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <Link
               href="/login"
-              className="inline-flex items-center justify-center bg-[#0D7377] text-white font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-[#0a5f63] transition-colors shadow-lg shadow-[#0D7377]/20"
+              className="inline-flex items-center justify-center bg-[#0D7377] text-white font-semibold text-sm px-8 py-3.5 rounded-xl hover:bg-[#0b8a8f] transition-colors"
             >
               Create your booking link →
             </Link>
             <a
               href="/book/test-availability"
-              className="inline-flex items-center justify-center border border-[#1a1a1a]/10 text-[#1a1a1a]/60 text-sm px-8 py-3.5 rounded-xl hover:border-[#1a1a1a]/20 hover:text-[#1a1a1a] transition-colors bg-white/60"
+              className="inline-flex items-center justify-center border border-white/10 text-white/50 text-sm px-8 py-3.5 rounded-xl hover:border-white/20 hover:text-white/80 transition-colors"
             >
               See a live demo
             </a>
           </div>
         </div>
 
-        {/* Booking widget mockup */}
-        <div className="mt-14 sm:mt-20 w-full max-w-2xl mx-auto">
-          <div className="rounded-2xl border border-[#1a1a1a]/[0.08] bg-white shadow-xl shadow-[#1a1a1a]/[0.06] overflow-hidden">
-            <div className="flex items-center gap-1.5 px-4 sm:px-5 py-3 sm:py-3.5 border-b border-[#1a1a1a]/[0.06] bg-[#f9f7f3]">
-              <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
-              <div className="w-2.5 h-2.5 rounded-full bg-[#1a1a1a]/10" />
-              <span className="ml-3 text-[11px] text-[#1a1a1a]/30 font-mono">calroute.me/book/sales-call</span>
+        {/* Widget mockup */}
+        <div className="mt-16 sm:mt-24 w-full max-w-2xl mx-auto">
+          <div className="rounded-2xl border border-white/[0.08] bg-white/[0.04] backdrop-blur overflow-hidden shadow-2xl shadow-black/40">
+            {/* Browser chrome */}
+            <div className="flex items-center gap-1.5 px-5 py-3 border-b border-white/[0.06] bg-white/[0.03]">
+              <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+              <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+              <div className="w-2.5 h-2.5 rounded-full bg-white/10" />
+              <span className="ml-3 text-[11px] text-white/20 font-mono">calroute.me/book/sales-call</span>
             </div>
             <div className="p-5 sm:p-7">
-              {/* Mobile: stacked layout. Desktop: side by side */}
               <div className="flex flex-col sm:flex-row gap-6 sm:gap-8">
-                {/* Date strip */}
+                {/* Calendar */}
                 <div className="flex-1">
-                  <p className="text-[10px] font-semibold text-[#1a1a1a]/30 uppercase tracking-widest mb-3">Select a date</p>
-                  {/* Mobile: horizontal scroll */}
+                  <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Select a date</p>
+                  {/* Mobile */}
                   <div className="flex gap-1.5 overflow-x-auto pb-1 sm:hidden">
-                    {[8,9,10,11,12,13,14,15].map(d => (
+                    {[8,9,10,11,12,13,14,15].map((d, i) => (
                       <div key={d} className={`flex-shrink-0 flex flex-col items-center px-2.5 py-2 rounded-xl text-[10px] min-w-[40px] ${
-                        d === 12 ? 'bg-[#0D7377] text-white' : 'bg-[#f9f7f3] text-[#1a1a1a]/60'
+                        d === 12 ? 'bg-[#0D7377] text-white' : 'bg-white/5 text-white/40'
                       }`}>
-                        <span className="uppercase">{['','','','','','W','T','F','S'][d] ?? 'M'}</span>
+                        <span className="uppercase">{['M','T','W','T','F','S','S','M'][i]}</span>
                         <span className="font-bold text-sm mt-0.5">{d}</span>
                       </div>
                     ))}
                   </div>
-                  {/* Desktop: calendar grid */}
+                  {/* Desktop */}
                   <div className="hidden sm:block">
                     <div className="grid grid-cols-7 gap-1 mb-2">
                       {['M','T','W','T','F','S','S'].map((d, i) => (
-                        <div key={i} className="text-center text-[10px] text-[#1a1a1a]/30 py-1">{d}</div>
+                        <div key={i} className="text-center text-[10px] text-white/20 py-1">{d}</div>
                       ))}
                       {Array.from({length: 30}, (_, i) => i + 1).map(d => (
                         <div key={d} className={`text-center text-[11px] py-2 rounded-lg cursor-pointer transition-colors ${
                           d === 12 ? 'bg-[#0D7377] text-white font-semibold' :
-                          [1,7,8,14,15,21,22,28,29,30].includes(d) ? 'text-[#1a1a1a]/20' :
-                          'text-[#1a1a1a]/60 hover:bg-[#0D7377]/8'
+                          [1,7,8,14,15,21,22,28,29,30].includes(d) ? 'text-white/15' :
+                          'text-white/40 hover:bg-white/5'
                         }`}>{d}</div>
                       ))}
                     </div>
                   </div>
                 </div>
-
-                {/* Time slots */}
+                {/* Times */}
                 <div className="sm:w-40 sm:flex-shrink-0">
-                  <p className="text-[10px] font-semibold text-[#1a1a1a]/30 uppercase tracking-widest mb-3">Available</p>
+                  <p className="text-[10px] font-semibold text-white/30 uppercase tracking-widest mb-3">Available</p>
                   <div className="grid grid-cols-2 sm:grid-cols-1 gap-1.5">
                     {[
                       { t: '9:00 AM', host: 'Alex' },
@@ -139,17 +138,17 @@ export default function HomePage() {
                     ].map((s, i) => (
                       <div key={i} className={`flex items-center justify-between py-2 px-3 rounded-lg border text-[11px] cursor-pointer transition-colors ${
                         i === 1
-                          ? 'border-[#0D7377]/40 bg-[#0D7377]/8 text-[#0D7377] font-medium'
-                          : 'border-[#1a1a1a]/08 text-[#1a1a1a]/50'
+                          ? 'border-[#0D7377]/50 bg-[#0D7377]/20 text-[#4ecdc4] font-medium'
+                          : 'border-white/[0.06] text-white/30'
                       }`}>
                         <span>{s.t}</span>
-                        <span className="text-[9px] bg-[#1a1a1a]/05 px-1.5 py-0.5 rounded text-[#1a1a1a]/30">{s.host}</span>
+                        <span className="text-[9px] bg-white/5 px-1.5 py-0.5 rounded text-white/20">{s.host}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               </div>
-              <div className="mt-5 pt-4 border-t border-[#1a1a1a]/[0.06] flex items-center gap-2 text-[11px] text-[#1a1a1a]/30">
+              <div className="mt-5 pt-4 border-t border-white/[0.06] flex items-center gap-2 text-[11px] text-white/20">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                 Auto-routed · 3 calendars checked · 0 conflicts
               </div>
@@ -158,126 +157,196 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="py-12 sm:py-16 border-y border-[#1a1a1a]/[0.06] bg-white/50">
-        <div className="max-w-4xl mx-auto px-6 grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 text-center">
+      {/* Social proof ribbon */}
+      <section className="py-10 border-b border-black/[0.06]">
+        <div className="max-w-4xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-16 text-center">
           {[
-            { n: '< 2 min', label: 'to set up your first link' },
-            { n: '5×', label: 'calendars merged per person' },
-            { n: '0', label: 'double-bookings, guaranteed' },
+            { n: '60 sec', label: 'to create your first link' },
+            { n: '5 calendars', label: 'merged per team member' },
+            { n: 'Real-time', label: 'availability — no manual slots' },
           ].map(s => (
             <div key={s.n}>
-              <p className="text-4xl font-bold tracking-tight mb-1 text-[#0D7377]">{s.n}</p>
-              <p className="text-xs text-[#1a1a1a]/40">{s.label}</p>
+              <p className="text-2xl font-bold text-[#0D7377] mb-0.5">{s.n}</p>
+              <p className="text-xs text-black/40">{s.label}</p>
             </div>
           ))}
         </div>
       </section>
 
-      {/* Features */}
-      <section id="features" className="py-20 sm:py-32 px-6">
+      {/* Features — 3 big blocks */}
+      <section id="features" className="py-24 sm:py-36 px-6">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 sm:mb-20">
-            <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Features</p>
-            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight mb-6 leading-tight">
-              Everything you need for seamless team scheduling
+          <div className="text-center mb-20">
+            <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">What makes us different</p>
+            <h2 className="text-4xl sm:text-5xl font-bold tracking-tight leading-tight">
+              Built for teams.<br className="hidden sm:block" /> Not just individuals.
             </h2>
-            <p className="text-lg text-[#1a1a1a]/40 max-w-2xl mx-auto">Built for teams who actually want to keep their customers happy.</p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              {
-                icon: '👥',
-                title: 'Personal & team links',
-                desc: 'Solo scheduling or team routing. One link for your entire team — CalRoute automatically routes each meeting to whoever is actually free.'
-              },
-              {
-                icon: '📅',
-                title: 'Multi-calendar merging',
-                desc: 'Each team member connects up to 5 calendars. Work, personal, side projects — all merged into one honest view.'
-              },
-              {
-                icon: '🎯',
-                title: 'Smart routing',
-                desc: 'Round-robin, priority-based, or first-available. Set it once and let CalRoute assign automatically.'
-              },
-              {
-                icon: '📍',
-                title: 'Real-time availability',
-                desc: 'Live team status showing who is available right now or already in a meeting. Makes scheduling feel instant.'
-              },
-              {
-                icon: '⏰',
-                title: 'Timezone intelligence',
-                desc: 'Customers book in their timezone. Your team sees their own. No more "which timezone?" confusion.'
-              },
-              {
-                icon: '📞',
-                title: 'Phone call meetings',
-                desc: 'Offer phone calls instead of video. Customers enter their number, team gets it in confirmation emails.'
-              },
-              {
-                icon: '🌐',
-                title: 'Language-based selection',
-                desc: 'For global teams, customers pick their language. CalRoute shows only hosts who speak it.'
-              },
-              {
-                icon: '🔄',
-                title: 'Guest rescheduling & cancellation',
-                desc: 'Customers self-serve to reschedule or cancel up to 24h before. Real-time notifications to your team.'
-              },
-              {
-                icon: '📧',
-                title: 'Custom email templates',
-                desc: 'Brand your booking confirmations and reminders. Use variables like {{customer_name}} and {{meeting_time}}.'
-              },
-              {
-                icon: '🎣',
-                title: 'Webhooks & API',
-                desc: 'Get real-time booking events via webhooks. Build on top with our full REST API. HMAC-signed for security.'
-              },
-              {
-                icon: '📱',
-                title: 'Mobile-first design',
-                desc: 'Responsive month-calendar with touch-friendly interactions. Works perfectly on any device.'
-              },
-              {
-                icon: '🔗',
-                title: 'Embeddable everywhere',
-                desc: 'Drop one iframe into your website, Notion, or email. The booking widget appears inline — zero redirects.'
-              },
-            ].map(f => (
-              <div key={f.title} className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all duration-300 group">
-                <div className="w-12 h-12 bg-[#0D7377]/10 rounded-2xl flex items-center justify-center text-xl mb-5 group-hover:bg-[#0D7377]/15 transition-colors">
-                  {f.icon}
-                </div>
-                <h3 className="text-base font-semibold mb-3 group-hover:text-[#0D7377] transition-colors">{f.title}</h3>
-                <p className="text-sm text-[#1a1a1a]/40 leading-relaxed">{f.desc}</p>
+          <div className="space-y-6">
+
+            {/* Block 1 — Smart routing */}
+            <div className="grid lg:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-black/[0.07]">
+              <div className="bg-[#0f1117] text-white p-7 sm:p-10 lg:p-14 flex flex-col justify-center">
+                <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-5">Smart routing</p>
+                <h3 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-5">
+                  One link routes to the right person.
+                </h3>
+                <p className="text-white/50 leading-relaxed text-base">
+                  Share a single booking link with your team. CalRoute checks every host&apos;s calendar in real time and assigns the meeting — round-robin, by priority, or first available. No admin overhead, no missed assignments.
+                </p>
               </div>
-            ))}
+              <div className="bg-[#f5f5f7] p-7 sm:p-10 lg:p-14 flex flex-col justify-center gap-3">
+                {[
+                  { label: 'Alex Chen', status: 'In a meeting', dot: 'bg-red-400' },
+                  { label: 'Beth Park', status: 'Available now', dot: 'bg-emerald-400', highlight: true },
+                  { label: 'Carl Ross', status: 'Available at 2pm', dot: 'bg-amber-400' },
+                ].map(h => (
+                  <div key={h.label} className={`flex items-center gap-4 p-4 rounded-2xl border ${
+                    h.highlight ? 'bg-white border-[#0D7377]/20 shadow-md shadow-[#0D7377]/10' : 'bg-white/60 border-black/[0.06]'
+                  }`}>
+                    <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0 ${
+                      h.highlight ? 'bg-[#0D7377] text-white' : 'bg-black/10 text-black/40'
+                    }`}>
+                      {h.label.split(' ').map(w => w[0]).join('')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold ${h.highlight ? 'text-[#0f1117]' : 'text-black/50'}`}>{h.label}</p>
+                      <p className="text-xs text-black/40">{h.status}</p>
+                    </div>
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${h.dot}`} />
+                    {h.highlight && (
+                      <span className="text-[10px] font-semibold bg-[#0D7377] text-white px-2 py-1 rounded-lg">Assigned</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Block 2 — Multi-calendar */}
+            <div className="grid lg:grid-cols-2 gap-0 rounded-3xl overflow-hidden border border-black/[0.07]">
+              <div className="bg-[#f5f5f7] p-7 sm:p-10 lg:p-14 flex flex-col justify-center gap-4 order-2 lg:order-1">
+                <div className="space-y-3">
+                  {[
+                    { cal: 'Work — Google', events: 3, color: 'bg-blue-500' },
+                    { cal: 'Personal — Google', events: 1, color: 'bg-purple-400' },
+                    { cal: 'Side project', events: 2, color: 'bg-amber-400' },
+                  ].map(c => (
+                    <div key={c.cal} className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 border border-black/[0.06]">
+                      <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${c.color}`} />
+                      <span className="text-sm text-black/70 flex-1 min-w-0 truncate">{c.cal}</span>
+                      <span className="text-xs text-black/30 hidden sm:block whitespace-nowrap">{c.events} events today</span>
+                      <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-lg flex-shrink-0">Synced</span>
+                    </div>
+                  ))}
+                  <div className="flex items-center justify-center py-3 border-2 border-dashed border-black/10 rounded-2xl">
+                    <span className="text-xs text-black/30">+ Connect up to 5 calendars</span>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white p-7 sm:p-10 lg:p-14 flex flex-col justify-center order-1 lg:order-2">
+                <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-5">Multi-calendar merging</p>
+                <h3 className="text-3xl sm:text-4xl font-bold tracking-tight leading-tight mb-5">
+                  Your whole life, one honest schedule.
+                </h3>
+                <p className="text-black/50 leading-relaxed text-base">
+                  Each team member connects up to 5 Google calendars — work, personal, side projects. CalRoute merges them into one conflict-free availability view. Customers only see slots where you&apos;re genuinely free.
+                </p>
+              </div>
+            </div>
+
+            {/* Block 3 — Grid of smaller features */}
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {[
+                {
+                  title: 'Timezone intelligence',
+                  desc: 'Customers book in their timezone. Your team sees theirs. Zero confusion, zero emails asking "which timezone?"',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582m15.686 0A11.953 11.953 0 0112 10.5c-2.998 0-5.74-1.1-7.843-2.918m15.686 0A8.959 8.959 0 0121 12c0 .778-.099 1.533-.284 2.253m0 0A17.919 17.919 0 0112 16.5a17.92 17.92 0 01-8.716-2.247m0 0A9.015 9.015 0 013 12c0-1.605.42-3.113 1.157-4.418" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Phone & video calls',
+                  desc: 'Offer phone calls, Google Meet, or both. Customers pick what works for them — you get the details in the confirmation.',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Language-based routing',
+                  desc: 'Global team? Customers pick their language — CalRoute only shows hosts who speak it. Simple, respectful, effective.',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Guest self-service',
+                  desc: 'Customers reschedule or cancel up to 24h before — on their own, without emailing you. You get notified instantly.',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Webhooks & REST API',
+                  desc: 'Get real-time booking events in your own systems. HMAC-signed payloads, full API docs, no rate-limit surprises.',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3l-4.5 16.5" />
+                    </svg>
+                  ),
+                },
+                {
+                  title: 'Embeddable widget',
+                  desc: 'One iframe. Drop it in your website, Notion, or email. The booking experience appears inline — no redirects.',
+                  icon: (
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25" />
+                    </svg>
+                  ),
+                },
+              ].map(f => (
+                <div key={f.title} className="bg-white rounded-2xl p-7 border border-black/[0.07] hover:border-[#0D7377]/30 hover:shadow-md hover:shadow-[#0D7377]/[0.06] transition-all group">
+                  <div className="w-9 h-9 bg-[#0D7377]/8 rounded-xl flex items-center justify-center text-[#0D7377] mb-5 group-hover:bg-[#0D7377]/15 transition-colors">
+                    {f.icon}
+                  </div>
+                  <h3 className="font-semibold text-[#0f1117] mb-2">{f.title}</h3>
+                  <p className="text-sm text-black/45 leading-relaxed">{f.desc}</p>
+                </div>
+              ))}
+            </div>
+
           </div>
         </div>
       </section>
 
       {/* How it works */}
-      <section id="how" className="py-20 sm:py-32 px-6 bg-white/60 border-t border-[#1a1a1a]/[0.06]">
+      <section id="how" className="py-24 sm:py-36 px-6 bg-[#f5f5f7] border-t border-black/[0.06]">
         <div className="max-w-3xl mx-auto">
-          <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-3">How it works</p>
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-10 sm:mb-16 leading-tight">Up and running in under 2 minutes</h2>
+          <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">How it works</p>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-14 leading-tight">Up and running in 60 seconds.</h2>
 
-          <div className="space-y-5">
+          <div className="space-y-4">
             {[
-              { n: '01', title: 'Connect your calendar', desc: 'Sign in with Google and connect up to 5 calendars. CalRoute reads only free/busy data — never your event details.' },
-              { n: '02', title: 'Create a booking link', desc: 'Set your duration, buffer times, availability hours, and routing strategy. Takes about 60 seconds.' },
-              { n: '03', title: 'Share the link', desc: 'Send calroute.me/book/your-link to anyone. No account needed on their end.' },
-              { n: '04', title: 'Show up to the meeting', desc: 'CalRoute creates the calendar event and sends confirmation emails to both sides. You just show up.' },
+              { n: '1', title: 'Connect your Google Calendar', desc: 'Sign in with Google and link up to 5 calendars. CalRoute reads only free/busy data — never your event titles or details.' },
+              { n: '2', title: 'Create a booking link', desc: 'Set duration, buffer time, availability hours, and routing strategy. Invite teammates as hosts on the same link.' },
+              { n: '3', title: 'Share it anywhere', desc: 'Send calroute.me/book/your-slug to anyone — no account needed on their end. Embed it on your site with one iframe.' },
+              { n: '4', title: 'Just show up', desc: 'CalRoute creates the Google Calendar event, sends confirmation emails to both sides, and notifies your team instantly.' },
             ].map(s => (
-              <div key={s.n} className="flex gap-6 bg-white rounded-2xl p-6 border border-[#1a1a1a]/[0.06]">
-                <span className="text-3xl font-bold text-[#0D7377]/15 flex-shrink-0 w-12 leading-none pt-0.5">{s.n}</span>
+              <div key={s.n} className="flex gap-5 bg-white rounded-2xl px-7 py-6 border border-black/[0.06]">
+                <div className="w-8 h-8 rounded-xl bg-[#0D7377] text-white text-sm font-bold flex items-center justify-center flex-shrink-0 mt-0.5">
+                  {s.n}
+                </div>
                 <div>
-                  <h3 className="font-semibold text-[#1a1a1a] mb-1 text-sm">{s.title}</h3>
-                  <p className="text-sm text-[#1a1a1a]/40 leading-relaxed">{s.desc}</p>
+                  <h3 className="font-semibold text-[#0f1117] mb-1">{s.title}</h3>
+                  <p className="text-sm text-black/45 leading-relaxed">{s.desc}</p>
                 </div>
               </div>
             ))}
@@ -285,38 +354,38 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Vs */}
-      <section className="py-20 sm:py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
+      {/* Comparison */}
+      <section className="py-24 sm:py-36 px-6 border-t border-black/[0.06]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Why CalRoute</p>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-6">Built for teams, not individuals.</h2>
-            <p className="text-lg text-[#1a1a1a]/40">We did what other scheduling tools left unfinished.</p>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">Built for teams, not individuals.</h2>
+            <p className="text-lg text-black/40">We finished what other scheduling tools left half-done.</p>
           </div>
 
-          <div className="rounded-3xl border border-[#1a1a1a]/[0.08] overflow-hidden bg-white shadow-lg shadow-[#1a1a1a]/[0.04]">
-            <div className="grid grid-cols-2 border-b border-[#1a1a1a]/[0.08] bg-[#f9f7f3]">
-              <div className="px-6 sm:px-8 py-4 text-xs font-semibold text-[#1a1a1a]/40 uppercase tracking-wider border-r border-[#1a1a1a]/[0.08]">Standard solutions</div>
-              <div className="px-6 sm:px-8 py-4 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
+          <div className="rounded-3xl border border-black/[0.08] overflow-hidden shadow-xl shadow-black/[0.04]">
+            <div className="grid grid-cols-2 border-b border-black/[0.08] bg-[#f5f5f7]">
+              <div className="px-4 sm:px-8 py-4 text-xs font-semibold text-black/35 uppercase tracking-wider border-r border-black/[0.08]">Other tools</div>
+              <div className="px-4 sm:px-8 py-4 text-xs font-semibold text-[#0D7377] uppercase tracking-wider">CalRoute</div>
             </div>
             {[
-              { them: 'One calendar per person', us: 'Up to 5 calendars merged per person' },
-              { them: 'Manual round-robin setup', us: 'Automatic routing, configured in seconds' },
-              { them: 'Stale availability info', us: 'Real-time availability status for your team' },
-              { them: 'No phone call support', us: 'Phone calls or video — switch anytime' },
-              { them: 'Static confirmation emails', us: 'Custom branded email templates' },
-              { them: 'No API access', us: 'Full REST API + webhooks for integrations' },
-              { them: 'Per-seat pricing', us: 'From $10/mo — not $10 per person' },
-              { them: 'Redirect to external page', us: 'Embed directly on your website' },
-            ].map((r, i) => (
-              <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < 5 ? 'border-b border-[#1a1a1a]/[0.08]' : ''}`}>
-                <div className="px-6 sm:px-8 py-4 sm:py-5 text-[#1a1a1a]/40 flex items-start sm:items-center gap-3 border-r border-[#1a1a1a]/[0.08]">
-                  <span className="text-[#1a1a1a]/15 flex-shrink-0 mt-0.5 sm:mt-0 text-lg">✕</span>
+              { them: 'One calendar per person', us: 'Up to 5 calendars merged' },
+              { them: 'Manual round-robin setup', us: 'Auto-routing in seconds' },
+              { them: 'Stale, manually-set slots', us: 'Live calendar availability' },
+              { them: 'No phone call option', us: 'Phone or video — your choice' },
+              { them: 'Static confirmation emails', us: 'Custom branded templates' },
+              { them: 'No API access', us: 'Full REST API + webhooks' },
+              { them: 'Per-seat pricing', us: 'From $10/mo flat' },
+              { them: 'Redirects externally', us: 'Embeds on your site' },
+            ].map((r, i, arr) => (
+              <div key={i} className={`grid grid-cols-2 text-xs sm:text-sm ${i < arr.length - 1 ? 'border-b border-black/[0.06]' : ''}`}>
+                <div className="px-4 sm:px-8 py-3.5 sm:py-5 text-black/35 flex items-start gap-2 sm:gap-3 border-r border-black/[0.06]">
+                  <span className="text-black/20 flex-shrink-0 font-bold mt-0.5">✕</span>
                   <span>{r.them}</span>
                 </div>
-                <div className="px-6 sm:px-8 py-4 sm:py-5 text-[#1a1a1a]/70 flex items-start sm:items-center gap-3 bg-[#0D7377]/[0.03]">
-                  <span className="text-[#0D7377] flex-shrink-0 mt-0.5 sm:mt-0 text-lg font-bold">✓</span>
-                  <span className="text-[#1a1a1a]/80">{r.us}</span>
+                <div className="px-4 sm:px-8 py-3.5 sm:py-5 text-[#0f1117]/80 flex items-start gap-2 sm:gap-3 bg-[#0D7377]/[0.03]">
+                  <span className="text-[#0D7377] flex-shrink-0 font-bold mt-0.5">✓</span>
+                  <span>{r.us}</span>
                 </div>
               </div>
             ))}
@@ -325,165 +394,116 @@ export default function HomePage() {
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 sm:py-32 px-6 border-t border-[#1a1a1a]/[0.06]">
+      <section id="pricing" className="py-24 sm:py-36 px-6 bg-[#f5f5f7] border-t border-black/[0.06]">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-16">
             <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-4">Pricing</p>
-            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-6">Simple pricing that scales.</h2>
-            <p className="text-lg text-[#1a1a1a]/40">Start free. Upgrade only when you're ready.</p>
+            <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">Simple, honest pricing.</h2>
+            <p className="text-lg text-black/40">Start free. Upgrade only when you&apos;re ready.</p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
-            {/* Free Card */}
-            <div className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all">
-              <p className="font-semibold text-gray-900 mb-1">Free</p>
-              <p className="text-sm text-gray-500 mb-4">Get started, no card needed</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-[#1a1a1a]">$0</span>
-                <span className="text-gray-500 text-sm ml-2">/ month</span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-8">
+            {/* Free */}
+            <div className="bg-white rounded-3xl p-8 border border-black/[0.07]">
+              <p className="font-semibold text-[#0f1117] mb-1">Free</p>
+              <p className="text-sm text-black/40 mb-6">Get started, no card needed</p>
+              <div className="mb-7">
+                <span className="text-4xl font-bold text-[#0f1117]">$0</span>
+                <span className="text-black/40 text-sm ml-2">/ month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>1 booking link</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Unlimited bookings</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Phone + video meetings</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Google Calendar sync</span>
-                </li>
+              <ul className="space-y-3 mb-8 text-sm text-black/60">
+                {['1 booking link', 'Unlimited bookings', 'Phone + video meetings', 'Google Calendar sync'].map(f => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
-              <Link
-                href="/login"
-                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
-              >
+              <Link href="/login" className="w-full inline-block text-center border border-black/10 text-[#0f1117] font-semibold text-sm px-6 py-3 rounded-xl hover:border-black/20 transition-colors">
                 Start for free →
               </Link>
             </div>
 
-            {/* Solo Card (Most Popular) */}
-            <div className="bg-white rounded-3xl p-8 border border-[#0D7377]/40 shadow-lg shadow-[#0D7377]/[0.08] relative">
+            {/* Solo — featured */}
+            <div className="bg-[#0f1117] rounded-3xl p-8 border border-transparent relative">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="inline-flex items-center gap-2 border border-[#0D7377]/20 bg-[#0D7377]/8 text-[#0D7377] text-xs font-medium px-3 py-1.5 rounded-full">
-                  <span className="w-1.5 h-1.5 bg-[#0D7377] rounded-full" />
+                <div className="inline-flex items-center gap-1.5 bg-[#0D7377] text-white text-[10px] font-semibold px-3 py-1.5 rounded-full">
+                  <span className="w-1 h-1 bg-white rounded-full" />
                   Most popular
                 </div>
               </div>
-              <p className="font-semibold text-gray-900 mb-1">Solo</p>
-              <p className="text-sm text-gray-500 mb-4">Everything you need, one flat rate</p>
-              <div className="mb-6">
-                <span className="text-4xl font-bold text-[#1a1a1a]">$10</span>
-                <span className="text-gray-500 text-sm ml-2">/ month</span>
+              <p className="font-semibold text-white mb-1">Solo</p>
+              <p className="text-sm text-white/40 mb-6">Everything you need</p>
+              <div className="mb-7">
+                <span className="text-4xl font-bold text-white">$10</span>
+                <span className="text-white/40 text-sm ml-2">/ month</span>
               </div>
-              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Unlimited booking links</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Custom email templates</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Full analytics</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Webhooks & REST API</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Phone & email support</span>
-                </li>
+              <ul className="space-y-3 mb-8 text-sm text-white/60">
+                {['Unlimited booking links', 'Custom email templates', 'Full analytics', 'Webhooks & REST API', 'Priority support'].map(f => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
-              <Link
-                href="/login"
-                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
-              >
+              <Link href="/login" className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0b8a8f] transition-colors">
                 Get Solo →
               </Link>
             </div>
 
-            {/* Team Card */}
-            <div className="bg-white rounded-3xl p-8 border border-[#1a1a1a]/[0.06] hover:border-[#0D7377]/30 hover:shadow-lg hover:shadow-[#0D7377]/[0.08] transition-all">
-              <p className="font-semibold text-gray-900 mb-1">Team</p>
-              <p className="text-sm text-gray-500 mb-4">Built for routing pools and shared calendars</p>
-              <div className="mb-6">
+            {/* Team */}
+            <div className="bg-white rounded-3xl p-8 border border-black/[0.07]">
+              <p className="font-semibold text-[#0f1117] mb-1">Team</p>
+              <p className="text-sm text-black/40 mb-6">Shared routing pools</p>
+              <div className="mb-7">
                 <div>
-                  <span className="text-3xl font-bold text-[#1a1a1a]">$10</span>
-                  <span className="text-gray-500 text-sm ml-2">/ month base</span>
+                  <span className="text-4xl font-bold text-[#0f1117]">$10</span>
+                  <span className="text-black/40 text-sm ml-2">/ mo base</span>
                 </div>
-                <div className="mt-1 text-sm text-gray-500">+ $2 per seat</div>
+                <p className="text-sm text-black/40 mt-1">+ $2 per seat</p>
               </div>
-              <ul className="space-y-3 mb-8 text-sm text-[#1a1a1a]/70">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Everything in Solo</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Multi-host booking links</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Round-robin & priority routing</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>Real-time team availability</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
-                  <span>50% off Solo for team members</span>
-                </li>
+              <ul className="space-y-3 mb-8 text-sm text-black/60">
+                {['Everything in Solo', 'Multi-host booking links', 'Round-robin & priority routing', 'Real-time team availability', '50% off Solo for team members'].map(f => (
+                  <li key={f} className="flex items-start gap-2">
+                    <span className="text-[#0D7377] font-bold flex-shrink-0 mt-0.5">✓</span>
+                    <span>{f}</span>
+                  </li>
+                ))}
               </ul>
-              <Link
-                href="/login"
-                className="w-full inline-block text-center bg-[#0D7377] text-white font-semibold text-sm px-6 py-3 rounded-xl hover:bg-[#0a5f63] transition-colors"
-              >
+              <Link href="/login" className="w-full inline-block text-center border border-black/10 text-[#0f1117] font-semibold text-sm px-6 py-3 rounded-xl hover:border-black/20 transition-colors">
                 Get Team →
               </Link>
             </div>
           </div>
 
-          <p className="text-center text-sm text-[#1a1a1a]/40">All plans include a 14-day free trial. No credit card required to start.</p>
+          <p className="text-center text-sm text-black/35">All plans include a 14-day free trial. No credit card required.</p>
         </div>
       </section>
 
       {/* CTA */}
-      <section className="py-20 sm:py-32 px-6 bg-gradient-to-b from-[#0D7377] to-[#0a5f63] text-white text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-white rounded-full mix-blend-multiply filter blur-3xl" />
-        </div>
-        <div className="max-w-3xl mx-auto relative z-10">
-          <h2 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6 leading-tight">Ready to get your team synced?</h2>
-          <p className="text-white/70 text-xl mb-3">Stop email ping-pong. Start working.</p>
-          <p className="text-white/50 text-lg mb-12">14-day free trial. No credit card required.</p>
+      <section className="py-24 sm:py-36 px-6 bg-[#0f1117] text-white text-center">
+        <div className="max-w-3xl mx-auto">
+          <p className="text-xs text-[#0D7377] font-semibold uppercase tracking-widest mb-6">Get started today</p>
+          <h2 className="text-4xl sm:text-6xl font-bold tracking-tight mb-6 leading-[0.95]">
+            Stop asking<br />&ldquo;who&apos;s free?&rdquo;
+          </h2>
+          <p className="text-white/40 text-lg mb-12">CalRoute already knows. 14-day free trial, no card needed.</p>
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 bg-white text-[#0D7377] font-bold text-lg px-12 py-4 rounded-xl hover:bg-[#F7F4EF] transition-all shadow-2xl shadow-black/20 hover:shadow-2xl hover:shadow-white/30"
+            className="inline-flex items-center gap-2 bg-[#0D7377] text-white font-bold text-base px-10 py-4 rounded-xl hover:bg-[#0b8a8f] transition-colors"
           >
             Create your booking link →
           </Link>
-          <p className="text-white/40 text-sm mt-8">Takes under 2 minutes. Free trial included.</p>
+          <p className="text-white/25 text-sm mt-6">Takes under 60 seconds.</p>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-[#F7F4EF] border-t border-[#1a1a1a]/[0.06] py-8 px-6">
+      <footer className="bg-white border-t border-black/[0.06] py-8 px-6">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
-          <span className="text-sm font-semibold">CalRoute</span>
-          <p className="text-xs text-[#1a1a1a]/30">© 2026 CalRoute. Smart scheduling for teams.</p>
-          <div className="flex gap-6 text-xs text-[#1a1a1a]/30">
+          <span className="text-sm font-bold text-[#0f1117]">Cal<span className="text-[#0D7377]">Route</span></span>
+          <p className="text-xs text-black/30">© 2026 CalRoute. Smart scheduling for teams.</p>
+          <div className="flex gap-6 text-xs text-black/30">
             <a href="#features" className="hover:text-[#0D7377] transition-colors">Features</a>
             <a href="#how" className="hover:text-[#0D7377] transition-colors">How it works</a>
             <a href="#pricing" className="hover:text-[#0D7377] transition-colors">Pricing</a>
