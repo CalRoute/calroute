@@ -115,61 +115,57 @@ export default async function LinksPage() {
             <div className="space-y-3">
               {links.map((link) => (
                 <div key={link.id} className="bg-white rounded-2xl border border-gray-200 p-5 hover:border-gray-300 transition-colors">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center gap-2.5 mb-1">
-                        <h3 className="font-semibold text-gray-900 truncate">{link.title}</h3>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
-                        <span>{link.durationMinutes} min</span>
-                        <span>·</span>
-                        <span>{link.meetingType === 'phone_call' ? 'Phone call' : 'Google Meet'}</span>
-                        <span>·</span>
-                        <span>{link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing</span>
-                      </div>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-xs text-[#0D7377] hover:underline mt-2 block truncate"
-                      >
-                        {process.env.NEXT_PUBLIC_APP_URL}/book/{link.slug}
-                      </a>
-                      {link.members.length > 0 && (
-                        <div className="flex items-center gap-2 mt-3">
-                          <div className="flex -space-x-1.5">
-                            {link.members.slice(0, 6).map((m: any) => (
-                              <div
-                                key={m.uid}
-                                title={m.name}
-                                className="w-6 h-6 rounded-full border-2 border-white bg-[#0D7377]/20 text-[#0D7377] flex items-center justify-center text-[10px] font-semibold overflow-hidden flex-shrink-0"
-                              >
-                                {m.avatarUrl
-                                  ? <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
-                                  : initials(m.name)}
-                              </div>
-                            ))}
-                          </div>
-                          <span className="text-xs text-gray-400">
-                            {link.members.length === 1 ? '1 host' : `${link.members.length} hosts`}
-                          </span>
+                  <div className="min-w-0">
+                    <h3 className="font-semibold text-gray-900 truncate mb-1">{link.title}</h3>
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
+                      <span>{link.durationMinutes} min</span>
+                      <span>·</span>
+                      <span>{link.meetingType === 'phone_call' ? 'Phone call' : 'Google Meet'}</span>
+                      <span>·</span>
+                      <span>{link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing</span>
+                    </div>
+                    <a
+                      href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs text-[#0D7377] hover:underline mt-2 block truncate"
+                    >
+                      {process.env.NEXT_PUBLIC_APP_URL}/book/{link.slug}
+                    </a>
+                    {link.members.length > 0 && (
+                      <div className="flex items-center gap-2 mt-3">
+                        <div className="flex -space-x-1.5">
+                          {link.members.slice(0, 6).map((m: any) => (
+                            <div
+                              key={m.uid}
+                              title={m.name}
+                              className="w-6 h-6 rounded-full border-2 border-white bg-[#0D7377]/20 text-[#0D7377] flex items-center justify-center text-[10px] font-semibold overflow-hidden flex-shrink-0"
+                            >
+                              {m.avatarUrl
+                                ? <img src={m.avatarUrl} alt={m.name} className="w-full h-full object-cover" />
+                                : initials(m.name)}
+                            </div>
+                          ))}
                         </div>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0">
-                      <LinkRowActions
-                        linkId={link.id}
-                        slug={link.slug}
-                        isActive={link.isActive}
-                        appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
-                      />
-                      <Link
-                        href={`/dashboard/links/${link.id}`}
-                        className="text-sm text-white bg-[#0D7377] hover:bg-[#0a5f63] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
-                      >
-                        Edit
-                      </Link>
-                    </div>
+                        <span className="text-xs text-gray-400">
+                          {link.members.length === 1 ? '1 host' : `${link.members.length} hosts`}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 mt-4 pt-3 border-t border-gray-100">
+                    <LinkRowActions
+                      linkId={link.id}
+                      slug={link.slug}
+                      isActive={link.isActive}
+                      appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
+                    />
+                    <Link
+                      href={`/dashboard/links/${link.id}`}
+                      className="ml-auto text-sm text-white bg-[#0D7377] hover:bg-[#0a5f63] rounded-lg px-3 py-1.5 transition-colors whitespace-nowrap"
+                    >
+                      Edit
+                    </Link>
                   </div>
                 </div>
               ))}
