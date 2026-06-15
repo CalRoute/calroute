@@ -1,7 +1,6 @@
-import { requireUser } from '@/lib/firebase/session'
+import { requireAdminApi } from '@/lib/admin-session'
 import { adminDb } from '@/lib/firebase/admin'
 
-const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
 
 interface EmailMetric {
   templateName: string
@@ -11,11 +10,9 @@ interface EmailMetric {
 }
 
 export async function GET(request: Request) {
-  const user = await requireUser('/dashboard')
-
-  if (!ADMIN_UIDS.includes(user.uid)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 403 })
-  }
+  const adminCheck = await requireAdminApi(request)
+  if (adminCheck instanceof Response) return adminCheck
+  const user = adminCheck
 
   try {
     // For now, we'll calculate from email logs

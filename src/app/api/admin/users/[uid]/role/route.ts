@@ -1,19 +1,15 @@
-import { requireUser } from '@/lib/firebase/session'
+import { requireAdminApi } from '@/lib/admin-session'
 import { hasPermission, setUserRole } from '@/lib/user-roles'
 
-const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
 
 export async function PATCH(
   request: Request,
   { params }: { params: Promise<{ uid: string }> }
 ) {
-  const user = await requireUser('/dashboard')
+  const adminCheck = await requireAdminApi(request)
+  if (adminCheck instanceof Response) return adminCheck
+  const user = adminCheck
   const { uid } = await params
-
-  // Check if user is admin
-  if (!ADMIN_UIDS.includes(user.uid)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 403 })
-  }
 
   // Check if user has permission
   const canManageUsers = await hasPermission(user.uid, 'manage_users')

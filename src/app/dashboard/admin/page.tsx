@@ -2,23 +2,28 @@ export const dynamic = 'force-dynamic'
 
 import { redirect } from 'next/navigation'
 import { requireUser } from '@/lib/firebase/session'
+import { verifyAdminOtp } from '@/lib/admin-session'
+import { getTotpSecret } from '@/lib/admin-totp'
 import { adminDb } from '@/lib/firebase/admin'
 import DashboardLayout from '@/components/DashboardLayout'
 import AdminDashboardTabs from './AdminDashboardTabs'
+import AdminOtpLogout from './AdminOtpLogout'
 import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
 
-// Admin UIDs - add your UID here
 const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
 
 export default async function AdminPage() {
   const user = await requireUser('/dashboard')
 
-  // Check if user is admin
-  if (!ADMIN_UIDS.includes(user.uid)) {
-    redirect('/dashboard')
-  }
+  if (!ADMIN_UIDS.includes(user.uid)) redirect('/dashboard')
+
+  // Redirect to TOTP setup/verify if not authenticated this session
+  const hasSecret = !!(await getTotpSecret())
+  if (!hasSecret) redirect('/dashboard/admin-setup')
+  const otpVerified = await verifyAdminOtp()
+  if (!otpVerified) redirect('/dashboard/admin-verify')
 
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
   const host = hostSnap.data()
@@ -172,9 +177,12 @@ export default async function AdminPage() {
       breadcrumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: 'Admin' }]}
     >
       <div className="space-y-8">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
-          <p className="text-sm text-gray-500 mt-0.5">System overview and user management</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Admin</h1>
+            <p className="text-sm text-gray-500 mt-0.5">System overview and user management</p>
+          </div>
+          <AdminOtpLogout />
         </div>
 
         <AdminDashboardTabs

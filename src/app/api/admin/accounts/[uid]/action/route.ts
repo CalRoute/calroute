@@ -1,18 +1,15 @@
-import { requireUser } from '@/lib/firebase/session'
+import { requireAdminApi } from '@/lib/admin-session'
 import { disableUserAccount, enableUserAccount, deleteUserAccount } from '@/lib/account-management'
 
-const ADMIN_UIDS = process.env.ADMIN_UIDS?.split(',') || ['at6jDLmcVdQFOxaX1oJq6gU4ANf1']
 
 export async function POST(
   request: Request,
   { params }: { params: Promise<{ uid: string }> }
 ) {
-  const user = await requireUser('/dashboard')
+  const adminCheck = await requireAdminApi(request)
+  if (adminCheck instanceof Response) return adminCheck
+  const user = adminCheck
   const { uid } = await params
-
-  if (!ADMIN_UIDS.includes(user.uid)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 403 })
-  }
 
   const { action, reason } = await request.json() as { action: 'disable' | 'enable' | 'delete'; reason?: string }
 
