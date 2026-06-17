@@ -135,7 +135,8 @@ export async function POST(request: NextRequest) {
       customerEmail: customer_email,
       customerName: customer_name,
       hostEmail: host.email,
-      createMeet: link.meetingType !== 'phone_call',
+      createMeet: link.meetingType === 'google_meet',
+      location: link.meetingType === 'in_person' ? (link.meetingLocation ?? undefined) : undefined,
     })
 
     if (calendarResult) {
@@ -197,6 +198,7 @@ export async function POST(request: NextRequest) {
           meetingType: link.meetingType,
           customerPhone: customer_phone,
           meetLink,
+          meetingLocation: link.meetingLocation ?? undefined,
           greeting: link.greeting,
           customerNotes: customer_notes ?? undefined,
         })
@@ -222,6 +224,7 @@ export async function POST(request: NextRequest) {
           meetingType: link.meetingType,
           customerPhone: customer_phone,
           meetLink,
+          meetingLocation: link.meetingLocation ?? undefined,
         })
 
     await Promise.all([

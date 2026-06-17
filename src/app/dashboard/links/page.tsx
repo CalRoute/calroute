@@ -149,7 +149,7 @@ export default async function LinksPage() {
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-gray-500">
                       <span>{link.durationMinutes} min</span>
                       <span>·</span>
-                      <span>{link.meetingType === 'phone_call' ? 'Phone call' : 'Google Meet'}</span>
+                      <span>{link.meetingType === 'phone_call' ? 'Phone call' : link.meetingType === 'in_person' ? 'In person' : 'Google Meet'}</span>
                       <span>·</span>
                       <span>{link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing</span>
                     </div>

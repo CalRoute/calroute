@@ -39,7 +39,8 @@ export interface BookingLink {
   bufferBeforeMinutes: number
   bufferAfterMinutes: number
   routingStrategy: 'priority' | 'round_robin'
-  meetingType?: 'google_meet' | 'phone_call'
+  meetingType?: 'google_meet' | 'phone_call' | 'in_person'
+  meetingLocation?: string | null
   isActive: boolean
   maxDaysAhead: number
   externalDataEnabled?: boolean

@@ -163,6 +163,7 @@ export async function createCalendarEvent(
     customerName: string
     hostEmail: string
     createMeet?: boolean
+    location?: string
   }
 ): Promise<{ eventId: string; meetLink: string | null } | null> {
   try {
@@ -176,6 +177,7 @@ export async function createCalendarEvent(
       requestBody: {
         summary: booking.title,
         description: booking.description,
+        ...(booking.location && { location: booking.location }),
         start: { dateTime: booking.startTime.toISOString() },
         end: { dateTime: booking.endTime.toISOString() },
         attendees: [

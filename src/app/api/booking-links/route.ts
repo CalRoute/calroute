@@ -14,7 +14,7 @@ export async function POST(request: NextRequest) {
   const {
     title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
-    routingStrategy, maxDaysAhead,
+    routingStrategy, maxDaysAhead, meetingType, meetingLocation,
   } = body
 
   if (!title || !slug) {
@@ -62,6 +62,8 @@ export async function POST(request: NextRequest) {
     routingStrategy: routingStrategy ?? 'priority',
     isActive: true,
     maxDaysAhead: maxDaysAhead ?? 30,
+    meetingType: meetingType ?? 'google_meet',
+    meetingLocation: meetingLocation || null,
     createdAt: new Date().toISOString(),
   })
 

@@ -25,7 +25,8 @@ export default function TeamLinkPage() {
     bufferAfterMinutes: 0,
     routingStrategy: 'priority' as 'priority' | 'round_robin',
     maxDaysAhead: 30,
-    meetingType: 'google_meet' as 'google_meet' | 'phone_call',
+    meetingType: 'google_meet' as 'google_meet' | 'phone_call' | 'in_person',
+    meetingLocation: '',
   })
 
   function slugify(val: string) {
@@ -302,6 +303,7 @@ export default function TeamLinkPage() {
               {[
                 { value: 'google_meet', label: 'Google Meet', desc: 'Video conference link in calendar' },
                 { value: 'phone_call', label: 'Phone Call', desc: 'Exchange phone numbers' },
+                { value: 'in_person', label: 'In person', desc: 'Provide a meeting address' },
               ].map(opt => (
                 <button key={opt.value} type="button"
                   onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
@@ -314,6 +316,18 @@ export default function TeamLinkPage() {
                 </button>
               ))}
             </div>
+            {form.meetingType === 'in_person' && (
+              <div className="mt-3">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Meeting address</label>
+                <input
+                  type="text"
+                  value={form.meetingLocation}
+                  onChange={e => setForm(f => ({ ...f, meetingLocation: e.target.value }))}
+                  placeholder="123 Main St, New York, NY 10001"
+                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]/30 focus:border-[#0D7377]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Routing */}

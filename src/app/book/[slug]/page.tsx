@@ -68,6 +68,7 @@ export default async function BookPage({ params }: Props) {
     bufferAfterMinutes: link.bufferAfterMinutes ?? 0,
     routingStrategy: link.routingStrategy ?? 'priority',
     meetingType: link.meetingType ?? 'google_meet',
+    meetingLocation: link.meetingLocation ?? null,
     isActive: link.isActive,
     maxDaysAhead: link.maxDaysAhead ?? 30,
     ownerId: link.ownerId,

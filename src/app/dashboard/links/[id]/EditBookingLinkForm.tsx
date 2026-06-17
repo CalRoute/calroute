@@ -41,6 +41,7 @@ export default function EditBookingLinkForm({
     routingStrategy: link.routingStrategy ?? 'priority',
     maxDaysAhead: link.maxDaysAhead ?? 30,
     meetingType: link.meetingType ?? 'google_meet',
+    meetingLocation: link.meetingLocation ?? '',
     externalDataEnabled: link.externalDataEnabled ?? false,
     externalDataApiEndpoint: link.externalDataApiEndpoint ?? '',
     externalDataApiKey: link.externalDataApiKey ?? '',
@@ -361,10 +362,11 @@ export default function EditBookingLinkForm({
 
                 <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-3">
                   <h2 className="font-semibold text-gray-900">Meeting type</h2>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     {[
                       { value: 'google_meet', label: 'Google Meet', desc: 'Video link in calendar' },
                       { value: 'phone_call', label: 'Phone call', desc: 'Exchange phone numbers' },
+                      { value: 'in_person', label: 'In person', desc: 'Provide a meeting address' },
                     ].map(opt => (
                       <button key={opt.value} type="button"
                         onClick={() => setForm(f => ({ ...f, meetingType: opt.value as any }))}
@@ -377,6 +379,18 @@ export default function EditBookingLinkForm({
                       </button>
                     ))}
                   </div>
+                  {form.meetingType === 'in_person' && (
+                    <div className="mt-3">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Meeting address</label>
+                      <input
+                        type="text"
+                        value={form.meetingLocation}
+                        onChange={e => setForm(f => ({ ...f, meetingLocation: e.target.value }))}
+                        placeholder="123 Main St, New York, NY 10001"
+                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]/30 focus:border-[#0D7377]"
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

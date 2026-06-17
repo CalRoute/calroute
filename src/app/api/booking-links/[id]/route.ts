@@ -24,7 +24,7 @@ export async function PATCH(
   const {
     title, teamName, description, slug,
     durationMinutes, bufferBeforeMinutes, bufferAfterMinutes,
-    routingStrategy, maxDaysAhead, isActive, emailTemplates, meetingType,
+    routingStrategy, maxDaysAhead, isActive, emailTemplates, meetingType, meetingLocation,
     externalDataEnabled, externalDataApiEndpoint, externalDataApiKey,
     redirectUrlOnBooking, greeting,
   } = body
@@ -56,6 +56,7 @@ export async function PATCH(
     maxDaysAhead: maxDaysAhead ?? 30,
     ...(isActive !== undefined && { isActive }),
     ...(meetingType && { meetingType }),
+    meetingLocation: meetingLocation || null,
     ...(emailTemplates && { emailTemplates }),
     ...(externalDataEnabled !== undefined && { externalDataEnabled }),
     ...(externalDataApiEndpoint && { externalDataApiEndpoint }),

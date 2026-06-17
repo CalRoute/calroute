@@ -11,9 +11,10 @@ export function bookingConfirmedEmail(data: {
   timezone: string
   rescheduleUrl: string
   cancelUrl: string
-  meetingType?: 'google_meet' | 'phone_call'
+  meetingType?: 'google_meet' | 'phone_call' | 'in_person'
   customerPhone?: string
   meetLink?: string | null
+  meetingLocation?: string
   greeting?: string
   customerNotes?: string
 }): string {
@@ -22,9 +23,11 @@ export function bookingConfirmedEmail(data: {
 
   const locationRow = data.meetingType === 'phone_call'
     ? `<tr><td class="label">Where</td><td class="value">${data.hostName} will call you${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
-    : data.meetLink
-      ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
-      : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
+    : data.meetingType === 'in_person'
+      ? `<tr><td class="label">Where</td><td class="value">${data.meetingLocation || 'In person — your host will share the address'}</td></tr>`
+      : data.meetLink
+        ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
+        : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
 
   const content = `
     <h2>You're booked with ${data.hostName} 🎉</h2>
@@ -38,7 +41,7 @@ export function bookingConfirmedEmail(data: {
       ${data.hostEmail ? `<tr><td class="label">Host</td><td class="value">${data.hostName} (<a href="mailto:${data.hostEmail}">${data.hostEmail}</a>)</td></tr>` : ''}
       ${data.customerNotes ? `<tr><td class="label">Your notes</td><td class="value">${data.customerNotes}</td></tr>` : ''}
     </table>
-    ${data.meetingType !== 'phone_call' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
+    ${data.meetingType === 'google_meet' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
     <hr />
     <p class="actions">
       Need to make a change? You can
@@ -57,17 +60,20 @@ export function bookingConfirmedHostEmail(data: {
   startTime: Date
   durationMinutes?: number
   timezone?: string
-  meetingType?: 'google_meet' | 'phone_call'
+  meetingType?: 'google_meet' | 'phone_call' | 'in_person'
   customerPhone?: string
   meetLink?: string | null
+  meetingLocation?: string
 }): string {
   const whenText = formatTimeInTimezone(data.startTime, data.timezone ?? 'UTC')
 
   const locationRow = data.meetingType === 'phone_call'
     ? `<tr><td class="label">Where</td><td class="value">Phone call — call ${data.customerName}${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
-    : data.meetLink
-      ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
-      : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
+    : data.meetingType === 'in_person'
+      ? `<tr><td class="label">Where</td><td class="value">${data.meetingLocation || 'In person'}</td></tr>`
+      : data.meetLink
+        ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
+        : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
 
   const content = `
     <h2>New booking: ${data.customerName} 📅</h2>
@@ -80,7 +86,7 @@ export function bookingConfirmedHostEmail(data: {
       ${locationRow}
       ${data.customerNotes ? `<tr><td class="label">Notes</td><td class="value">${data.customerNotes}</td></tr>` : ''}
     </table>
-    ${data.meetingType !== 'phone_call' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
+    ${data.meetingType === 'google_meet' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
   `
   return emailLayout(content, `New booking from ${data.customerName} on ${whenText}`)
 }
