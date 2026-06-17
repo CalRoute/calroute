@@ -146,6 +146,8 @@ export async function POST(
           timezone: booking.timezone ?? 'UTC',
           rescheduleUrl,
           cancelUrl,
+          meetingType: link.meetingType,
+          meetingLocation: link.meetingLocation ?? undefined,
         })
 
     const hostHtml = customTemplates.rescheduled

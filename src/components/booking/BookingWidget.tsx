@@ -296,7 +296,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
           {link.meetingType === 'phone_call'
             ? 'Phone call'
             : link.meetingType === 'in_person'
-              ? ((link as any).meetingLocation || 'In person')
+              ? (link.meetingLocation || 'In person')
               : 'Google Meet'}
         </div>
         {selectedLanguage && step !== 'select-language' && (
