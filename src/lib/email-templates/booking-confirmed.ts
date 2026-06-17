@@ -5,6 +5,7 @@ export function bookingConfirmedEmail(data: {
   title: string
   customerName: string
   hostName: string
+  hostEmail?: string
   startTime: Date
   durationMinutes: number
   timezone: string
@@ -12,26 +13,40 @@ export function bookingConfirmedEmail(data: {
   cancelUrl: string
   meetingType?: 'google_meet' | 'phone_call'
   customerPhone?: string
+  meetLink?: string | null
+  greeting?: string
+  customerNotes?: string
 }): string {
+  const whenText = formatTimeInTimezone(data.startTime, data.timezone)
+  const firstName = data.customerName.split(' ')[0]
+
+  const locationRow = data.meetingType === 'phone_call'
+    ? `<tr><td class="label">Where</td><td class="value">${data.hostName} will call you${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
+    : data.meetLink
+      ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
+      : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
+
   const content = `
-    <h2>Your meeting is confirmed!</h2>
-    <ul>
-      <li><strong>What:</strong> ${data.title}</li>
-      <li><strong>When:</strong> ${formatTimeInTimezone(data.startTime, data.timezone)}</li>
-      <li><strong>Duration:</strong> ${data.durationMinutes} minutes</li>
-      <li><strong>With:</strong> ${data.hostName}</li>
-    </ul>
-    <p>${data.meetingType === 'phone_call'
-      ? `This is a phone call. ${data.hostName} will call you at <strong>${data.customerPhone}</strong>.`
-      : 'A Google Meet link is in your calendar invite.'}</p>
+    <h2>You're booked with ${data.hostName} 🎉</h2>
+    <p>Hi ${firstName}, your meeting is confirmed. Here are the details:</p>
+    ${data.greeting ? `<div class="greeting">${data.greeting}</div>` : ''}
+    <table class="details">
+      <tr><td class="label">What</td><td class="value">${data.title}</td></tr>
+      <tr><td class="label">When</td><td class="value">${whenText}</td></tr>
+      <tr><td class="label">Duration</td><td class="value">${data.durationMinutes} minutes</td></tr>
+      ${locationRow}
+      ${data.hostEmail ? `<tr><td class="label">Host</td><td class="value">${data.hostName} (<a href="mailto:${data.hostEmail}">${data.hostEmail}</a>)</td></tr>` : ''}
+      ${data.customerNotes ? `<tr><td class="label">Your notes</td><td class="value">${data.customerNotes}</td></tr>` : ''}
+    </table>
+    ${data.meetingType !== 'phone_call' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
     <hr />
-    <p style="font-size: 13px; color: #666;">
+    <p class="actions">
       Need to make a change? You can
       <a href="${data.rescheduleUrl}">reschedule</a> or
       <a href="${data.cancelUrl}">cancel</a> up to 24 hours before the meeting.
     </p>
   `
-  return emailLayout(content)
+  return emailLayout(content, `Your meeting with ${data.hostName} is confirmed for ${whenText}`)
 }
 
 export function bookingConfirmedHostEmail(data: {
@@ -40,20 +55,32 @@ export function bookingConfirmedHostEmail(data: {
   customerEmail: string
   customerNotes?: string
   startTime: Date
+  durationMinutes?: number
   timezone?: string
   meetingType?: 'google_meet' | 'phone_call'
   customerPhone?: string
+  meetLink?: string | null
 }): string {
+  const whenText = formatTimeInTimezone(data.startTime, data.timezone ?? 'UTC')
+
+  const locationRow = data.meetingType === 'phone_call'
+    ? `<tr><td class="label">Where</td><td class="value">Phone call — call ${data.customerName}${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
+    : data.meetLink
+      ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
+      : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
+
   const content = `
-    <h2>New booking received</h2>
-    <ul>
-      <li><strong>Meeting:</strong> ${data.title}</li>
-      <li><strong>When:</strong> ${formatTimeInTimezone(data.startTime, data.timezone ?? 'UTC')}</li>
-      <li><strong>Customer:</strong> ${data.customerName} (${data.customerEmail})</li>
-      ${data.customerNotes ? `<li><strong>Notes:</strong> ${data.customerNotes}</li>` : ''}
-      ${data.meetingType === 'phone_call' && data.customerPhone ? `<li><strong>Phone:</strong> ${data.customerPhone}</li>` : ''}
-    </ul>
-    <p>${data.meetingType === 'phone_call' ? 'Call the customer at the number above.' : 'Check your calendar for the invite.'}</p>
+    <h2>New booking: ${data.customerName} 📅</h2>
+    <p>Someone just booked time with you. Here are the details:</p>
+    <table class="details">
+      <tr><td class="label">Meeting</td><td class="value">${data.title}</td></tr>
+      <tr><td class="label">When</td><td class="value">${whenText}</td></tr>
+      ${data.durationMinutes ? `<tr><td class="label">Duration</td><td class="value">${data.durationMinutes} minutes</td></tr>` : ''}
+      <tr><td class="label">Guest</td><td class="value">${data.customerName} (<a href="mailto:${data.customerEmail}">${data.customerEmail}</a>)</td></tr>
+      ${locationRow}
+      ${data.customerNotes ? `<tr><td class="label">Notes</td><td class="value">${data.customerNotes}</td></tr>` : ''}
+    </table>
+    ${data.meetingType !== 'phone_call' && data.meetLink ? `<a class="button" href="${data.meetLink}">Join Google Meet</a>` : ''}
   `
-  return emailLayout(content)
+  return emailLayout(content, `New booking from ${data.customerName} on ${whenText}`)
 }

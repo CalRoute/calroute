@@ -75,7 +75,7 @@ export async function POST(
     .collection('connected_calendars')
     .where('isActive', '==', true).limit(1).get()
   if (!newCalSnap.empty) {
-    newGoogleEventId = await createCalendarEvent(
+    const calendarResult = await createCalendarEvent(
       { id: newCalSnap.docs[0].id, ...newCalSnap.docs[0].data() } as any,
       {
         title: `${link.title} — ${booking.customerName}`,
@@ -89,6 +89,7 @@ export async function POST(
         hostEmail: newHost.email,
       }
     )
+    newGoogleEventId = calendarResult?.eventId ?? null
 
     // Update lastSyncedAt for new host to track real-time sync
     await adminDb

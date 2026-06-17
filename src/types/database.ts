@@ -83,6 +83,7 @@ export interface Booking {
   startTime: string
   endTime: string
   googleEventId: string | null
+  meetLink?: string | null
   status: 'confirmed' | 'cancelled' | 'rescheduled'
   cancelledAt: string | null
   cancellationReason: string | null

@@ -90,7 +90,7 @@ export async function POST(
       await deleteCalendarEvent(cal, booking.googleEventId)
     }
 
-    newGoogleEventId = await createCalendarEvent(cal, {
+    const calendarResult = await createCalendarEvent(cal, {
       title: `${link.title} — ${booking.customerName}`,
       description: booking.customerNotes
         ? `Meeting booked via CalRoute\n\nNotes: ${booking.customerNotes}`
@@ -101,6 +101,7 @@ export async function POST(
       customerName: booking.customerName,
       hostEmail: host.email,
     })
+    newGoogleEventId = calendarResult?.eventId ?? null
 
     // Update lastSyncedAt to track real-time sync
     await adminDb

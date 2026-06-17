@@ -101,6 +101,7 @@ export async function POST(request: NextRequest) {
   })
 
   // 6. Load host calendar and create Google Calendar event
+  let meetLink: string | null = null
   const calsSnap = await adminDb
     .collection('hosts')
     .doc(host_id)
@@ -124,7 +125,7 @@ export async function POST(request: NextRequest) {
       createdAt: calData.createdAt,
     }
 
-    const googleEventId = await createCalendarEvent(hostCalendar, {
+    const calendarResult = await createCalendarEvent(hostCalendar, {
       title: `${link.title} — ${customer_name}`,
       description: customer_notes
         ? `Meeting booked via CalRoute\n\nNotes: ${customer_notes}`
@@ -137,8 +138,9 @@ export async function POST(request: NextRequest) {
       createMeet: link.meetingType !== 'phone_call',
     })
 
-    if (googleEventId) {
-      await bookingRef.update({ googleEventId })
+    if (calendarResult) {
+      meetLink = calendarResult.meetLink
+      await bookingRef.update({ googleEventId: calendarResult.eventId, meetLink })
       // Update lastSyncedAt timestamp to track when calendar was last synced
       await adminDb
         .collection('hosts')
@@ -174,16 +176,19 @@ export async function POST(request: NextRequest) {
       ? renderCustomTemplate(customTemplates.confirmed, {
           customerName: customer_name,
           hostName: host.name,
+          hostEmail: host.email,
           title: link.title,
           startTime: formatTimeInTimezone(startTime, timezone ?? 'UTC'),
           customerPhone: customer_phone,
           rescheduleUrl,
           cancelUrl,
+          meetLink: meetLink ?? '',
         })
       : bookingConfirmedEmail({
           title: link.title,
           customerName: customer_name,
           hostName: host.name,
+          hostEmail: host.email,
           startTime,
           durationMinutes: link.durationMinutes,
           timezone: timezone ?? 'UTC',
@@ -191,6 +196,9 @@ export async function POST(request: NextRequest) {
           cancelUrl,
           meetingType: link.meetingType,
           customerPhone: customer_phone,
+          meetLink,
+          greeting: link.greeting,
+          customerNotes: customer_notes ?? undefined,
         })
 
     // Host email (use custom if exists, else default)
@@ -201,6 +209,7 @@ export async function POST(request: NextRequest) {
           title: link.title,
           startTime: formatTimeInTimezone(startTime, timezone ?? 'UTC'),
           customerPhone: customer_phone,
+          meetLink: meetLink ?? '',
         })
       : bookingConfirmedHostEmail({
           title: link.title,
@@ -208,9 +217,11 @@ export async function POST(request: NextRequest) {
           customerEmail: customer_email,
           customerNotes: customer_notes ?? undefined,
           startTime,
+          durationMinutes: link.durationMinutes,
           timezone: timezone ?? 'UTC',
           meetingType: link.meetingType,
           customerPhone: customer_phone,
+          meetLink,
         })
 
     await Promise.all([

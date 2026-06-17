@@ -164,7 +164,7 @@ export async function createCalendarEvent(
     hostEmail: string
     createMeet?: boolean
   }
-): Promise<string | null> {
+): Promise<{ eventId: string; meetLink: string | null } | null> {
   try {
     const auth = await getAuthenticatedClient(hostCalendar)
     const calendarClient = google.calendar({ version: 'v3', auth })
@@ -194,7 +194,8 @@ export async function createCalendarEvent(
       ...(createMeet && { conferenceDataVersion: 1 }),
     })
 
-    return data.id ?? null
+    if (!data.id) return null
+    return { eventId: data.id, meetLink: data.hangoutLink ?? null }
   } catch (error) {
     console.error('Failed to create calendar event:', error)
     return null
