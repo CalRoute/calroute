@@ -1,0 +1,70 @@
+name: Version Bump
+
+on:
+  push:
+    branches:
+      - main
+    # Don't re-trigger on the version bump commit itself
+    paths-ignore:
+      - 'package.json'
+      - 'admin/package.json'
+      - '.bumpversion.toml'
+
+jobs:
+  bump:
+    name: Bump version and tag
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Install bump-my-version
+        run: pip install bump-my-version
+
+      - name: Determine bump level from commit message
+        id: bump_level
+        run: |
+          # Get the commit message that triggered this run
+          MSG=$(git log -1 --pretty=%s)
+          echo "Commit: $MSG"
+
+          # BREAKING CHANGE anywhere in body/footer → major
+          BODY=$(git log -1 --pretty=%b)
+          if echo "$BODY" | grep -qiE "BREAKING[[:space:]]CHANGE"; then
+            LEVEL="major"
+          elif echo "$MSG" | grep -qiE "^(feat|feature)(\(.+\))?!:"; then
+            LEVEL="major"
+          elif echo "$MSG" | grep -qiE "^(feat|feature)(\(.+\))?:"; then
+            LEVEL="minor"
+          elif echo "$MSG" | grep -qiE "^(fix|perf|refactor|revert)(\(.+\))?:"; then
+            LEVEL="patch"
+          else
+            # chore, docs, style, test, ci, build → no bump
+            LEVEL="none"
+          fi
+
+          echo "Bump level: $LEVEL"
+          echo "level=$LEVEL" >> "$GITHUB_OUTPUT"
+
+      - name: Bump version
+        if: steps.bump_level.outputs.level != 'none'
+        env:
+          LEVEL: ${{ steps.bump_level.outputs.level }}
+        run: |
+          bump-my-version bump "$LEVEL"
+
+      - name: Push commit and tag
+        if: steps.bump_level.outputs.level != 'none'
+        run: |
+          git push origin main --follow-tags
