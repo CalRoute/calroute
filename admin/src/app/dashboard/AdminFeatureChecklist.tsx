@@ -22,7 +22,6 @@ const FEATURES = {
     '⬜ Reschedule analytics (fields not stored)',
   ],
   Users: [
-    '✅ User roles & permissions',
     '✅ Account list (all users)',
     '✅ Disable / re-enable accounts',
     '✅ Delete accounts',
