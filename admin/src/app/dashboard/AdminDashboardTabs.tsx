@@ -60,7 +60,7 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
 
         {activeTab === 'monitoring' && (
           <div className="space-y-6">
-            <SystemHealth metrics={healthMetrics} />
+            <SystemHealth />
             <ErrorTracking stats={errorTracking} />
             <SupportQueue />
           </div>

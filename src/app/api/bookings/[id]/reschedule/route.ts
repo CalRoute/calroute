@@ -9,6 +9,7 @@ import { isBefore, addHours, addMinutes, parseISO } from 'date-fns'
 import { bookingRescheduledGuestEmail, bookingRescheduledHostEmail } from '@/lib/email-templates/booking-rescheduled'
 import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
+import { logEmailDelivery } from '@/lib/email-logger'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -167,7 +168,7 @@ export async function POST(
           timezone: booking.timezone ?? 'UTC',
         })
 
-    await Promise.all([
+    const [guestResult, hostResult] = await Promise.allSettled([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: booking.customerEmail,
@@ -181,6 +182,8 @@ export async function POST(
         html: hostHtml,
       }),
     ])
+    logEmailDelivery({ type: 'booking_rescheduled', to: booking.customerEmail, subject: `Meeting rescheduled: ${link.title}`, success: guestResult.status === 'fulfilled', error: guestResult.status === 'rejected' ? String(guestResult.reason) : undefined })
+    logEmailDelivery({ type: 'booking_rescheduled', to: host.email, subject: `Meeting rescheduled: ${booking.customerName} — ${link.title}`, success: hostResult.status === 'fulfilled', error: hostResult.status === 'rejected' ? String(hostResult.reason) : undefined })
   } catch (e) {
     console.error('[reschedule] email failed:', e)
   }

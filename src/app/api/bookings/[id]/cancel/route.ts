@@ -9,6 +9,7 @@ import { isBefore, addHours, parseISO } from 'date-fns'
 import { bookingCancelledGuestEmail, bookingCancelledHostEmail } from '@/lib/email-templates/booking-cancelled'
 import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
+import { logEmailDelivery } from '@/lib/email-logger'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -113,7 +114,7 @@ export async function POST(
           cancelledBy,
         })
 
-    await Promise.all([
+    const [guestResult, hostResult] = await Promise.allSettled([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: booking.customerEmail,
@@ -127,6 +128,8 @@ export async function POST(
         html: hostHtml,
       }),
     ])
+    logEmailDelivery({ type: 'booking_cancelled', to: booking.customerEmail, subject: `Booking cancelled: ${link.title}`, success: guestResult.status === 'fulfilled', error: guestResult.status === 'rejected' ? String(guestResult.reason) : undefined })
+    logEmailDelivery({ type: 'booking_cancelled', to: host.email, subject: `Booking cancelled: ${booking.customerName} — ${link.title}`, success: hostResult.status === 'fulfilled', error: hostResult.status === 'rejected' ? String(hostResult.reason) : undefined })
   } catch (e) {
     console.error('[cancel] email failed:', e)
   }

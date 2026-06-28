@@ -10,6 +10,7 @@ import { bookingConfirmedEmail, bookingConfirmedHostEmail } from '@/lib/email-te
 import { renderCustomTemplate } from '@/lib/email-templates/render-custom'
 import { fireWebhooks } from '@/lib/webhooks'
 import { formatTimeInTimezone } from '@/lib/format-time'
+import { logEmailDelivery } from '@/lib/email-logger'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -227,7 +228,7 @@ export async function POST(request: NextRequest) {
           meetingLocation: link.meetingLocation ?? undefined,
         })
 
-    await Promise.all([
+    const [guestResult, hostResult] = await Promise.allSettled([
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: customer_email,
@@ -241,6 +242,8 @@ export async function POST(request: NextRequest) {
         html: hostHtml,
       }),
     ])
+    logEmailDelivery({ type: 'booking_confirmed', to: customer_email, subject: `Booking confirmed: ${link.title}`, success: guestResult.status === 'fulfilled', error: guestResult.status === 'rejected' ? String(guestResult.reason) : undefined })
+    logEmailDelivery({ type: 'booking_confirmed', to: host.email, subject: `New booking: ${customer_name} — ${link.title}`, success: hostResult.status === 'fulfilled', error: hostResult.status === 'rejected' ? String(hostResult.reason) : undefined })
   } catch (emailError) {
     console.error('Email failed:', emailError)
   }

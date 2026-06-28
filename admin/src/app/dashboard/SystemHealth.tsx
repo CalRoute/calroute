@@ -1,81 +1,91 @@
 'use client'
 
-interface HealthMetrics {
-  totalWebhooks: number
-  failedWebhooks: number
-  failureRate: string
-  errorRate: string
-  totalErrors: number
-  lastError?: string
-  health?: {
-    status?: string
-    calendarAPI?: string
-    emailService?: string
-    database?: string
-    firebase?: string
-  }
-  emailQueue?: {
-    pending: number
-    empty: boolean
-  }
+import { useState, useEffect } from 'react'
+
+interface HealthData {
+  webhooks: { totalWebhooks: number; failedWebhooks: number; failureRate: string }
+  email: { total: number; failed: number; deliveryRate: number | null }
+  tokens: { expiredCount: number; totalUsers: number }
+  lastBooking: string | null
+  noCalendarUsers: number
+  totalUsers: number
 }
 
-export default function SystemHealth({ metrics }: { metrics: HealthMetrics }) {
-  const webhookStatus = metrics.totalWebhooks === 0
-    ? '— No webhooks configured'
-    : metrics.failureRate === '0.0' ? '✅ No failures' : `⚠️ ${metrics.failedWebhooks} failed`
+export default function SystemHealth() {
+  const [data, setData] = useState<HealthData | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const errorStatus = metrics.totalErrors === 0 && parseFloat(metrics.errorRate) === 0
-    ? '— No API log data yet'
-    : parseFloat(metrics.errorRate) < 1 ? '✅ Normal' : '⚠️ High error rate'
+  useEffect(() => {
+    fetch('/api/admin/system-health-stats')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d) setData(d) })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) return (
+    <div className="bg-white rounded-2xl border border-gray-200 p-6">
+      <p className="text-sm text-gray-500">Loading system health…</p>
+    </div>
+  )
+
+  if (!data) return null
+
+  const { webhooks, email, tokens, lastBooking, noCalendarUsers, totalUsers } = data
+
+  const lastBookingText = lastBooking
+    ? (() => {
+        const diff = Math.round((Date.now() - new Date(lastBooking).getTime()) / 60000)
+        if (diff < 60) return `${diff}m ago`
+        if (diff < 1440) return `${Math.round(diff / 60)}h ago`
+        return `${Math.round(diff / 1440)}d ago`
+      })()
+    : 'No bookings yet'
+
+  const webhookStatus = webhooks.totalWebhooks === 0
+    ? { label: 'No webhooks configured', color: 'text-gray-500', dot: 'bg-gray-300' }
+    : webhooks.failedWebhooks === 0
+      ? { label: `${webhooks.totalWebhooks} configured · no failures`, color: 'text-green-700', dot: 'bg-green-500' }
+      : { label: `${webhooks.failedWebhooks} failed of ${webhooks.totalWebhooks}`, color: 'text-red-700', dot: 'bg-red-500' }
+
+  const emailStatus = email.deliveryRate === null
+    ? { label: 'No emails sent yet', color: 'text-gray-500', dot: 'bg-gray-300' }
+    : email.deliveryRate === 100
+      ? { label: `100% delivery · ${email.total} sent (24h)`, color: 'text-green-700', dot: 'bg-green-500' }
+      : { label: `${email.deliveryRate}% delivery · ${email.failed} failed (24h)`, color: 'text-red-700', dot: 'bg-red-500' }
+
+  const tokenStatus = tokens.expiredCount === 0
+    ? { label: `All ${totalUsers} users connected`, color: 'text-green-700', dot: 'bg-green-500' }
+    : { label: `${tokens.expiredCount} user${tokens.expiredCount !== 1 ? 's' : ''} with expired token`, color: 'text-red-700', dot: 'bg-red-500' }
+
+  const calStatus = noCalendarUsers === 0
+    ? { label: 'All users have a calendar connected', color: 'text-green-700', dot: 'bg-green-500' }
+    : { label: `${noCalendarUsers} user${noCalendarUsers !== 1 ? 's' : ''} with no calendar`, color: 'text-amber-700', dot: 'bg-amber-400' }
+
+  const rows = [
+    { label: 'Webhooks', value: webhookStatus.label, color: webhookStatus.color, dot: webhookStatus.dot },
+    { label: 'Email delivery (24h)', value: emailStatus.label, color: emailStatus.color, dot: emailStatus.dot },
+    { label: 'Calendar tokens', value: tokenStatus.label, color: tokenStatus.color, dot: tokenStatus.dot },
+    { label: 'Calendar connections', value: calStatus.label, color: calStatus.color, dot: calStatus.dot },
+  ]
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+    <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-5">
       <div>
         <h2 className="text-xl font-semibold text-gray-900">System Health</h2>
-        <p className="text-sm text-gray-600 mt-1">Real-time system monitoring</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="border border-gray-200 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Webhook Status</p>
-          <p className="text-sm font-bold text-gray-900 mb-1">{webhookStatus}</p>
-          <p className="text-xs text-gray-600">{metrics.failedWebhooks} failed of {metrics.totalWebhooks}</p>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">API Errors (24h)</p>
-          <p className="text-sm font-bold text-gray-900 mb-1">{errorStatus}</p>
-          <p className="text-xs text-gray-600">Rate: {metrics.errorRate}%</p>
-        </div>
-
-        <div className="border border-gray-200 rounded-xl p-4">
-          <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Email Queue</p>
-          <p className="text-sm font-bold text-gray-900 mb-1">
-            {metrics.emailQueue?.empty ? '✅ Empty' : `⚠️ ${metrics.emailQueue?.pending} pending`}
-          </p>
-          <p className="text-xs text-gray-600">Checked in last hour</p>
-        </div>
-      </div>
-
-      {metrics.lastError && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
-          <p className="text-sm font-medium text-yellow-900 mb-1">Last Error</p>
-          <p className="text-xs text-yellow-800">{metrics.lastError}</p>
-        </div>
-      )}
-
-      <div className="pt-4 border-t border-gray-200">
-        <p className="text-xs font-semibold text-gray-700 mb-3">Service Status</p>
-        <ul className="space-y-2 text-sm text-gray-700">
-          <li>{metrics.health?.firebase ?? '✅ Firebase: Connected'}</li>
-          <li>{metrics.health?.database ?? '✅ Database: Connected'}</li>
-          <li>{metrics.health?.emailService ?? '— Email service: unknown'}</li>
-          <li>{metrics.health?.calendarAPI ?? '— Calendar API: not monitored'}</li>
-        </ul>
-        <p className="text-xs text-gray-400 mt-3">
-          Uptime and response time monitoring require API middleware instrumentation.
+        <p className="text-sm text-gray-500 mt-0.5">
+          Last booking: <span className="font-medium text-gray-700">{lastBookingText}</span>
         </p>
+      </div>
+
+      <div className="space-y-3">
+        {rows.map(row => (
+          <div key={row.label} className="flex items-center gap-3">
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${row.dot}`} />
+            <span className="text-sm text-gray-600 w-44 flex-shrink-0">{row.label}</span>
+            <span className={`text-sm font-medium ${row.color}`}>{row.value}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
