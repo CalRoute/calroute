@@ -9,8 +9,6 @@ import EngagementMetrics from './EngagementMetrics'
 import UserDebugView from './UserDebugView'
 import AccountManagement from './AccountManagement'
 import RevenueAnalytics from './RevenueAnalytics'
-import EmailDeliveryMonitoring from './EmailDeliveryMonitoring'
-import EmailTemplateAnalytics from './EmailTemplateAnalytics'
 import FeedbackTracker from './FeedbackTracker'
 import SlackIntegrationManager from './SlackIntegrationManager'
 import BrandingManager from './BrandingManager'
@@ -88,8 +86,6 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
 
         {activeTab === 'communications' && (
           <div className="space-y-6">
-            <EmailDeliveryMonitoring />
-            <EmailTemplateAnalytics />
             <FeedbackTracker />
           </div>
         )}
