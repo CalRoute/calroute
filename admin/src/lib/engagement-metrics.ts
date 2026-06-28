@@ -15,11 +15,20 @@ export async function getUserEngagementMetrics(days = 30) {
       .map(d => d.data())
       .filter(b => b.createdAt >= sinceStr)
 
+    // Get all bookings (not just recent) to find last booking per host
+    const allBookings = allBookingsSnap.docs.map(d => d.data())
+
     // Calculate metrics per host
     const metrics = hosts.map(host => {
       const hostBookings = recentBookings.filter(b => b.hostId === host.uid)
       const cancelledBookings = hostBookings.filter(b => b.status === 'cancelled').length
       const confirmedBookings = hostBookings.filter(b => b.status === 'confirmed').length
+
+      const lastBooking = allBookings
+        .filter(b => b.hostId === host.uid && b.status === 'confirmed' && b.startTime)
+        .map(b => b.startTime as string)
+        .sort()
+        .at(-1) ?? null
 
       return {
         uid: host.uid,
@@ -32,6 +41,7 @@ export async function getUserEngagementMetrics(days = 30) {
           hostBookings.length > 0 ? ((cancelledBookings / hostBookings.length) * 100).toFixed(1) : '0',
         engagementScore:
           hostBookings.length > 0 ? Math.round((confirmedBookings / hostBookings.length) * 100) : 0,
+        lastBookingAt: lastBooking,
       }
     })
 
