@@ -12,13 +12,12 @@ interface EngagementData {
   engagementScore: number
 }
 
-interface SyncStatus {
+interface TokenHealth {
   hostId: string
   email: string
   totalCalendars: number
-  syncedCalendars: number
-  lastSyncMinutesAgo: number
-  syncStatus: 'synced' | 'stale' | 'outdated'
+  expiredCount: number
+  status: 'ok' | 'expired' | 'no_calendar'
 }
 
 interface RescheduleAnalytics {
@@ -30,7 +29,7 @@ interface RescheduleAnalytics {
 
 export default function EngagementMetrics() {
   const [engagement, setEngagement] = useState<EngagementData[]>([])
-  const [syncStatus, setSyncStatus] = useState<SyncStatus[]>([])
+  const [tokenHealth, setTokenHealth] = useState<TokenHealth[]>([])
   const [rescheduleAnalytics, setRescheduleAnalytics] = useState<RescheduleAnalytics | null>(null)
   const [loading, setLoading] = useState(true)
 
@@ -44,7 +43,7 @@ export default function EngagementMetrics() {
       if (res.ok) {
         const data = await res.json()
         setEngagement(data.engagement || [])
-        setSyncStatus(data.syncStatus || [])
+        setTokenHealth(data.tokenHealth || [])
         setRescheduleAnalytics(data.rescheduleAnalytics)
       }
     } catch (err) {
@@ -59,7 +58,8 @@ export default function EngagementMetrics() {
   }
 
   const topEngagedUsers = engagement.sort((a, b) => b.engagementScore - a.engagementScore).slice(0, 5)
-  const outOfSyncCalendars = syncStatus.filter(s => s.syncStatus !== 'synced')
+  const expiredTokens = tokenHealth.filter(h => h.status === 'expired')
+  const healthyCount = tokenHealth.filter(h => h.status === 'ok').length
 
   return (
     <div className="space-y-6">
@@ -90,34 +90,32 @@ export default function EngagementMetrics() {
         </div>
       </div>
 
-      {/* Calendar Sync Status */}
+      {/* Calendar Token Health */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-4">Calendar Sync Status</h2>
-        <div className="space-y-2">
-          <p className="text-sm text-gray-600 mb-3">Synced: {syncStatus.filter(s => s.syncStatus === 'synced').length} / {syncStatus.length}</p>
-          {outOfSyncCalendars.length === 0 ? (
-            <p className="text-center py-8 text-green-600 font-medium">All calendars synced ✓</p>
-          ) : (
-            outOfSyncCalendars.map(sync => (
-              <div key={sync.hostId} className={`p-4 rounded-lg border ${
-                sync.syncStatus === 'stale' ? 'bg-yellow-50 border-yellow-200' : 'bg-red-50 border-red-200'
-              }`}>
+        <h2 className="text-xl font-semibold text-gray-900 mb-1">Calendar Token Health</h2>
+        <p className="text-sm text-gray-500 mb-4">Users whose Google OAuth token has expired — new bookings will fail to create calendar events until they reconnect.</p>
+        <p className="text-sm text-gray-600 mb-3">
+          Healthy: <span className="font-semibold text-green-700">{healthyCount}</span>
+          {' · '}
+          Expired: <span className={`font-semibold ${expiredTokens.length > 0 ? 'text-red-700' : 'text-gray-500'}`}>{expiredTokens.length}</span>
+        </p>
+        {expiredTokens.length === 0 ? (
+          <p className="text-center py-8 text-green-600 font-medium">All calendar tokens are valid ✓</p>
+        ) : (
+          <div className="space-y-2">
+            {expiredTokens.map(h => (
+              <div key={h.hostId} className="p-4 rounded-lg border bg-red-50 border-red-200">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-gray-900">{sync.email}</p>
-                    <p className="text-sm text-gray-600">{sync.syncedCalendars}/{sync.totalCalendars} calendars synced</p>
+                    <p className="font-medium text-gray-900">{h.email}</p>
+                    <p className="text-sm text-gray-600">{h.expiredCount}/{h.totalCalendars} token{h.expiredCount !== 1 ? 's' : ''} expired</p>
                   </div>
-                  <div className="text-right">
-                    <p className={`text-sm font-semibold ${sync.syncStatus === 'stale' ? 'text-yellow-700' : 'text-red-700'}`}>
-                      {sync.lastSyncMinutesAgo}m ago
-                    </p>
-                    <p className="text-xs text-gray-600">{sync.syncStatus}</p>
-                  </div>
+                  <span className="text-xs font-semibold text-red-700 bg-red-100 px-2 py-1 rounded-full">Token expired</span>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Reschedule Analytics */}

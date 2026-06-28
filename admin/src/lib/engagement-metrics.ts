@@ -42,57 +42,44 @@ export async function getUserEngagementMetrics(days = 30) {
   }
 }
 
-export async function getCalendarSyncStatus() {
+export async function getCalendarTokenHealth() {
   try {
     const hostsSnap = await adminDb.collection('hosts').get()
+    const now = Date.now()
 
-    const syncStatus = await Promise.all(
+    const results = await Promise.all(
       hostsSnap.docs.map(async (hostDoc) => {
-        // Correct collection name is 'connected_calendars', not 'calendars'
         const calendarsSnap = await hostDoc.ref.collection('connected_calendars').get()
-        const calendars = calendarsSnap.docs.map(d => ({
-          id: d.id,
-          ...(d.data() as any),
-        }))
+        const calendars = calendarsSnap.docs.map(d => ({ id: d.id, ...(d.data() as any) }))
 
-        // If no calendars connected, return default status
         if (calendars.length === 0) {
           return {
             hostId: hostDoc.id,
             email: hostDoc.data().email,
             totalCalendars: 0,
-            syncedCalendars: 0,
-            lastSyncMinutesAgo: 0,
-            syncStatus: 'not_connected',
+            expiredCount: 0,
+            status: 'no_calendar' as const,
           }
         }
 
-        // Get the most recent sync time from all connected calendars
-        const lastSyncTimes = calendars
-          .filter(c => c.lastSyncedAt)
-          .map(c => new Date(c.lastSyncedAt).getTime())
-
-        // If no syncs recorded, use calendar creation time as fallback
-        const mostRecentSync = lastSyncTimes.length > 0
-          ? Math.max(...lastSyncTimes)
-          : Math.min(...calendars.map(c => new Date(c.createdAt || 0).getTime()))
-
-        const minutesSinceSync = Math.round((Date.now() - mostRecentSync) / 60000)
+        const expiredCalendars = calendars.filter(c => {
+          if (!c.expiresAt) return false
+          return new Date(c.expiresAt).getTime() < now
+        })
 
         return {
           hostId: hostDoc.id,
           email: hostDoc.data().email,
           totalCalendars: calendars.length,
-          syncedCalendars: calendars.filter(c => c.lastSyncedAt).length,
-          lastSyncMinutesAgo: minutesSinceSync,
-          syncStatus: minutesSinceSync < 60 ? 'synced' : minutesSinceSync < 1440 ? 'stale' : 'outdated',
+          expiredCount: expiredCalendars.length,
+          status: expiredCalendars.length === 0 ? 'ok' as const : 'expired' as const,
         }
       })
     )
 
-    return syncStatus
+    return results
   } catch (error) {
-    console.error('[sync] error:', error)
+    console.error('[token-health] error:', error)
     return []
   }
 }

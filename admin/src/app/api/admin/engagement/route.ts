@@ -1,5 +1,5 @@
 import { getAdminSession } from '@/lib/session'
-import { getUserEngagementMetrics, getCalendarSyncStatus, getBookingRescheduleAnalytics } from '@/lib/engagement-metrics'
+import { getUserEngagementMetrics, getCalendarTokenHealth, getBookingRescheduleAnalytics } from '@/lib/engagement-metrics'
 import { getFeatureUsageHeatmap, getFeatureAdoptionMetrics } from '@/lib/feature-tracking'
 
 
@@ -9,9 +9,9 @@ export async function GET(request: Request) {
   const user = { uid: session.uid, email: session.email }
 
   try {
-    const [engagement, syncStatus, rescheduleAnalytics, featureHeatmap, featureAdoption] = await Promise.all([
+    const [engagement, tokenHealth, rescheduleAnalytics, featureHeatmap, featureAdoption] = await Promise.all([
       getUserEngagementMetrics(),
-      getCalendarSyncStatus(),
+      getCalendarTokenHealth(),
       getBookingRescheduleAnalytics(),
       getFeatureUsageHeatmap(),
       getFeatureAdoptionMetrics(),
@@ -19,7 +19,7 @@ export async function GET(request: Request) {
 
     return Response.json({
       engagement,
-      syncStatus,
+      tokenHealth,
       rescheduleAnalytics,
       featureHeatmap,
       featureAdoption,
