@@ -21,7 +21,8 @@ interface BookingStats {
 }
 
 export default function BookingAnalytics({ stats }: { stats: BookingStats }) {
-  const last7Days = stats.trends.slice(-7)
+  // trends already comes in as exactly 7 days with zeros filled in
+  const last7Days = stats.trends
   const last7DaysTotal = last7Days.reduce((sum, day) => sum + day.bookingCount, 0)
 
   return (
@@ -71,10 +72,11 @@ export default function BookingAnalytics({ stats }: { stats: BookingStats }) {
         </div>
       )}
 
-      {/* Geographic Distribution */}
+      {/* Guest Timezone Distribution */}
       {stats.geoDistribution.length > 0 && (
         <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">Geographic Distribution</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-1">Guest Timezones</h3>
+          <p className="text-xs text-gray-500 mb-3">Timezones guests were in when they booked</p>
           <div className="space-y-2">
             {stats.geoDistribution.slice(0, 8).map((geo) => (
               <div key={geo.timezone} className="flex items-center justify-between">
@@ -96,29 +98,33 @@ export default function BookingAnalytics({ stats }: { stats: BookingStats }) {
         </div>
       )}
 
-      {/* Booking Trend */}
-      {last7Days.length > 0 && (
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 mb-3">7-Day Trend</h3>
-          <div className="flex items-end gap-2 h-24">
-            {last7Days.map((day) => {
-              const maxCount = Math.max(...last7Days.map(d => d.bookingCount), 1)
-              const height = (day.bookingCount / maxCount) * 100
-
-              return (
-                <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
-                  <div
-                    className="w-full bg-[#0D7377] rounded-t hover:opacity-80 transition-opacity"
-                    style={{ height: `${height}%` }}
-                    title={`${day.date}: ${day.bookingCount} bookings`}
-                  />
-                  <p className="text-xs text-gray-500">{new Date(day.date).getDate()}</p>
-                </div>
-              )
-            })}
-          </div>
+      {/* 7-Day Trend */}
+      <div>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-900">7-Day Trend</h3>
+          <span className="text-xs text-gray-500">{last7DaysTotal} bookings</span>
         </div>
-      )}
+        <div className="flex items-end gap-1.5 h-28">
+          {last7Days.map((day) => {
+            const maxCount = Math.max(...last7Days.map(d => d.bookingCount), 1)
+            const heightPct = Math.max((day.bookingCount / maxCount) * 100, day.bookingCount === 0 ? 0 : 4)
+            const label = new Date(day.date + 'T12:00:00').toLocaleDateString('en', { weekday: 'short' })
+            return (
+              <div key={day.date} className="flex-1 flex flex-col items-center gap-1">
+                <span className="text-xs text-gray-700 font-medium">{day.bookingCount > 0 ? day.bookingCount : ''}</span>
+                <div className="w-full flex items-end" style={{ height: '72px' }}>
+                  <div
+                    className="w-full bg-[#0D7377] rounded-t transition-all"
+                    style={{ height: day.bookingCount === 0 ? '2px' : `${heightPct}%`, opacity: day.bookingCount === 0 ? 0.2 : 1 }}
+                    title={`${day.date}: ${day.bookingCount} booking${day.bookingCount !== 1 ? 's' : ''}`}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">{label}</p>
+              </div>
+            )
+          })}
+        </div>
+      </div>
     </div>
   )
 }

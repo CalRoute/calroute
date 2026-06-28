@@ -3,7 +3,7 @@ export const dynamic = 'force-dynamic'
 import { requireAdminSession } from '@/lib/session'
 import { adminDb } from '@/lib/firebase/admin'
 import AdminDashboardTabs from './AdminDashboardTabs'
-import { getBookingDurationStats, getMostPopularLinks, getGeographicDistribution, getBookingTrends } from '@/lib/booking-analytics'
+import { getBookingDurationStats, getMostPopularLinks, getGuestTimezoneDistribution, getBookingTrends } from '@/lib/booking-analytics'
 import { getErrorStats } from '@/lib/error-logger'
 import { getDeliveryStats } from '@/lib/delivery-tracker'
 
@@ -92,8 +92,8 @@ export default async function AdminDashboardPage() {
 
   const durationStats = await getBookingDurationStats()
   const popularLinks = await getMostPopularLinks(10)
-  const geoDistribution = await getGeographicDistribution()
-  const bookingTrends = await getBookingTrends(30)
+  const geoDistribution = await getGuestTimezoneDistribution()
+  const bookingTrends = await getBookingTrends(7)
 
   const bookingAnalytics = {
     avgDuration: durationStats.avgDuration,

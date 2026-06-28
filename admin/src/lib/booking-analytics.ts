@@ -73,9 +73,9 @@ export async function getMostPopularLinks(limit = 10) {
     .slice(0, limit)
 }
 
-export async function getGeographicDistribution() {
-  // Simple country distribution based on timezone guessing
-  // In production, you'd track customer location explicitly
+export async function getGuestTimezoneDistribution() {
+  // Uses the guest's own timezone submitted at booking time (from their browser),
+  // not the host's configured timezone.
   const bookingsSnap = await adminDb
     .collection('bookings')
     .where('status', '==', 'confirmed')
@@ -84,11 +84,8 @@ export async function getGeographicDistribution() {
   const timezones = new Map<string, number>()
 
   for (const doc of bookingsSnap.docs) {
-    const data = doc.data()
-    const linkSnap = await adminDb.collection('booking_links').doc(data.bookingLinkId).get()
-    const linkData = linkSnap.data()
-    const timezone = linkData?.timezone || 'UTC'
-    timezones.set(timezone, (timezones.get(timezone) || 0) + 1)
+    const tz = doc.data().timezone || 'UTC'
+    timezones.set(tz, (timezones.get(tz) || 0) + 1)
   }
 
   return Array.from(timezones.entries())
@@ -96,30 +93,34 @@ export async function getGeographicDistribution() {
     .sort((a, b) => b.bookingCount - a.bookingCount)
 }
 
-export async function getBookingTrends(days = 30) {
-  const startDate = new Date()
-  startDate.setDate(startDate.getDate() - days)
-  const startDateStr = startDate.toISOString()
+export async function getBookingTrends(days = 7) {
+  // Build a dense 7-day window (today − 6 days → today) so every day
+  // appears even if there were zero bookings that day.
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
 
-  // Fetch all confirmed bookings and filter by date in-memory to avoid composite index
+  const dailyData: Record<string, number> = {}
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today)
+    d.setDate(d.getDate() - i)
+    dailyData[d.toISOString().split('T')[0]] = 0
+  }
+
+  const startDateStr = Object.keys(dailyData)[0]
+
   const bookingsSnap = await adminDb
     .collection('bookings')
     .where('status', '==', 'confirmed')
     .get()
 
-  const bookings = bookingsSnap.docs
+  bookingsSnap.docs
     .map(d => d.data())
     .filter(b => b.startTime >= startDateStr)
-
-  // Group by date
-  const dailyData = {} as Record<string, number>
-
-  bookings.forEach(booking => {
-    const date = new Date(booking.startTime).toISOString().split('T')[0]
-    dailyData[date] = (dailyData[date] || 0) + 1
-  })
+    .forEach(b => {
+      const date = new Date(b.startTime).toISOString().split('T')[0]
+      if (date in dailyData) dailyData[date]++
+    })
 
   return Object.entries(dailyData)
-    .map(([date, count]) => ({ date, bookingCount: count }))
-    .sort((a, b) => a.date.localeCompare(b.date))
+    .map(([date, bookingCount]) => ({ date, bookingCount }))
 }
