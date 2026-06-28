@@ -11,8 +11,6 @@ interface InsightsData {
   peakHours: { hour: number; count: number }[]
   churnedUsers: { uid: string; email: string; name: string }[]
   churnedCount: number
-  deadLinks: { id: string; title: string; slug: string }[]
-  deadLinkCount: number
   totalActiveLinks: number
 }
 
@@ -112,37 +110,6 @@ export default function BookingInsights() {
             ))}
             {data.churnedCount > data.churnedUsers.length && (
               <p className="text-xs text-gray-400 text-center">+{data.churnedCount - data.churnedUsers.length} more</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Dead links */}
-      <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide">Inactive Booking Links</h3>
-            <p className="text-xs text-gray-400 mt-0.5">Active links with no bookings in the last 30 days</p>
-          </div>
-          <span className={`text-2xl font-bold ${data.deadLinkCount > 0 ? 'text-amber-600' : 'text-green-600'}`}>
-            {data.deadLinkCount} <span className="text-sm font-normal text-gray-400">/ {data.totalActiveLinks}</span>
-          </span>
-        </div>
-        {data.deadLinks.length === 0 ? (
-          <p className="text-sm text-green-600 font-medium">All active links had bookings in the last 30 days ✓</p>
-        ) : (
-          <div className="space-y-2">
-            {data.deadLinks.map(l => (
-              <div key={l.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
-                <div>
-                  <p className="text-sm font-medium text-gray-900">{l.title}</p>
-                  <p className="text-xs text-gray-400">/book/{l.slug}</p>
-                </div>
-                <span className="text-xs text-gray-400">No bookings 30d</span>
-              </div>
-            ))}
-            {data.deadLinkCount > data.deadLinks.length && (
-              <p className="text-xs text-gray-400 text-center">+{data.deadLinkCount - data.deadLinks.length} more</p>
             )}
           </div>
         )}

@@ -67,16 +67,6 @@ export async function GET() {
       })
     ).then(results => results.filter(Boolean))
 
-    // ── 5. Dead links (no bookings in 30d, link is active) ────
-    const linksSnap = await adminDb.collection('booking_links').where('isActive', '==', true).get()
-    const recentHostIds = new Set(
-      confirmed.filter(b => b.createdAt >= thirtyDaysAgo).map(b => b.bookingLinkId)
-    )
-    const deadLinks = linksSnap.docs
-      .filter(d => !recentHostIds.has(d.id))
-      .map(d => ({ id: d.id, title: d.data().title, slug: d.data().slug }))
-      .slice(0, 10)
-
     return Response.json({
       cancellationRate,
       totalConfirmed: confirmed.length,
@@ -86,9 +76,6 @@ export async function GET() {
       peakHours,
       churnedUsers,
       churnedCount: churnedHostIds.length,
-      deadLinks,
-      deadLinkCount: deadLinks.length,
-      totalActiveLinks: linksSnap.size,
     })
   } catch (error) {
     console.error('[booking-insights] error:', error)
