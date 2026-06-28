@@ -42,6 +42,7 @@ export default async function EditBookingLinkPage({
       link={link}
       initialHosts={initialHosts}
       ownerId={user.uid}
+      isTeam={!!link.teamName}
     />
   )
 }

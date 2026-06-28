@@ -19,10 +19,12 @@ export default function EditBookingLinkForm({
   link,
   initialHosts,
   ownerId,
+  isTeam = false,
 }: {
   link: any
   initialHosts: TeamMember[]
   ownerId: string
+  isTeam?: boolean
 }) {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('general')
@@ -200,7 +202,7 @@ export default function EditBookingLinkForm({
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'general', label: 'General' },
-    { id: 'routing', label: 'Routing & Team' },
+    ...(isTeam ? [{ id: 'routing' as Tab, label: 'Routing & Team' }] : []),
     { id: 'emails', label: 'Emails' },
     { id: 'integrations', label: 'Integrations' },
   ]
@@ -277,15 +279,17 @@ export default function EditBookingLinkForm({
                     className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
-                  <input
-                    type="text" value={form.teamName}
-                    onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
-                    placeholder="e.g. Sales Team"
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
-                  />
-                </div>
+                {isTeam && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Team name</label>
+                    <input
+                      type="text" value={form.teamName}
+                      onChange={e => setForm(f => ({ ...f, teamName: e.target.value }))}
+                      placeholder="e.g. Sales Team"
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
+                    />
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                   <textarea
