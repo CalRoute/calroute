@@ -10,12 +10,10 @@ import UserDebugView from './UserDebugView'
 import AccountManagement from './AccountManagement'
 import RevenueAnalytics from './RevenueAnalytics'
 import FeedbackTracker from './FeedbackTracker'
-import SlackIntegrationManager from './SlackIntegrationManager'
-import BrandingManager from './BrandingManager'
 import SupportQueue from './SupportQueue'
 import OnboardingStats from './OnboardingStats'
 
-type TabType = 'overview' | 'monitoring' | 'analytics' | 'users' | 'revenue' | 'communications' | 'integrations'
+type TabType = 'overview' | 'monitoring' | 'analytics' | 'users' | 'revenue' | 'communications'
 
 const TABS = [
   { id: 'overview', label: 'Overview' },
@@ -24,7 +22,6 @@ const TABS = [
   { id: 'users', label: 'Users' },
   { id: 'revenue', label: 'Activity' },
   { id: 'communications', label: 'Communications' },
-  { id: 'integrations', label: 'Integrations' },
 ] as const
 
 export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracking, bookingAnalytics }: any) {
@@ -90,13 +87,6 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
           </div>
         )}
 
-        {activeTab === 'integrations' && (
-          <div className="space-y-6">
-            <SlackIntegrationManager />
-            <BrandingManager />
-            <IntegrationStatus />
-          </div>
-        )}
       </div>
     </div>
   )
