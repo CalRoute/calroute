@@ -164,10 +164,11 @@ export async function createCalendarEvent(
     hostEmail: string
     createMeet?: boolean
     location?: string
-  }
+  },
+  onTokenRefresh?: (token: string, expiresAt: Date) => Promise<void>
 ): Promise<{ eventId: string; meetLink: string | null } | null> {
   try {
-    const auth = await getAuthenticatedClient(hostCalendar)
+    const auth = await getAuthenticatedClient(hostCalendar, onTokenRefresh)
     const calendarClient = google.calendar({ version: 'v3', auth })
 
     const createMeet = booking.createMeet !== false

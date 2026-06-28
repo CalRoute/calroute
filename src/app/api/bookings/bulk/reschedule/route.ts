@@ -81,6 +81,7 @@ export async function POST(request: NextRequest) {
             await deleteCalendarEvent(cal, booking.googleEventId)
           }
 
+          const calDocRef = adminDb.collection('hosts').doc(booking.hostId).collection('connected_calendars').doc(calsSnap.docs[0].id)
           const calendarResult = await createCalendarEvent(cal, {
             title: `${link.title} — ${booking.customerName}`,
             description: booking.customerNotes
@@ -91,15 +92,11 @@ export async function POST(request: NextRequest) {
             customerEmail: booking.customerEmail,
             customerName: booking.customerName,
             hostEmail: host.email,
+          }, async (token, expiresAt) => {
+            await calDocRef.update({ accessToken: token, expiresAt: expiresAt.toISOString() })
           })
           newGoogleEventId = calendarResult?.eventId ?? null
-
-          // Update lastSyncedAt to track real-time sync
-          await adminDb
-            .collection('hosts').doc(booking.hostId)
-            .collection('connected_calendars')
-            .doc(calsSnap.docs[0].id)
-            .update({ lastSyncedAt: new Date().toISOString() })
+          await calDocRef.update({ lastSyncedAt: new Date().toISOString() })
         }
 
         // Update booking

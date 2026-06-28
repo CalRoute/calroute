@@ -75,6 +75,7 @@ export async function POST(
     .collection('connected_calendars')
     .where('isActive', '==', true).limit(1).get()
   if (!newCalSnap.empty) {
+    const newCalDocRef = adminDb.collection('hosts').doc(newHostId).collection('connected_calendars').doc(newCalSnap.docs[0].id)
     const calendarResult = await createCalendarEvent(
       { id: newCalSnap.docs[0].id, ...newCalSnap.docs[0].data() } as any,
       {
@@ -87,16 +88,13 @@ export async function POST(
         customerEmail: booking.customerEmail,
         customerName: booking.customerName,
         hostEmail: newHost.email,
+      },
+      async (token, expiresAt) => {
+        await newCalDocRef.update({ accessToken: token, expiresAt: expiresAt.toISOString() })
       }
     )
     newGoogleEventId = calendarResult?.eventId ?? null
-
-    // Update lastSyncedAt for new host to track real-time sync
-    await adminDb
-      .collection('hosts').doc(newHostId)
-      .collection('connected_calendars')
-      .doc(newCalSnap.docs[0].id)
-      .update({ lastSyncedAt: new Date().toISOString() })
+    await newCalDocRef.update({ lastSyncedAt: new Date().toISOString() })
   }
 
   // Update booking

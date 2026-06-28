@@ -126,6 +126,7 @@ export async function POST(request: NextRequest) {
       createdAt: calData.createdAt,
     }
 
+    const calDocRef = adminDb.collection('hosts').doc(host_id).collection('connected_calendars').doc(calsSnap.docs[0].id)
     const calendarResult = await createCalendarEvent(hostCalendar, {
       title: `${link.title} — ${customer_name}`,
       description: customer_notes
@@ -138,18 +139,14 @@ export async function POST(request: NextRequest) {
       hostEmail: host.email,
       createMeet: link.meetingType === 'google_meet',
       location: link.meetingType === 'in_person' ? (link.meetingLocation ?? undefined) : undefined,
+    }, async (token, expiresAt) => {
+      await calDocRef.update({ accessToken: token, expiresAt: expiresAt.toISOString() })
     })
 
     if (calendarResult) {
       meetLink = calendarResult.meetLink
       await bookingRef.update({ googleEventId: calendarResult.eventId, meetLink })
-      // Update lastSyncedAt timestamp to track when calendar was last synced
-      await adminDb
-        .collection('hosts')
-        .doc(host_id)
-        .collection('connected_calendars')
-        .doc(calsSnap.docs[0].id)
-        .update({ lastSyncedAt: new Date().toISOString() })
+      await calDocRef.update({ lastSyncedAt: new Date().toISOString() })
     }
   }
 
