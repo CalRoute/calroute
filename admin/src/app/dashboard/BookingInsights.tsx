@@ -64,22 +64,33 @@ export default function BookingInsights() {
 
       {/* Peak booking hours */}
       <div className="bg-white rounded-2xl border border-gray-200 p-6">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-4">Peak Hours Bookings Are Made</h3>
+        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Peak hours bookings are made</h3>
+        <p className="text-xs text-gray-400 mb-5">Top 3 hours when guests submit bookings</p>
         {data.peakHours.length === 0 ? (
           <p className="text-sm text-gray-500">No booking data yet</p>
         ) : (
-          <div className="flex items-end gap-3">
-            {data.peakHours.map((h, i) => (
-              <div key={h.hour} className="flex-1 flex flex-col items-center gap-1.5">
-                <span className="text-sm font-semibold text-gray-700">{h.count}</span>
-                <div
-                  className={`w-full rounded-t ${i === 0 ? 'bg-[#0D7377]' : 'bg-[#0D7377]/40'}`}
-                  style={{ height: `${Math.max(24, (h.count / data.peakHours[0].count) * 80)}px` }}
-                />
-                <span className="text-xs text-gray-500">{fmt12h(h.hour)}</span>
-                {i === 0 && <span className="text-xs text-[#0D7377] font-medium">peak</span>}
-              </div>
-            ))}
+          <div className="space-y-3">
+            {data.peakHours.map((h, i) => {
+              const pct = Math.round((h.count / data.peakHours[0].count) * 100)
+              return (
+                <div key={h.hour} className="flex items-center gap-4">
+                  <span className="text-sm text-gray-500 w-10 text-right flex-shrink-0">{fmt12h(h.hour)}</span>
+                  <div className="flex-1 h-7 bg-gray-100 rounded-lg overflow-hidden">
+                    <div
+                      className="h-full rounded-lg transition-all"
+                      style={{
+                        width: `${pct}%`,
+                        backgroundColor: i === 0 ? '#0D7377' : i === 1 ? '#0D737799' : '#0D737755',
+                      }}
+                    />
+                  </div>
+                  <span className="text-sm font-semibold text-gray-700 w-12 flex-shrink-0">
+                    {h.count} <span className="text-xs font-normal text-gray-400">booking{h.count !== 1 ? 's' : ''}</span>
+                  </span>
+                  {i === 0 && <span className="text-xs font-medium text-[#0D7377] bg-[#0D7377]/10 px-2 py-0.5 rounded-full flex-shrink-0">peak</span>}
+                </div>
+              )
+            })}
           </div>
         )}
       </div>
