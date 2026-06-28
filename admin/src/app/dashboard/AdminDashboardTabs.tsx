@@ -10,6 +10,7 @@ import UserDebugView from './UserDebugView'
 import AccountManagement from './AccountManagement'
 import RevenueAnalytics from './RevenueAnalytics'
 import FeedbackTracker from './FeedbackTracker'
+import BookingInsights from './BookingInsights'
 import SupportQueue from './SupportQueue'
 import OnboardingStats from './OnboardingStats'
 
@@ -20,7 +21,7 @@ const TABS = [
   { id: 'monitoring', label: 'Monitoring' },
   { id: 'analytics', label: 'Analytics' },
   { id: 'users', label: 'Users' },
-  { id: 'revenue', label: 'Activity' },
+  { id: 'revenue', label: 'Booking Activity' },
   { id: 'communications', label: 'Communications' },
 ] as const
 
@@ -64,6 +65,7 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
         {activeTab === 'analytics' && (
           <div className="space-y-6">
             <BookingAnalytics stats={bookingAnalytics} />
+            <BookingInsights />
             <EngagementMetrics />
           </div>
         )}
