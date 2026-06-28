@@ -7,7 +7,6 @@ import ErrorTracking from './ErrorTracking'
 import ApiMetricsTracker from './ApiMetricsTracker'
 import BookingAnalytics from './BookingAnalytics'
 import EngagementMetrics from './EngagementMetrics'
-import UserSearch from './UserSearch'
 import UserDebugView from './UserDebugView'
 import UserRolesManager from './UserRolesManager'
 import AccountManagement from './AccountManagement'
@@ -82,7 +81,6 @@ export default function AdminDashboardTabs({ metrics, healthMetrics, errorTracki
           <div className="space-y-6">
             <UserRolesManager />
             <AccountManagement />
-            <UserSearch />
             <UserDebugView />
           </div>
         )}
