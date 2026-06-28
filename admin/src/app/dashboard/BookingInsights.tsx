@@ -87,7 +87,6 @@ export default function BookingInsights() {
                   <span className="text-sm font-semibold text-gray-700 w-12 flex-shrink-0">
                     {h.count} <span className="text-xs font-normal text-gray-400">booking{h.count !== 1 ? 's' : ''}</span>
                   </span>
-                  {i === 0 && <span className="text-xs font-medium text-[#0D7377] bg-[#0D7377]/10 px-2 py-0.5 rounded-full flex-shrink-0">peak</span>}
                 </div>
               )
             })}
