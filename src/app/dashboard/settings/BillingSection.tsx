@@ -93,6 +93,7 @@ export default function BillingSection({ linkCount }: Props) {
 
   const tier = billing?.user?.tier ?? 'free_trial'
   const status = billing?.user?.status ?? 'active'
+  const isVip = tier === 'vip'
   const isSubscribed = ['solo', 'team_member'].includes(tier)
   const isPastDue = status === 'past_due'
 
@@ -101,14 +102,18 @@ export default function BillingSection({ linkCount }: Props) {
       ? 'Solo Plan'
       : tier === 'team_member'
         ? 'Team Member'
-        : 'Free Trial'
+        : tier === 'vip'
+          ? '⭐ VIP'
+          : 'Free Trial'
 
   const planDescription =
     tier === 'solo'
       ? '$10/month flat rate'
       : tier === 'team_member'
         ? 'Team-managed (Solo with 50% discount)'
-        : 'Limited to personal use'
+        : tier === 'vip'
+          ? 'Full access — complimentary'
+          : 'Limited to personal use'
 
   return (
     <div className="bg-white rounded-2xl border border-gray-200 p-5 sm:p-6 space-y-4">
@@ -131,7 +136,7 @@ export default function BillingSection({ linkCount }: Props) {
               )}
             </div>
             <div className="flex flex-col gap-2 w-full max-w-xs">
-              {isSubscribed ? (
+              {isVip ? null : isSubscribed ? (
                 <div className="flex flex-col gap-2">
                   <button
                     onClick={handlePortal}
@@ -148,7 +153,7 @@ export default function BillingSection({ linkCount }: Props) {
                     {checkoutLoading ? 'Loading...' : 'Cancel subscription'}
                   </button>
                 </div>
-              ) : (
+              ) : isVip ? null : (
                 <>
                   <input
                     type="text"
