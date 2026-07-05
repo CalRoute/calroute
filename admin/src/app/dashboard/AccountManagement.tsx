@@ -9,6 +9,7 @@ interface Account {
   createdAt: string
   status: 'active' | 'disabled' | 'deleted'
   disabledReason?: string
+  isVip?: boolean
 }
 
 export default function AccountManagement() {
@@ -17,6 +18,7 @@ export default function AccountManagement() {
   const [actioningId, setActioningId] = useState<string | null>(null)
   const [disableReason, setDisableReason] = useState('')
   const [pendingDisable, setPendingDisable] = useState<string | null>(null)
+  const [vipLoading, setVipLoading] = useState<string | null>(null)
 
   useEffect(() => { loadAccounts() }, [])
 
@@ -54,6 +56,22 @@ export default function AccountManagement() {
     }
   }
 
+  const toggleVip = async (uid: string, currentlyVip: boolean) => {
+    setVipLoading(uid)
+    try {
+      await fetch('/api/admin/accounts/vip', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid, grant: !currentlyVip }),
+      })
+      setAccounts(prev => prev.map(a => a.uid === uid ? { ...a, isVip: !currentlyVip } : a))
+    } catch (err) {
+      console.error('Failed to toggle VIP:', err)
+    } finally {
+      setVipLoading(null)
+    }
+  }
+
   if (loading) return <div className="text-center py-8 text-gray-500">Loading accounts...</div>
 
   const active = accounts.filter(a => a.status === 'active')
@@ -66,7 +84,7 @@ export default function AccountManagement() {
         <p className="text-sm text-gray-600 mt-1">All {accounts.length} user accounts</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <div className="bg-white rounded-xl p-4 border border-gray-200">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Active</p>
           <p className="text-3xl font-bold text-teal-600">{active.length}</p>
@@ -74,6 +92,10 @@ export default function AccountManagement() {
         <div className="bg-white rounded-xl p-4 border border-gray-200">
           <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">Disabled</p>
           <p className="text-3xl font-bold text-gray-900">{disabled.length}</p>
+        </div>
+        <div className="bg-white rounded-xl p-4 border border-amber-200">
+          <p className="text-xs font-semibold text-amber-500 uppercase tracking-wide mb-1">VIP</p>
+          <p className="text-3xl font-bold text-amber-500">{accounts.filter(a => a.isVip).length}</p>
         </div>
       </div>
 
@@ -86,7 +108,12 @@ export default function AccountManagement() {
             <div key={account.uid} className="p-4 border border-gray-200 rounded-lg">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{account.name || '(no name)'}</p>
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-900 truncate">{account.name || '(no name)'}</p>
+                    {account.isVip && (
+                      <span className="text-xs font-semibold text-amber-600 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full flex-shrink-0">VIP</span>
+                    )}
+                  </div>
                   <p className="text-sm text-gray-600 truncate">{account.email}</p>
                   {account.createdAt && (
                     <p className="text-xs text-gray-400 mt-0.5">
@@ -95,6 +122,17 @@ export default function AccountManagement() {
                   )}
                 </div>
                 <div className="flex gap-2 flex-shrink-0">
+                  <button
+                    onClick={() => toggleVip(account.uid, !!account.isVip)}
+                    disabled={vipLoading === account.uid}
+                    className={`px-3 py-1 text-sm rounded transition-colors disabled:opacity-50 ${
+                      account.isVip
+                        ? 'bg-amber-100 text-amber-700 hover:bg-amber-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-amber-50 hover:text-amber-700'
+                    }`}
+                  >
+                    {account.isVip ? 'Revoke VIP' : 'Grant VIP'}
+                  </button>
                   {pendingDisable === account.uid ? (
                     <div className="flex items-center gap-2">
                       <input

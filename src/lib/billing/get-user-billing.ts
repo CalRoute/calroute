@@ -1,7 +1,7 @@
 import { adminDb } from '@/lib/firebase/admin'
 import type { UserBillingDoc } from '@/types/billing'
 
-export type BillingTier = 'free_trial' | 'solo' | 'team_member'
+export type BillingTier = 'free_trial' | 'solo' | 'team_member' | 'vip'
 
 export interface UserBilling {
   tier: BillingTier
@@ -22,8 +22,9 @@ export async function getUserBilling(uid: string): Promise<UserBilling> {
 
   const doc = snap.data() as UserBillingDoc
   const isPaid =
-    (doc.tier === 'solo' || doc.tier === 'team_member') &&
-    (doc.status === 'active' || doc.status === 'trialing')
+    doc.tier === 'vip' ||
+    ((doc.tier === 'solo' || doc.tier === 'team_member') &&
+    (doc.status === 'active' || doc.status === 'trialing'))
 
   return {
     tier: doc.tier,

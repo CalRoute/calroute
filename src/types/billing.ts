@@ -1,6 +1,6 @@
 export interface UserBillingDoc {
   subscriptionId: string | null
-  tier: 'free_trial' | 'solo' | 'team_member'
+  tier: 'free_trial' | 'solo' | 'team_member' | 'vip'
   status: 'active' | 'trialing' | 'past_due' | 'canceled' | 'expired'
   stripeCustomerId: string | null
   teamId: string | null

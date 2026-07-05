@@ -11,12 +11,22 @@ export async function GET() {
       adminDb.collection('user_accounts').get(),
     ])
 
-    // Build a map of manually-actioned statuses
     const actionedMap = new Map(accountsSnap.docs.map(d => [d.id, d.data()]))
+
+    // Fetch billing docs in parallel to check VIP status
+    const billingDocs = await Promise.all(
+      hostsSnap.docs.map(doc =>
+        adminDb.collection('hosts').doc(doc.id).collection('billing').doc('status').get()
+      )
+    )
+    const billingMap = new Map(
+      hostsSnap.docs.map((doc, i) => [doc.id, billingDocs[i].data()])
+    )
 
     const accounts = hostsSnap.docs.map(doc => {
       const host = doc.data()
       const actioned = actionedMap.get(doc.id)
+      const billing = billingMap.get(doc.id)
       return {
         uid: doc.id,
         email: host.email || '',
@@ -25,6 +35,7 @@ export async function GET() {
         status: (actioned?.status ?? 'active') as 'active' | 'disabled' | 'deleted',
         disabledAt: actioned?.disabledAt,
         disabledReason: actioned?.disabledReason,
+        isVip: billing?.tier === 'vip',
       }
     })
 
