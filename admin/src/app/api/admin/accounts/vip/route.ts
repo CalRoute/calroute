@@ -3,8 +3,6 @@ import { getAdminSession } from '@/lib/session'
 import { adminDb } from '@/lib/firebase/admin'
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 // POST { uid, grant: true|false }
 export async function POST(request: NextRequest) {
   const session = await getAdminSession()
@@ -41,13 +39,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Notify the user
-    if (host?.email) {
+    if (host?.email && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY)
       const appUrl = process.env.NEXT_PUBLIC_APP_URL!
       const firstName = host.name?.split(' ')[0] ?? 'there'
       const subject = grant ? `${firstName}, you're a VIP now ⭐` : 'A quick note about your CalRoute account'
       const html = grant
-        ? `<p>Hey ${firstName}! 🎉</p><p>We've upgraded your account to full VIP access — completely on us. Unlimited booking links, API access, team features, everything. No catch, no expiry. Just enjoy it!</p><p><a href="${appUrl}/dashboard">Go explore →</a></p><p style="color:#888;font-size:13px;">Questions? Just reply to this email.</p>`
-        : `<p>Hey ${firstName},</p><p>Just a heads up — your complimentary VIP access has been removed and your account is back on the free trial. If you'd like to keep full access, upgrading is quick and easy.</p><p><a href="${appUrl}/dashboard/settings?tab=billing">See plans →</a></p><p style="color:#888;font-size:13px;">Have questions? Reply here and we'll help you out.</p>`
+        ? `<p>Hey ${firstName}! 🎉</p><p>We've upgraded your account to full VIP access, completely on us. Unlimited booking links, API access, team features, everything. No catch, no expiry. Just enjoy it!</p><p><a href="${appUrl}/dashboard">Go explore →</a></p><p style="color:#888;font-size:13px;">Questions? Just reply to this email.</p>`
+        : `<p>Hey ${firstName},</p><p>Just a heads up. Your complimentary VIP access has been removed and your account is back on the free trial. If you'd like to keep full access, upgrading is quick and easy.</p><p><a href="${appUrl}/dashboard/settings?tab=billing">See plans →</a></p><p style="color:#888;font-size:13px;">Have questions? Reply here and we'll help you out.</p>`
 
       resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
