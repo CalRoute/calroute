@@ -3,7 +3,7 @@ import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
 
 export const metadata = {
-  title: 'Terms of Service — CalRoute',
+  title: 'Terms of Service | CalRoute',
 }
 
 export default function TermsPage() {

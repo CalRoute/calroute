@@ -7,7 +7,7 @@ export function accountDeletedEmail(data: {
   const firstName = data.name.split(' ')[0]
   const content = `
     <h2>Take care, ${firstName}.</h2>
-    <p>Your CalRoute account has been deleted — everything's gone: your booking links, history, and any active subscription. Clean slate.</p>
+    <p>Your CalRoute account has been deleted. Everything's gone: your booking links, history, and any active subscription. Clean slate.</p>
     <p>If you ever feel like coming back, the door's open. No hard feelings. 🙂</p>
     <a class="button" href="${data.appUrl}">Come back anytime</a>
     <hr />

@@ -7,7 +7,7 @@ export function welcomeEmail(data: {
   const firstName = data.name.split(' ')[0]
   const content = `
     <h2>Hey ${firstName}, welcome to CalRoute! 👋</h2>
-    <p>Really glad you're here. Getting started takes about 5 minutes — here's the quick path:</p>
+    <p>Really glad you're here. Getting started takes about 5 minutes:</p>
     <table class="details">
       <tr>
         <td class="label">First</td>
@@ -19,12 +19,12 @@ export function welcomeEmail(data: {
       </tr>
       <tr>
         <td class="label">Finally</td>
-        <td class="value">Share the link — email signature, website, wherever works for you.</td>
+        <td class="value">Share the link in your email signature, on your website, wherever works for you.</td>
       </tr>
     </table>
     <a class="button" href="${data.appUrl}/dashboard">Let's go →</a>
     <hr />
-    <p class="actions">Got questions? Just reply here — we actually read these.</p>
+    <p class="actions">Got questions? Just reply here. We actually read these.</p>
   `
   return emailLayout(content, `Hey ${firstName}, your CalRoute account is ready!`)
 }

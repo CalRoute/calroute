@@ -593,7 +593,7 @@ export default function EditBookingLinkForm({
                   spellCheck={false}
                 />
                 <p className="text-xs text-gray-400 mt-1">
-                  Plain HTML only — no <code className="bg-gray-100 px-1 rounded">&lt;script&gt;</code> tags.
+                  Plain HTML only. No <code className="bg-gray-100 px-1 rounded">&lt;script&gt;</code> tags.
                   Your HTML will be wrapped in CalRoute&apos;s standard email layout.
                 </p>
               </div>

@@ -92,7 +92,7 @@ async function activateSubscription(session: any) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: hostEmail,
-        subject: `You're all set — welcome to CalRoute ${planName}!`,
+        subject: `You're all set! Welcome to CalRoute ${planName}.`,
         html: billingSubscriptionConfirmedEmail({
           name: hostName,
           planName,

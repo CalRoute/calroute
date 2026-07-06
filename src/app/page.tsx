@@ -64,7 +64,7 @@ export default function HomePage() {
           </h1>
 
           <p className="text-white/50 text-lg sm:text-xl max-w-lg mx-auto mb-12 leading-relaxed">
-            CalRoute checks your whole team&apos;s availability in real time and routes each booking to whoever is actually free — automatically.
+            CalRoute checks your whole team&apos;s availability in real time and routes each booking to whoever is actually free. Automatically.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -163,7 +163,7 @@ export default function HomePage() {
           {[
             { n: '60 sec', label: 'to create your first link' },
             { n: '5 calendars', label: 'merged per team member' },
-            { n: 'Real-time', label: 'availability — no manual slots' },
+            { n: 'Real-time', label: 'availability, no manual slots' },
           ].map(s => (
             <div key={s.n}>
               <p className="text-2xl font-bold text-[#0D7377] mb-0.5">{s.n}</p>
@@ -193,7 +193,7 @@ export default function HomePage() {
                   One link routes to the right person.
                 </h3>
                 <p className="text-white/50 leading-relaxed text-base">
-                  Share a single booking link with your team. CalRoute checks every host&apos;s calendar in real time and assigns the meeting — round-robin, by priority, or first available. No admin overhead, no missed assignments.
+                  Share a single booking link with your team. CalRoute checks every host&apos;s calendar in real time and assigns the meeting: round-robin, by priority, or first available. No admin overhead, no missed assignments.
                 </p>
               </div>
               <div className="bg-[#f5f5f7] p-7 sm:p-10 lg:p-14 flex flex-col justify-center gap-3">
@@ -228,8 +228,8 @@ export default function HomePage() {
               <div className="bg-[#f5f5f7] p-7 sm:p-10 lg:p-14 flex flex-col justify-center gap-4 order-2 lg:order-1">
                 <div className="space-y-3">
                   {[
-                    { cal: 'Work — Google', events: 3, color: 'bg-blue-500' },
-                    { cal: 'Personal — Google', events: 1, color: 'bg-purple-400' },
+                    { cal: 'Work (Google)', events: 3, color: 'bg-blue-500' },
+                    { cal: 'Personal (Google)', events: 1, color: 'bg-purple-400' },
                     { cal: 'Side project', events: 2, color: 'bg-amber-400' },
                   ].map(c => (
                     <div key={c.cal} className="flex items-center gap-3 bg-white rounded-2xl px-4 py-3.5 border border-black/[0.06]">
@@ -250,7 +250,7 @@ export default function HomePage() {
                   Your whole life, one honest schedule.
                 </h3>
                 <p className="text-black/50 leading-relaxed text-base">
-                  Each team member connects up to 5 Google calendars — work, personal, side projects. CalRoute merges them into one conflict-free availability view. Customers only see slots where you&apos;re genuinely free.
+                  Each team member connects up to 5 Google calendars: work, personal, side projects. CalRoute merges them into one conflict-free availability view. Customers only see slots where you&apos;re genuinely free.
                 </p>
               </div>
             </div>
@@ -269,7 +269,7 @@ export default function HomePage() {
                 },
                 {
                   title: 'Phone & video calls',
-                  desc: 'Offer phone calls, Google Meet, or both. Customers pick what works for them — you get the details in the confirmation.',
+                  desc: 'Offer phone calls, Google Meet, or both. Customers pick what works for them and you get the details in the confirmation.',
                   icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z" />
@@ -278,7 +278,7 @@ export default function HomePage() {
                 },
                 {
                   title: 'Language-based routing',
-                  desc: 'Global team? Customers pick their language — CalRoute only shows hosts who speak it. Simple, respectful, effective.',
+                  desc: 'Global team? Customers pick their language and CalRoute only shows hosts who speak it. Simple, respectful, effective.',
                   icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
@@ -287,7 +287,7 @@ export default function HomePage() {
                 },
                 {
                   title: 'Guest self-service',
-                  desc: 'Customers reschedule or cancel up to 24h before — on their own, without emailing you. You get notified instantly.',
+                  desc: 'Customers reschedule or cancel up to 24h before, on their own, without emailing you. You get notified instantly.',
                   icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
@@ -305,7 +305,7 @@ export default function HomePage() {
                 },
                 {
                   title: 'Embeddable widget',
-                  desc: 'One iframe. Drop it in your website, Notion, or email. The booking experience appears inline — no redirects.',
+                  desc: 'One iframe. Drop it in your website, Notion, or email. The booking experience appears inline with no redirects.',
                   icon: (
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75L22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25" />
@@ -335,9 +335,9 @@ export default function HomePage() {
 
           <div className="space-y-4">
             {[
-              { n: '1', title: 'Connect your Google Calendar', desc: 'Sign in with Google and link up to 5 calendars. CalRoute reads only free/busy data — never your event titles or details.' },
+              { n: '1', title: 'Connect your Google Calendar', desc: 'Sign in with Google and link up to 5 calendars. CalRoute reads only free/busy data, never your event titles or details.' },
               { n: '2', title: 'Create a booking link', desc: 'Set duration, buffer time, availability hours, and routing strategy. Invite teammates as hosts on the same link.' },
-              { n: '3', title: 'Share it anywhere', desc: 'Send calroute.me/book/your-slug to anyone — no account needed on their end. Embed it on your site with one iframe.' },
+              { n: '3', title: 'Share it anywhere', desc: 'Send calroute.me/book/your-slug to anyone. No account needed on their end. Embed it on your site with one iframe.' },
               { n: '4', title: 'Just show up', desc: 'CalRoute creates the Google Calendar event, sends confirmation emails to both sides, and notifies your team instantly.' },
             ].map(s => (
               <div key={s.n} className="flex gap-5 bg-white rounded-2xl px-7 py-6 border border-black/[0.06]">
@@ -372,7 +372,7 @@ export default function HomePage() {
               { them: 'One calendar per person', us: 'Up to 5 calendars merged' },
               { them: 'Manual round-robin setup', us: 'Auto-routing in seconds' },
               { them: 'Stale, manually-set slots', us: 'Live calendar availability' },
-              { them: 'No phone call option', us: 'Phone or video — your choice' },
+              { them: 'No phone call option', us: 'Phone or video, your choice' },
               { them: 'Static confirmation emails', us: 'Custom branded templates' },
               { them: 'No API access', us: 'Full REST API + webhooks' },
               { them: 'Per-seat pricing', us: 'From $10/mo flat' },

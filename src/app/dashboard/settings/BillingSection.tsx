@@ -112,7 +112,7 @@ export default function BillingSection({ linkCount }: Props) {
       : tier === 'team_member'
         ? 'Team-managed (Solo with 50% discount)'
         : tier === 'vip'
-          ? 'Full access — complimentary'
+          ? 'Full access, complimentary'
           : 'Limited to personal use'
 
   return (

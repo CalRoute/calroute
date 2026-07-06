@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: Props) {
   const link = snap.docs[0].data()
 
   return {
-    title: `Book a time — ${link.title}`,
+    title: `Book a time with ${link.title}`,
     description: link.description ?? 'Schedule a meeting via CalRoute',
   }
 }

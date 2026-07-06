@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       await resend.emails.send({
         from: process.env.RESEND_FROM_EMAIL!,
         to: host.email,
-        subject: "You're back — CalRoute is open for bookings again",
+        subject: "You're back! CalRoute is open for bookings again.",
         html: vacationEndedEmail({
           name: host.name ?? 'there',
           appUrl: process.env.NEXT_PUBLIC_APP_URL!,

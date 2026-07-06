@@ -43,7 +43,7 @@ export default function AdminSetupClient({ userEmail }: { userEmail: string }) {
         router.push('/dashboard/admin')
       } else {
         const data = await res.json()
-        setError(data.error ?? 'Invalid code — try again')
+        setError(data.error ?? 'Invalid code. Try again')
         setCode('')
         inputRef.current?.focus()
       }

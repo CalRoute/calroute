@@ -3,7 +3,7 @@ import PublicHeader from '@/components/PublicHeader'
 import PublicFooter from '@/components/PublicFooter'
 
 export const metadata = {
-  title: 'Privacy Policy — CalRoute',
+  title: 'Privacy Policy | CalRoute',
 }
 
 export default function PrivacyPage() {
@@ -26,7 +26,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">2. Information we collect</h2>
             <p className="mb-3"><strong className="text-[#1a1a1a]">Account information:</strong> When you sign in with Google, we receive your name, email address, and profile photo from Google.</p>
-            <p className="mb-3"><strong className="text-[#1a1a1a]">Google Calendar data:</strong> With your explicit permission, CalRoute accesses your Google Calendar free/busy information to determine your availability. We do <strong className="text-[#1a1a1a]">not</strong> read, store, or process the titles, descriptions, or attendees of your calendar events — only whether a time slot is free or busy.</p>
+            <p className="mb-3"><strong className="text-[#1a1a1a]">Google Calendar data:</strong> With your explicit permission, CalRoute accesses your Google Calendar free/busy information to determine your availability. We do <strong className="text-[#1a1a1a]">not</strong> read, store, or process the titles, descriptions, or attendees of your calendar events. We only check whether a time slot is free or busy.</p>
             <p className="mb-3"><strong className="text-[#1a1a1a]">Booking information:</strong> When a customer books a meeting through CalRoute, we collect their name, email address, and any optional notes they provide. For phone call meetings, we also collect their phone number to facilitate the call.</p>
           </section>
 
@@ -66,10 +66,10 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold text-[#1a1a1a] mb-3">7. Third-party services</h2>
             <ul className="list-disc pl-5 space-y-2">
-              <li><strong className="text-[#1a1a1a]">Google Calendar API</strong> — for reading availability and creating events</li>
-              <li><strong className="text-[#1a1a1a]">Firebase / Firestore</strong> — for authentication and data storage</li>
-              <li><strong className="text-[#1a1a1a]">Resend</strong> — for sending confirmation emails</li>
-              <li><strong className="text-[#1a1a1a]">Vercel</strong> — for hosting the application</li>
+              <li><strong className="text-[#1a1a1a]">Google Calendar API</strong>:reading availability and creating events</li>
+              <li><strong className="text-[#1a1a1a]">Firebase / Firestore</strong>:authentication and data storage</li>
+              <li><strong className="text-[#1a1a1a]">Resend</strong>:sending confirmation emails</li>
+              <li><strong className="text-[#1a1a1a]">Vercel</strong>:hosting the application</li>
             </ul>
           </section>
 

@@ -121,7 +121,7 @@ export default function VacationDatesEditor({ savedDates }: Props) {
             <div key={date.id} className="border border-gray-200 rounded-lg p-3 flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <p className="font-medium text-gray-900 text-sm">
-                  {format(parseISO(date.startDate), 'MMM d')} — {format(parseISO(date.endDate), 'MMM d, yyyy')}
+                  {format(parseISO(date.startDate), 'MMM d')} to {format(parseISO(date.endDate), 'MMM d, yyyy')}
                 </p>
                 {date.reason && <p className="text-xs text-gray-600 mt-1">{date.reason}</p>}
               </div>

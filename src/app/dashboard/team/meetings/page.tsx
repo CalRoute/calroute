@@ -4,7 +4,7 @@ import type { TeamMeeting } from '@/types/database'
 import TeamMeetingsManager from './TeamMeetingsManager'
 
 export const metadata = {
-  title: 'Team Meetings — CalRoute',
+  title: 'Team Meetings | CalRoute',
 }
 
 export default async function TeamMeetingsPage() {

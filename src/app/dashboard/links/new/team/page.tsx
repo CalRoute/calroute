@@ -337,7 +337,7 @@ export default function TeamLinkPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {[
                 { value: 'priority', label: 'Priority', desc: 'Always assign the highest-priority host first' },
-                { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly — whoever was booked longest ago goes next' },
+                { value: 'round_robin', label: 'Round robin', desc: 'Distribute evenly. Whoever was booked longest ago goes next.' },
               ].map(opt => (
                 <button key={opt.value} type="button"
                   onClick={() => setForm(f => ({ ...f, routingStrategy: opt.value as any }))}
@@ -353,7 +353,7 @@ export default function TeamLinkPage() {
           </div>
 
           <p className="text-xs text-gray-400 text-center">
-            Set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link> — it applies to all your booking links.
+            Set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link>. It applies to all your booking links.
           </p>
 
           <button

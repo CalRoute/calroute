@@ -14,7 +14,7 @@ export function bookingRescheduledGuestEmail(data: {
 }): string {
   const whenText = formatTimeInTimezone(data.newStartTime, data.timezone)
   const locationNote = data.meetingType === 'in_person'
-    ? `<p>📍 Location: <strong>${data.meetingLocation || 'In person — your host will confirm the address'}</strong></p>`
+    ? `<p>📍 Location: <strong>${data.meetingLocation || 'In person (your host will confirm the address)'}</strong></p>`
     : data.meetingType === 'phone_call'
       ? `<p>Your host will call you at the number you provided.</p>`
       : `<p>Your calendar invite has been updated with the new time.</p>`

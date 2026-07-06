@@ -4,7 +4,7 @@ import type { TeamMeeting } from '@/types/database'
 import MeetingNotesEditor from './MeetingNotesEditor'
 
 export const metadata = {
-  title: 'Meeting Notes — CalRoute',
+  title: 'Meeting Notes | CalRoute',
 }
 
 interface Props {

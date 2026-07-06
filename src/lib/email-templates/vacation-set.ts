@@ -7,8 +7,8 @@ export function vacationEndedEmail(data: {
   const firstName = data.name.split(' ')[0]
   const content = `
     <h2>Welcome back, ${firstName}! 🎉</h2>
-    <p>Your blackout period is over — guests can book time with you again starting today.</p>
-    <p>Hope you had a great break. Your booking links are back to normal, no action needed on your end.</p>
+    <p>Your blackout period is over. Guests can book time with you again starting today.</p>
+    <p>Hope you had a great break. Your booking links are back to normal, no action needed.</p>
     <a class="button" href="${data.appUrl}/dashboard">See your dashboard →</a>
   `
   return emailLayout(content, `You're back, ${firstName}!`)
@@ -23,7 +23,7 @@ export function vacationSetEmail(data: {
   const dateRows = data.dates.map(d => {
     const start = new Date(d.startDate).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })
     const end = new Date(d.endDate).toLocaleDateString('en', { month: 'long', day: 'numeric', year: 'numeric' })
-    const label = start === end ? start : `${start} – ${end}`
+    const label = start === end ? start : `${start} to ${end}`
     return `<tr><td class="label">${label}</td><td class="value">${d.reason || 'Blocked'}</td></tr>`
   }).join('')
 
@@ -36,5 +36,5 @@ export function vacationSetEmail(data: {
     <p>Need to make changes? You can update your blackout dates anytime from your settings.</p>
     <a class="button" href="${data.appUrl}/dashboard/settings?tab=availability">Manage availability →</a>
   `
-  return emailLayout(content, 'Your blackout dates are saved — enjoy your time off!')
+  return emailLayout(content, 'Your blackout dates are saved. Enjoy your time off!')
 }

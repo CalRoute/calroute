@@ -294,7 +294,7 @@ function ReschedulePanel({ bookingId, linkSlug, durationMinutes, onDone, onError
         <div className="border-t border-gray-200 pt-2 space-y-1.5">
           <p className="text-xs font-medium text-gray-600">{format(parseISO(selectedDate), 'EEE, MMM d')}</p>
           {loadingSlots && <p className="text-xs text-gray-400">Loading…</p>}
-          {!loadingSlots && slotsOnDate.length === 0 && <p className="text-xs text-gray-400">No availability — try another day.</p>}
+          {!loadingSlots && slotsOnDate.length === 0 && <p className="text-xs text-gray-400">No availability on this day. Try another one.</p>}
           <div className="space-y-1 max-h-32 overflow-y-auto">
             {slotsOnDate.map(slot => (
               <button key={slot.start} onClick={() => !submitting && handleSlot(slot)} disabled={submitting}

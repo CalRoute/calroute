@@ -24,7 +24,7 @@ export function bookingConfirmedEmail(data: {
   const locationRow = data.meetingType === 'phone_call'
     ? `<tr><td class="label">Where</td><td class="value">${data.hostName} will call you${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
     : data.meetingType === 'in_person'
-      ? `<tr><td class="label">Where</td><td class="value">${data.meetingLocation || 'In person — your host will share the address'}</td></tr>`
+      ? `<tr><td class="label">Where</td><td class="value">${data.meetingLocation || 'In person (your host will share the address)'}</td></tr>`
       : data.meetLink
         ? `<tr><td class="label">Where</td><td class="value"><a href="${data.meetLink}">${data.meetLink}</a></td></tr>`
         : `<tr><td class="label">Where</td><td class="value">Google Meet link in your calendar invite</td></tr>`
@@ -68,7 +68,7 @@ export function bookingConfirmedHostEmail(data: {
   const whenText = formatTimeInTimezone(data.startTime, data.timezone ?? 'UTC')
 
   const locationRow = data.meetingType === 'phone_call'
-    ? `<tr><td class="label">Where</td><td class="value">Phone call — call ${data.customerName}${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
+    ? `<tr><td class="label">Where</td><td class="value">Phone call. You'll call ${data.customerName}${data.customerPhone ? ` at ${data.customerPhone}` : ''}</td></tr>`
     : data.meetingType === 'in_person'
       ? `<tr><td class="label">Where</td><td class="value">${data.meetingLocation || 'In person'}</td></tr>`
       : data.meetLink

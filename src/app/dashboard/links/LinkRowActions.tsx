@@ -144,7 +144,7 @@ export default function LinkRowActions({ linkId, slug, isActive: initialActive, 
               {embedCopied ? 'Copied!' : 'Copy'}
             </button>
           </div>
-          <p className="text-xs text-gray-400">Paste this anywhere — your website, Notion, or any HTML page.</p>
+          <p className="text-xs text-gray-400">Paste this anywhere: your website, Notion, or any HTML page.</p>
         </div>
       )}
     </div>

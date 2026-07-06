@@ -296,7 +296,7 @@ export default async function TeamPage() {
                     {/* Members */}
                     <div className="px-5 py-3">
                       {link.members.length === 0 ? (
-                        <p className="text-sm text-gray-400 py-1">No members yet — <Link href={`/dashboard/links/${link.id}`} className="text-[#0D7377] hover:underline">add hosts</Link>.</p>
+                        <p className="text-sm text-gray-400 py-1">No members yet. <Link href={`/dashboard/links/${link.id}`} className="text-[#0D7377] hover:underline">Add hosts</Link>.</p>
                       ) : (
                         <div className="divide-y divide-gray-50">
                             {link.members.map((m: any) => (

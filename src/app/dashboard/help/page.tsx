@@ -178,7 +178,7 @@ export default async function HelpPage() {
         },
         {
           q: 'How are webhook payloads secured?',
-          a: 'All webhooks are signed with HMAC-SHA256. Your secret key is in Settings > API Keys — use it to verify webhook authenticity.',
+          a: 'All webhooks are signed with HMAC-SHA256. Your secret key is in Settings > API Keys. Use it to verify webhook authenticity.',
         },
         {
           q: 'Can I integrate with Slack or Zapier?',

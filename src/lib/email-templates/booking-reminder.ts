@@ -21,10 +21,10 @@ export function bookingReminderGuestEmail(data: {
       ? `<p>📍 You're meeting in person at: <strong>${data.meetingLocation || 'your host will confirm the address'}</strong></p>`
       : data.meetLink
         ? `<a class="button" href="${data.meetLink}">Join Google Meet →</a>`
-        : `<p>Your calendar invite has the Google Meet link — see you there!</p>`
+        : `<p>Your calendar invite has the Google Meet link. See you there!</p>`
 
   const content = `
-    <h2>Just a reminder — you have a meeting tomorrow! 👋</h2>
+    <h2>Just a reminder, you have a meeting tomorrow! 👋</h2>
     <table class="details">
       <tr><td class="label">What</td><td class="value">${data.title}</td></tr>
       <tr><td class="label">When</td><td class="value">${whenText}</td></tr>
@@ -35,7 +35,7 @@ export function bookingReminderGuestEmail(data: {
     <hr />
     <p class="actions">Plans changed? You can <a href="${data.rescheduleUrl}">reschedule</a> or <a href="${data.cancelUrl}">cancel</a> up to 24 hours before the meeting.</p>
   `
-  return emailLayout(content, `Don't forget — ${data.title} is tomorrow!`)
+  return emailLayout(content, `Don't forget! ${data.title} is tomorrow.`)
 }
 
 export function bookingReminderHostEmail(data: {
@@ -61,7 +61,7 @@ export function bookingReminderHostEmail(data: {
         : `<p>Check your calendar for the Google Meet link.</p>`
 
   const content = `
-    <h2>You've got a meeting tomorrow, just a heads up! 📅</h2>
+    <h2>You've got a meeting tomorrow! 📅</h2>
     <table class="details">
       <tr><td class="label">What</td><td class="value">${data.title}</td></tr>
       <tr><td class="label">When</td><td class="value">${whenText}</td></tr>

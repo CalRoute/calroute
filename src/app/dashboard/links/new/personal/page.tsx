@@ -313,7 +313,7 @@ export default function PersonalLinkPage() {
           </div>
 
           <p className="text-xs text-gray-400 text-center">
-            Don&apos;t forget to set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link> — it applies to all your links.
+            Don&apos;t forget to set your availability in <Link href="/dashboard/settings" className="underline hover:text-gray-600">Settings</Link>. It applies to all your links.
           </p>
 
           <button
