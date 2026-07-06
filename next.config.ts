@@ -1,8 +1,12 @@
 import type { NextConfig } from "next";
+import { version } from './package.json'
 
 const ADMIN_SUBDOMAIN = process.env.ADMIN_SUBDOMAIN_URL ?? 'https://admin.calroute.me'
 
 const nextConfig: NextConfig = {
+  env: {
+    NEXT_PUBLIC_APP_VERSION: version,
+  },
   // Proxy Firebase's auth handler through calroute.me so signInWithPopup
   // works. When authDomain is set to calroute.me, the OAuth popup returns
   // to calroute.me/__/auth/handler (same origin) instead of
