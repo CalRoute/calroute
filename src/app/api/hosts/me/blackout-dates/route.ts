@@ -3,6 +3,10 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { Resend } from 'resend'
+import { vacationSetEmail } from '@/lib/email-templates/vacation-set'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function GET(request: NextRequest) {
   const user = await getServerUser()
@@ -69,6 +73,24 @@ export async function PUT(request: NextRequest) {
           endDate: date.endDate,
           reason: date.reason || null,
         })
+    }
+
+    // Send confirmation email if dates were added (fire-and-forget)
+    if (dates.length > 0) {
+      const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
+      const host = hostSnap.data()
+      if (host?.email) {
+        resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL!,
+          to: host.email,
+          subject: 'Your blackout dates have been saved',
+          html: vacationSetEmail({
+            name: host.name ?? 'there',
+            dates,
+            appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+          }),
+        }).catch(e => console.error('[vacation-email] failed:', e))
+      }
     }
 
     return NextResponse.json({ success: true })

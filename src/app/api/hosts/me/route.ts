@@ -4,6 +4,10 @@ import { NextResponse } from 'next/server'
 import { adminDb, adminAuth } from '@/lib/firebase/admin'
 import { getServerUser } from '@/lib/firebase/session'
 import { stripe } from '@/lib/stripe'
+import { Resend } from 'resend'
+import { accountDeletedEmail } from '@/lib/email-templates/account-deleted'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function DELETE() {
   const user = await getServerUser()
@@ -12,9 +16,24 @@ export async function DELETE() {
   const uid = user.uid
 
   try {
-    // Cancel Stripe subscription if one exists
     const hostSnap = await adminDb.collection('hosts').doc(uid).get()
-    const stripeCustomerId = hostSnap.data()?.stripeCustomerId
+    const hostData = hostSnap.data()
+
+    // Send goodbye email before deleting (fire-and-forget)
+    if (hostData?.email) {
+      resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL!,
+        to: hostData.email,
+        subject: 'Your CalRoute account has been deleted',
+        html: accountDeletedEmail({
+          name: hostData.name ?? 'there',
+          appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+        }),
+      }).catch(e => console.error('[goodbye-email] failed:', e))
+    }
+
+    // Cancel Stripe subscription if one exists
+    const stripeCustomerId = hostData?.stripeCustomerId
     if (stripeCustomerId) {
       try {
         const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, limit: 10 })

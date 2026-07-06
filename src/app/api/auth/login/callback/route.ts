@@ -3,6 +3,10 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { adminAuth, adminDb } from '@/lib/firebase/admin'
 import { signSession } from '@/lib/session-jwt'
+import { Resend } from 'resend'
+import { welcomeEmail } from '@/lib/email-templates/welcome'
+
+const resend = new Resend(process.env.RESEND_API_KEY)
 
 const SESSION_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
 const REFRESH_MAX_AGE = 14 * 24 * 60 * 60 // 14 days
@@ -94,15 +98,27 @@ export async function GET(request: NextRequest) {
     // Upsert host record
     const hostRef = adminDb.collection('hosts').doc(decoded.uid)
     const hostSnap = await hostRef.get()
-    if (!hostSnap.exists) {
+    const isNewUser = !hostSnap.exists
+    const userName = decoded.name ?? decoded.email?.split('@')[0] ?? 'User'
+    if (isNewUser) {
       await hostRef.set({
         uid: decoded.uid,
         email: decoded.email ?? '',
-        name: decoded.name ?? decoded.email?.split('@')[0] ?? 'User',
+        name: userName,
         avatarUrl: decoded.picture ?? null,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC',
         createdAt: new Date().toISOString(),
       })
+      // Send welcome email (fire-and-forget)
+      resend.emails.send({
+        from: process.env.RESEND_FROM_EMAIL!,
+        to: decoded.email!,
+        subject: 'Welcome to CalRoute!',
+        html: welcomeEmail({
+          name: userName,
+          appUrl: process.env.NEXT_PUBLIC_APP_URL!,
+        }),
+      }).catch(e => console.error('[welcome-email] failed:', e))
     }
 
     // Sign our own session JWT (no external verification needed later)
