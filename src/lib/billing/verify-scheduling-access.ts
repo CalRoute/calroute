@@ -52,6 +52,11 @@ export async function verifySchedulingAccess(
 
   const userBilling = userBillingSnap.data() as UserBillingDoc
 
+  // VIP users always have full access
+  if (userBilling.tier === 'vip') {
+    return { allowed: true }
+  }
+
   if (!['active', 'trialing'].includes(userBilling.status)) {
     return { allowed: false, code: 'LINK_INACTIVE' }
   }
