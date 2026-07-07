@@ -6,8 +6,6 @@ import { adminDb } from '@/lib/firebase/admin'
 import { Resend } from 'resend'
 import { vacationSetEmail } from '@/lib/email-templates/vacation-set'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function GET(request: NextRequest) {
   const user = await getServerUser()
   if (!user) {
@@ -75,7 +73,8 @@ export async function PUT(request: NextRequest) {
     }
 
     // Send confirmation email if dates were added (fire-and-forget)
-    if (dates.length > 0) {
+    if (dates.length > 0 && process.env.RESEND_API_KEY) {
+      const resend = new Resend(process.env.RESEND_API_KEY)
       const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
       const host = hostSnap.data()
       if (host?.email) {
