@@ -6,6 +6,7 @@ import {
   getDay, addMonths, subMonths, isBefore, isAfter,
   getDaysInMonth, setDate,
 } from 'date-fns'
+import { formatInTimeZone } from 'date-fns-tz'
 import { parsePhoneNumberFromString, isValidPhoneNumber, AsYouType } from 'libphonenumber-js'
 import type { BookingLink } from '@/types/database'
 
@@ -87,7 +88,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
     setSlots([])
     setError(null)
     const langParam = selectedLanguage ? `&language=${encodeURIComponent(selectedLanguage)}` : ''
-    fetch(`/api/availability?slug=${link.slug}&start=${selectedDate}&timezone=${encodeURIComponent(timezone)}${langParam}`)
+    fetch(`/api/availability?slug=${link.slug}&start=${selectedDate}&timezone=${encodeURIComponent(timezone)}&guest_timezone=${encodeURIComponent(timezone)}${langParam}`)
       .then(r => r.json())
       .then(data => { setSlots(data.slots ?? []); setStep('select-time') })
       .catch(() => setError('Failed to load availability. Please try again.'))
@@ -95,7 +96,7 @@ export default function BookingWidget({ link, availableLanguages }: Props) {
   }, [selectedDate, link.slug, timezone, selectedLanguage])
 
   const slotsOnDate = slots.filter(s =>
-    format(parseISO(s.start), 'yyyy-MM-dd') === selectedDate
+    formatInTimeZone(parseISO(s.start), timezone, 'yyyy-MM-dd') === selectedDate
   )
 
   async function handleSlotSelect(slot: Slot) {
