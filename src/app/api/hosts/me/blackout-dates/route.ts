@@ -19,7 +19,6 @@ export async function GET(request: NextRequest) {
       .collection('hosts')
       .doc(user.uid)
       .collection('blackout_dates')
-      .orderBy('startDate', 'desc')
       .get()
 
     const dates = datesSnap.docs.map(d => ({

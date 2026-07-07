@@ -53,9 +53,10 @@ export default async function SettingsPage({
   const apiKeys = apiKeysSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
 
   const blackoutDatesSnap = await adminDb
-    .collection('hosts').doc(user.uid).collection('blackout_dates')
-    .orderBy('startDate', 'desc').get()
-  const blackoutDates = blackoutDatesSnap.docs.map(d => ({ id: d.id, ...d.data() })) as any[]
+    .collection('hosts').doc(user.uid).collection('blackout_dates').get()
+  const blackoutDates = blackoutDatesSnap.docs
+    .map(d => ({ id: d.id, ...d.data() } as any))
+    .sort((a, b) => (a.startDate > b.startDate ? -1 : 1))
 
   return (
     <DashboardLayout
