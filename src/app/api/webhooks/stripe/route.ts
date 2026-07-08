@@ -239,6 +239,10 @@ export async function POST(request: NextRequest) {
         const uid = hostSnap.docs[0].id
         const host = hostSnap.docs[0].data() as any
 
+        // Skip VIP users — they have no Stripe subscription
+        const billingSnap = await adminDb.collection('hosts').doc(uid).collection('billing').doc('status').get()
+        if (billingSnap.data()?.tier === 'vip') break
+
         // Update status to past_due
         await adminDb
           .collection('hosts')
