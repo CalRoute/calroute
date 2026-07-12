@@ -8,6 +8,8 @@ export interface Host {
   timezone: string
   stripeCustomerId?: string | null
   customDomain?: string | null
+  customDomainPending?: string | null
+  customDomainToken?: string | null
   createdAt: string
 }
 

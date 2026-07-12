@@ -5,24 +5,40 @@ import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
 import dns from 'dns/promises'
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   const user = await getServerUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
   const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
-  const customDomain = hostSnap.data()?.customDomain as string | null
+  const host = hostSnap.data()
+  const pending = host?.customDomainPending as string | null
+  const token = host?.customDomainToken as string | null
 
-  if (!customDomain) {
-    return NextResponse.json({ error: 'No custom domain set' }, { status: 400 })
+  if (!pending || !token) {
+    return NextResponse.json({ error: 'No pending domain to verify' }, { status: 400 })
   }
 
+  // Look for the TXT record on the root of the pending domain
+  let records: string[][] = []
   try {
-    const records = await dns.resolveCname(customDomain)
-    const pointsToVercel = records.some(r =>
-      r.includes('vercel') || r.includes('cname.vercel-dns.com')
-    )
-    return NextResponse.json({ connected: pointsToVercel, cname: records[0] ?? null })
+    records = await dns.resolveTxt(pending)
   } catch {
-    return NextResponse.json({ connected: false, cname: null })
+    return NextResponse.json({ verified: false, reason: 'DNS lookup failed — record may not exist yet' })
   }
+
+  const flat = records.flat()
+  const found = flat.includes(token)
+
+  if (!found) {
+    return NextResponse.json({ verified: false, reason: 'TXT record not found yet' })
+  }
+
+  // Token found — activate the domain
+  await adminDb.collection('hosts').doc(user.uid).update({
+    customDomain: pending,
+    customDomainPending: null,
+    customDomainToken: null,
+  })
+
+  return NextResponse.json({ verified: true, customDomain: pending })
 }

@@ -5,21 +5,25 @@ import { useToast } from '@/components/Toast'
 
 interface Props {
   savedDomain: string | null
+  pendingDomain: string | null
+  verifyToken: string | null
 }
 
-type VerifyStatus = 'idle' | 'checking' | 'connected' | 'not_connected'
+type VerifyStatus = 'idle' | 'checking' | 'verified' | 'failed'
 
-export default function CustomDomainEditor({ savedDomain }: Props) {
+export default function CustomDomainEditor({ savedDomain, pendingDomain, verifyToken: initialToken }: Props) {
   const { showToast } = useToast()
-  const [domain, setDomain] = useState(savedDomain ?? '')
-  const [activeDomain, setActiveDomain] = useState(savedDomain ?? '')
+  const [input, setInput] = useState(savedDomain ?? pendingDomain ?? '')
+  const [activeDomain, setActiveDomain] = useState(savedDomain ?? null)
+  const [pending, setPending] = useState(pendingDomain ?? null)
+  const [token, setToken] = useState(initialToken ?? null)
   const [saving, setSaving] = useState(false)
   const [verifyStatus, setVerifyStatus] = useState<VerifyStatus>('idle')
 
   const handleSave = async () => {
     setSaving(true)
     setVerifyStatus('idle')
-    const cleaned = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
+    const cleaned = input.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/$/, '')
     try {
       const res = await fetch('/api/hosts/me/custom-domain', {
         method: 'PUT',
@@ -32,9 +36,18 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
         return
       }
       const data = await res.json()
-      setDomain(data.customDomain ?? '')
-      setActiveDomain(data.customDomain ?? '')
-      showToast(data.customDomain ? 'Custom domain saved' : 'Custom domain removed', 'success')
+      if (data.customDomain === null && !data.pending) {
+        setActiveDomain(null)
+        setPending(null)
+        setToken(null)
+        setInput('')
+        showToast('Custom domain removed', 'success')
+      } else {
+        setActiveDomain(null)
+        setPending(data.pending)
+        setToken(data.token)
+        showToast('Domain saved — add the TXT record below to verify ownership', 'success')
+      }
     } catch {
       showToast('Error saving domain', 'error')
     } finally {
@@ -43,16 +56,18 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
   }
 
   const handleRemove = async () => {
-    setDomain('')
-    setActiveDomain('')
-    setVerifyStatus('idle')
     setSaving(true)
+    setVerifyStatus('idle')
     try {
       await fetch('/api/hosts/me/custom-domain', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customDomain: null }),
       })
+      setActiveDomain(null)
+      setPending(null)
+      setToken(null)
+      setInput('')
       showToast('Custom domain removed', 'success')
     } catch {
       showToast('Error removing domain', 'error')
@@ -66,9 +81,16 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
     try {
       const res = await fetch('/api/hosts/me/custom-domain/verify')
       const data = await res.json()
-      setVerifyStatus(data.connected ? 'connected' : 'not_connected')
+      if (data.verified) {
+        setVerifyStatus('verified')
+        setActiveDomain(data.customDomain)
+        setPending(null)
+        setToken(null)
+      } else {
+        setVerifyStatus('failed')
+      }
     } catch {
-      setVerifyStatus('not_connected')
+      setVerifyStatus('failed')
     }
   }
 
@@ -79,8 +101,8 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
       <div className="flex gap-2">
         <input
           type="text"
-          value={domain}
-          onChange={(e) => { setDomain(e.target.value); setVerifyStatus('idle') }}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
           placeholder="book.yourcompany.com"
           className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#0D7377]"
         />
@@ -91,7 +113,7 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
         >
           {saving ? 'Saving...' : 'Save'}
         </button>
-        {activeDomain && (
+        {(activeDomain || pending) && (
           <button
             onClick={handleRemove}
             disabled={saving}
@@ -102,51 +124,21 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
         )}
       </div>
 
+      {/* Verified and active */}
       {activeDomain && (
-        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3 text-sm">
-          {/* Connection status */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              {verifyStatus === 'connected' && (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
-                  <span className="text-green-700 font-medium">Connected</span>
-                </>
-              )}
-              {verifyStatus === 'not_connected' && (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
-                  <span className="text-yellow-700 font-medium">Not active yet</span>
-                  <span className="text-gray-500">— DNS may still be propagating</span>
-                </>
-              )}
-              {verifyStatus === 'checking' && (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-gray-300 inline-block animate-pulse" />
-                  <span className="text-gray-500">Checking...</span>
-                </>
-              )}
-              {verifyStatus === 'idle' && (
-                <span className="text-gray-500">Domain saved. Check if DNS is active.</span>
-              )}
-            </div>
-            <button
-              onClick={handleVerify}
-              disabled={verifyStatus === 'checking'}
-              className="text-xs font-medium text-[#0D7377] hover:underline disabled:opacity-50"
-            >
-              {verifyStatus === 'checking' ? 'Checking...' : 'Check connection'}
-            </button>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-3 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-green-500 inline-block" />
+            <span className="text-green-800 font-medium">Verified and active</span>
           </div>
-
-          {/* DNS instructions */}
-          <div className="border-t border-gray-200 pt-3 space-y-2">
-            <p className="font-medium text-gray-900">DNS setup</p>
-            <p className="text-gray-600">Add this CNAME record in your DNS provider:</p>
-            <div className="font-mono bg-white border border-gray-200 rounded px-3 py-2 text-xs space-y-1">
+          <p className="text-green-700">
+            Visitors to <span className="font-medium">{activeDomain}</span> will see your booking page.
+          </p>
+          <div className="border-t border-green-200 pt-3 space-y-1">
+            <p className="text-green-800 font-medium text-xs">CNAME record (keep this in place)</p>
+            <div className="font-mono bg-white border border-green-200 rounded px-3 py-2 text-xs space-y-1">
               <div className="grid grid-cols-[80px_1fr] gap-2">
-                <span className="text-gray-500">Type</span>
-                <span>CNAME</span>
+                <span className="text-gray-500">Type</span><span>CNAME</span>
               </div>
               <div className="grid grid-cols-[80px_1fr] gap-2">
                 <span className="text-gray-500">Name</span>
@@ -157,10 +149,72 @@ export default function CustomDomainEditor({ savedDomain }: Props) {
                 <span className="text-[#0D7377]">{cnameTarget}</span>
               </div>
             </div>
-            <p className="text-xs text-gray-500">
-              DNS changes can take up to 24 hours to propagate. Once active, visitors to{' '}
-              <span className="font-medium text-gray-700">{activeDomain}</span> will see your booking page.
-            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Pending verification */}
+      {pending && token && (
+        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-4 text-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-yellow-400 inline-block" />
+            <span className="text-gray-800 font-medium">Verification required</span>
+          </div>
+
+          <p className="text-gray-600">
+            Add these two DNS records for <span className="font-medium text-gray-900">{pending}</span>, then click Verify ownership below.
+          </p>
+
+          {/* Step 1: TXT */}
+          <div className="space-y-1">
+            <p className="font-medium text-gray-800 text-xs uppercase tracking-wide">Step 1 — Prove ownership (TXT record)</p>
+            <div className="font-mono bg-white border border-gray-200 rounded px-3 py-2 text-xs space-y-1">
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-gray-500">Type</span><span>TXT</span>
+              </div>
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-gray-500">Name</span>
+                <span>{pending.split('.').slice(0, -2).join('.') || '@'}</span>
+              </div>
+              <div className="grid grid-cols-[80px_1fr] gap-2 break-all">
+                <span className="text-gray-500">Value</span>
+                <span className="text-[#0D7377] break-all">{token}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Step 2: CNAME */}
+          <div className="space-y-1">
+            <p className="font-medium text-gray-800 text-xs uppercase tracking-wide">Step 2 — Point to CalRoute (CNAME record)</p>
+            <div className="font-mono bg-white border border-gray-200 rounded px-3 py-2 text-xs space-y-1">
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-gray-500">Type</span><span>CNAME</span>
+              </div>
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-gray-500">Name</span>
+                <span>{pending.split('.').slice(0, -2).join('.') || pending}</span>
+              </div>
+              <div className="grid grid-cols-[80px_1fr] gap-2">
+                <span className="text-gray-500">Value</span>
+                <span className="text-[#0D7377]">{cnameTarget}</span>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-xs text-gray-500">DNS changes can take up to 24 hours to propagate.</p>
+
+          {/* Verify button + status */}
+          <div className="flex items-center gap-3 pt-1">
+            <button
+              onClick={handleVerify}
+              disabled={verifyStatus === 'checking'}
+              className="px-4 py-2 text-sm font-medium bg-[#0D7377] text-white rounded-lg hover:bg-[#0a5f63] transition-colors disabled:opacity-50"
+            >
+              {verifyStatus === 'checking' ? 'Checking...' : 'Verify ownership'}
+            </button>
+            {verifyStatus === 'failed' && (
+              <span className="text-xs text-yellow-700">TXT record not found yet — try again in a few minutes.</span>
+            )}
           </div>
         </div>
       )}

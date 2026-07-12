@@ -109,7 +109,11 @@ export default async function SettingsPage({
                     <span className="font-medium text-gray-700">book.yourcompany.com</span>).
                   </p>
                 </div>
-                <CustomDomainEditor savedDomain={host?.customDomain ?? null} />
+                <CustomDomainEditor
+                savedDomain={host?.customDomain ?? null}
+                pendingDomain={host?.customDomainPending ?? null}
+                verifyToken={host?.customDomainToken ?? null}
+              />
               </div>
             </>
           ),
