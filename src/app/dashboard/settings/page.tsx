@@ -16,6 +16,7 @@ import ApiKeysSection from './ApiKeysSection'
 import VacationDatesEditor from './VacationDatesEditor'
 import SettingsTabs from './SettingsTabs'
 import DangerZone from './DangerZone'
+import CustomDomainEditor from './CustomDomainEditor'
 
 export default async function SettingsPage({
   searchParams,
@@ -82,23 +83,35 @@ export default async function SettingsPage({
       <SettingsTabs>
         {{
           profile: (
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-              <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
-                <h2 className="font-semibold text-gray-900 text-lg">Profile</h2>
-                <ProfileEditor savedName={host?.name ?? ''} email={user.email} />
-                <div className="border-t border-gray-100 pt-5">
-                  <label className="block text-sm font-medium text-gray-900 mb-3">Timezone</label>
-                  <TimezoneSelector savedTimezone={host?.timezone ?? 'UTC'} />
+            <>
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-6">
+                  <h2 className="font-semibold text-gray-900 text-lg">Profile</h2>
+                  <ProfileEditor savedName={host?.name ?? ''} email={user.email} />
+                  <div className="border-t border-gray-100 pt-5">
+                    <label className="block text-sm font-medium text-gray-900 mb-3">Timezone</label>
+                    <TimezoneSelector savedTimezone={host?.timezone ?? 'UTC'} />
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
+                  <div>
+                    <h2 className="font-semibold text-gray-900 text-lg">Notifications</h2>
+                    <p className="text-sm text-gray-500 mt-1">Choose which events send you an email.</p>
+                  </div>
+                  <NotificationPrefs savedPrefs={savedNotificationPrefs} />
                 </div>
               </div>
               <div className="bg-white rounded-2xl border border-gray-200 p-6 space-y-4">
                 <div>
-                  <h2 className="font-semibold text-gray-900 text-lg">Notifications</h2>
-                  <p className="text-sm text-gray-500 mt-1">Choose which events send you an email.</p>
+                  <h2 className="font-semibold text-gray-900 text-lg">Custom domain</h2>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Use your own domain for your booking page (e.g.{' '}
+                    <span className="font-medium text-gray-700">book.yourcompany.com</span>).
+                  </p>
                 </div>
-                <NotificationPrefs savedPrefs={savedNotificationPrefs} />
+                <CustomDomainEditor savedDomain={host?.customDomain ?? null} />
               </div>
-            </div>
+            </>
           ),
           availability: (
             <>

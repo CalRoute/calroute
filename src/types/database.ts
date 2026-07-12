@@ -7,6 +7,7 @@ export interface Host {
   avatarUrl: string | null
   timezone: string
   stripeCustomerId?: string | null
+  customDomain?: string | null
   createdAt: string
 }
 
