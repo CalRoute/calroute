@@ -75,6 +75,9 @@ export default async function LinksPage() {
     return name.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2)
   }
 
+  const customDomain = host?.customDomain ?? null
+  const bookingBase = customDomain ? `https://${customDomain}` : (process.env.NEXT_PUBLIC_APP_URL ?? '')
+
   return (
     <DashboardLayout
       user={{ email: user.email, name: host?.name }}
@@ -154,12 +157,12 @@ export default async function LinksPage() {
                       <span>{link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing</span>
                     </div>
                     <a
-                      href={`${process.env.NEXT_PUBLIC_APP_URL}/book/${link.slug}`}
+                      href={customDomain ? `https://${customDomain}` : `${bookingBase}/book/${link.slug}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-[#0D7377] hover:underline mt-2 block truncate"
                     >
-                      {process.env.NEXT_PUBLIC_APP_URL}/book/{link.slug}
+                      {customDomain ? `https://${customDomain}` : `${bookingBase}/book/${link.slug}`}
                     </a>
                     {link.members.length > 0 && (
                       <div className="flex items-center gap-2 mt-3">
@@ -187,7 +190,8 @@ export default async function LinksPage() {
                       linkId={link.id}
                       slug={link.slug}
                       isActive={link.isActive}
-                      appUrl={process.env.NEXT_PUBLIC_APP_URL ?? ''}
+                      appUrl={bookingBase}
+                      customDomain={customDomain}
                     />
                   </div>
                 </div>
@@ -222,7 +226,7 @@ export default async function LinksPage() {
                         rel="noreferrer"
                         className="text-xs text-[#0D7377] hover:underline mt-2 block truncate"
                       >
-                        {process.env.NEXT_PUBLIC_APP_URL}/book/{link.slug}
+                        {process.env.NEXT_PUBLIC_APP_URL ?? ''}/book/{link.slug}
                       </a>
                     </div>
                     <span className="text-xs text-gray-500 border border-gray-200 rounded-lg px-2.5 py-1.5 flex-shrink-0">
