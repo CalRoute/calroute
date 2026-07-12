@@ -18,10 +18,11 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ error: 'No pending domain to verify' }, { status: 400 })
   }
 
-  // Look for the TXT record on the root of the pending domain
+  // Look for the TXT record on _calroute-verify.<domain> to avoid CNAME conflicts
+  const verifyHost = `_calroute-verify.${pending}`
   let records: string[][] = []
   try {
-    records = await dns.resolveTxt(pending)
+    records = await dns.resolveTxt(verifyHost)
   } catch {
     return NextResponse.json({ verified: false, reason: 'DNS lookup failed — record may not exist yet' })
   }

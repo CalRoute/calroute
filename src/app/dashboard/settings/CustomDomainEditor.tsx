@@ -174,7 +174,7 @@ export default function CustomDomainEditor({ savedDomain, pendingDomain, verifyT
               </div>
               <div className="grid grid-cols-[80px_1fr] gap-2">
                 <span className="text-gray-500">Name</span>
-                <span>{pending.split('.').slice(0, -2).join('.') || '@'}</span>
+                <span>_calroute-verify{pending.split('.').length > 2 ? '.' + pending.split('.').slice(0, -2).join('.') : ''}</span>
               </div>
               <div className="grid grid-cols-[80px_1fr] gap-2 break-all">
                 <span className="text-gray-500">Value</span>
