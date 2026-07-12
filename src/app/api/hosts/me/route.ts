@@ -6,6 +6,7 @@ import { getServerUser } from '@/lib/firebase/session'
 import { stripe } from '@/lib/stripe'
 import { Resend } from 'resend'
 import { accountDeletedEmail } from '@/lib/email-templates/account-deleted'
+import { removeVercelDomain } from '@/lib/vercel-domains'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -30,6 +31,13 @@ export async function DELETE() {
           appUrl: process.env.NEXT_PUBLIC_APP_URL!,
         }),
       }).catch(e => console.error('[goodbye-email] failed:', e))
+    }
+
+    // Remove custom domain from Vercel if one is active
+    if (hostData?.customDomain) {
+      await removeVercelDomain(hostData.customDomain).catch(e =>
+        console.error('[delete-account] vercel domain remove error:', e)
+      )
     }
 
     // Cancel Stripe subscription if one exists

@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { removeVercelDomain } from '@/lib/vercel-domains'
 import { randomBytes } from 'crypto'
 
 export async function PUT(request: NextRequest) {
@@ -11,7 +12,16 @@ export async function PUT(request: NextRequest) {
 
   const { customDomain } = await request.json() as { customDomain: string | null }
 
+  const hostSnap = await adminDb.collection('hosts').doc(user.uid).get()
+  const currentActiveDomain = hostSnap.data()?.customDomain as string | null
+
   if (customDomain === null) {
+    // Remove verified domain from Vercel
+    if (currentActiveDomain) {
+      await removeVercelDomain(currentActiveDomain).catch(e =>
+        console.error('[custom-domain] vercel remove error:', e)
+      )
+    }
     await adminDb.collection('hosts').doc(user.uid).update({
       customDomain: null,
       customDomainPending: null,
@@ -37,13 +47,19 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: 'Domain already in use' }, { status: 409 })
   }
 
+  // If the user is switching to a different domain, remove the old one from Vercel
+  if (currentActiveDomain && currentActiveDomain !== cleaned) {
+    await removeVercelDomain(currentActiveDomain).catch(e =>
+      console.error('[custom-domain] vercel remove old domain error:', e)
+    )
+  }
+
   // Generate a unique verification token
   const token = `calroute-verify=${randomBytes(16).toString('hex')}`
 
   await adminDb.collection('hosts').doc(user.uid).update({
     customDomainPending: cleaned,
     customDomainToken: token,
-    // Clear any previously verified domain until this one is confirmed
     customDomain: null,
   })
 

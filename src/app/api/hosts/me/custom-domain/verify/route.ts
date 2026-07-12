@@ -3,6 +3,7 @@ export const dynamic = 'force-dynamic'
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerUser } from '@/lib/firebase/session'
 import { adminDb } from '@/lib/firebase/admin'
+import { addVercelDomain } from '@/lib/vercel-domains'
 import dns from 'dns/promises'
 
 export async function GET(_request: NextRequest) {
@@ -34,7 +35,16 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({ verified: false, reason: 'TXT record not found yet' })
   }
 
-  // Token found — activate the domain
+  // Register domain with Vercel so it gets SSL and routes traffic
+  const { ok } = await addVercelDomain(pending)
+  if (!ok) {
+    return NextResponse.json(
+      { verified: false, reason: 'Could not register domain with hosting provider' },
+      { status: 502 }
+    )
+  }
+
+  // Activate the domain on the host profile
   await adminDb.collection('hosts').doc(user.uid).update({
     customDomain: pending,
     customDomainPending: null,
