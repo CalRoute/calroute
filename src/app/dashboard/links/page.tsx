@@ -77,6 +77,7 @@ export default async function LinksPage() {
 
   const customDomain = host?.customDomain ?? null
   const bookingBase = customDomain ? `https://${customDomain}` : (process.env.NEXT_PUBLIC_APP_URL ?? '')
+  // With custom domain, links are meet.dolbyto.dev/slug (not /book/slug)
 
   return (
     <DashboardLayout
@@ -157,12 +158,12 @@ export default async function LinksPage() {
                       <span>{link.routingStrategy === 'round_robin' ? 'Round robin' : 'Priority'} routing</span>
                     </div>
                     <a
-                      href={customDomain ? `https://${customDomain}` : `${bookingBase}/book/${link.slug}`}
+                      href={customDomain ? `https://${customDomain}/${link.slug}` : `${bookingBase}/book/${link.slug}`}
                       target="_blank"
                       rel="noreferrer"
                       className="text-xs text-[#0D7377] hover:underline mt-2 block truncate"
                     >
-                      {customDomain ? `https://${customDomain}` : `${bookingBase}/book/${link.slug}`}
+                      {customDomain ? `https://${customDomain}/${link.slug}` : `${bookingBase}/book/${link.slug}`}
                     </a>
                     {link.members.length > 0 && (
                       <div className="flex items-center gap-2 mt-3">

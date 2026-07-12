@@ -19,7 +19,7 @@ export default function LinkRowActions({ linkId, slug, isActive: initialActive, 
   const [embedCopied, setEmbedCopied] = useState(false)
   const { showToast } = useToast()
 
-  const bookingUrl = customDomain ? `https://${customDomain}` : `${appUrl}/book/${slug}`
+  const bookingUrl = customDomain ? `https://${customDomain}/${slug}` : `${appUrl}/book/${slug}`
   const embedCode = `<iframe src="${appUrl}/embed/${slug}" width="100%" height="600" frameborder="0" style="border-radius:16px;"></iframe>`
 
   async function handleCopy() {

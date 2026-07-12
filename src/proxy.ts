@@ -29,9 +29,17 @@ export async function proxy(request: NextRequest) {
 
   if (!slug) return NextResponse.next()
 
-  // Rewrite the path to /book/[slug], keeping the original domain in the URL bar
+  // Rewrite: custom domain root → /book/[defaultSlug]
+  // Subpaths are preserved: meet.dolbyto.dev/quick-call → /book/quick-call
   const url = request.nextUrl.clone()
-  url.pathname = `/book/${slug}`
+  const incomingPath = request.nextUrl.pathname
+
+  if (incomingPath === '/' || incomingPath === '') {
+    url.pathname = `/book/${slug}`
+  } else {
+    // Strip leading slash and treat as a booking slug
+    url.pathname = `/book${incomingPath}`
+  }
 
   return NextResponse.rewrite(url)
 }
